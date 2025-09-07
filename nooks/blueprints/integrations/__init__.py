@@ -1,1 +1,1 @@
-from .payment import OpayPayment
+from . import payment
