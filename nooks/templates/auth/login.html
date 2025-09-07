@@ -18,16 +18,17 @@
                 <form method="POST">
                     {{ form.csrf_token }}
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email or Username</label>
-                        <input type="text" class="form-control {% if form.email.errors %}is-invalid{% endif %}" id="email" name="email" value="{{ form.email.data or '' }}" required>
-                        {% for error in form.email.errors %}
+                        <label for="identifier" class="form-label">Email or Username</label>
+                        <input type="text" class="form-control {% if form.identifier.errors %}is-invalid{% endif %}" id="identifier" name="identifier" value="{{ form.identifier.data or '' }}" required>
+                        {% for error in form.identifier.errors %}
                             <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
                     </div>
                     
-                    <div class="mb-4">
+                    <div class="mb-4 password-toggle-wrapper">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" id="password" name="password" required>
+                        <i class="bi bi-eye-slash toggle-password" toggle="#password"></i>
                         {% for error in form.password.errors %}
                             <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
@@ -49,4 +50,18 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".toggle-password").forEach(function (eye) {
+        eye.addEventListener("click", function () {
+            const input = document.querySelector(eye.getAttribute("toggle"));
+            const isHidden = input.getAttribute("type") === "password";
+            input.setAttribute("type", isHidden ? "text" : "password");
+            eye.classList.toggle("bi-eye");
+            eye.classList.toggle("bi-eye-slash");
+        });
+    });
+});
+</script>
 {% endblock %}
