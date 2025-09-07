@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, url_for, session, request, j
 from flask_pymongo import PyMongo
 from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect
+from flask_caching import Cache
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
@@ -27,6 +28,8 @@ from blueprints.api.routes import api_bp
 from blueprints.quotes.routes import quotes_bp
 from blueprints.nooks_club.routes import nooks_club_bp
 from blueprints.mini_modules.routes import mini_modules_bp
+from blueprints.analytics.routes import analytics_bp
+from blueprints.donations.routes import donations_bp
 
 # Import breadcrumb helper
 from utils.breadcrumbs import register_breadcrumbs
@@ -39,12 +42,13 @@ def create_app():
     app = Flask(__name__)
     
     # Configuration
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-    app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+    app.config['MONGO_URI'] = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/nook_hook_app')
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_SECURE'] = True  # Enable for HTTPS in production
     app.config['WTF_CSRF_TIME_LIMIT'] = 7200
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+    app.config['CACHE_TYPE'] = 'simple'  # Configure Flask-Caching
     
     # Initialize MongoDB
     mongo = PyMongo(app)
@@ -57,6 +61,9 @@ def create_app():
     
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
+    
+    # Initialize Flask-Caching
+    cache = Cache(app)
     
     # Register breadcrumb helper
     register_breadcrumbs(app)
@@ -95,6 +102,16 @@ def create_app():
             logger.error(f"Error in debug_session: {str(e)}", exc_info=True)
             return jsonify({'error': 'An error occurred'}), 500
     
+    # Custom Jinja2 filters
+    @app.template_filter('get_username')
+    def get_username(user_id):
+        user = app.mongo.db.users.find_one({'_id': ObjectId(user_id)})
+        return user.get('username', 'Anonymous') if user else 'Anonymous'
+
+    @app.template_filter('datetimeformat')
+    def datetimeformat(value):
+        return value.strftime('%Y-%m-%d') if value else ''
+    
     # Initialize database with application context
     with app.app_context():
         DatabaseManager.initialize_database()
@@ -111,9 +128,12 @@ def create_app():
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(quotes_bp, url_prefix='/quotes')
     app.register_blueprint(nooks_club_bp, url_prefix='/nooks_club')
+    app.register_blueprint(mini_modules_bp, url_prefix='/mini_modules')
+    app.register_blueprint(analytics_bp, url_prefix='/analytics')
+    app.register_blueprint(donations_bp, url_prefix='/donations')
+    
     with app.app_context():
         logger.info("Registered endpoints: %s", [rule.endpoint for rule in app.url_map.iter_rules()])
-    app.register_blueprint(mini_modules_bp, url_prefix='/mini_modules')
     
     @app.route('/')
     def index():
@@ -187,4 +207,3 @@ app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
-
