@@ -14,8 +14,8 @@
         <p class="card-text">{{ club.description or 'No description' }}</p>
         <p class="card-text"><small class="text-muted">Topic: {{ club.topic or 'None' }}</small></p>
         <p class="card-text"><small class="text-muted">Created by: {{ club.creator_username }}</small></p>
-        <a href="{{ url_for('nooks_club.view_club', club_id=club._id) }}" class="btn btn-info">View</a>
-        <a href="{{ url_for('nooks_club.view_club', club_id=club._id) }}#manage" class="btn btn-warning">Manage</a>
+        <a href="{{ url_for('nooks_club.view_club', club_id=club._id) }}" class="btn btn-info">View {{ club.name }}</a>
+        <a href="{{ url_for('nooks_club.view_club', club_id=club._id) }}#manage" class="btn btn-warning">Manage {{ club.name }}</a>
       </div>
     </div>
     {% else %}
