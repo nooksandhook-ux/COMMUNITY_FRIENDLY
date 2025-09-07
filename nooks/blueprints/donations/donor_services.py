@@ -1,5 +1,5 @@
 from flask import current_app
-from .services import RewardService
+from blueprints.rewards.services import RewardService
 from bson import ObjectId
 from datetime import datetime
 
@@ -67,4 +67,5 @@ class DonorRewardService(RewardService):
                     'donation_count': entry['donation_count'],
                     'level': RewardService.calculate_level(RewardService.get_user_total_points(entry['_id']))
                 })
+
         return leaderboard
