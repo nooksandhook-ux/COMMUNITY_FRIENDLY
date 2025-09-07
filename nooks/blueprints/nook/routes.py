@@ -11,8 +11,8 @@ from cryptography.fernet import Fernet
 from io import BytesIO
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, TextAreaField, SelectField, IntegerField, HiddenField, BooleanField
-from wtforms.validators import DataRequired, Optional
+from wtforms import StringField, TextAreaField, SelectField, IntegerField, HiddenField, BooleanField, FloatField
+from wtforms.validators import DataRequired, Optional, NumberRange
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -24,6 +24,10 @@ nook_bp = Blueprint('nook', __name__, template_folder='templates')
 ENCRYPTION_KEY = os.environ.get('UPLOAD_ENCRYPTION_KEY', Fernet.generate_key())
 fernet = Fernet(ENCRYPTION_KEY)
 
+# Configure CSRF token lifetime (2 hours)
+nook_bp.config = {'WTF_CSRF_TIME_LIMIT': 7200}
+
+# Form Definitions
 class AddBookForm(FlaskForm):
     pdf_file = FileField('Upload Book (PDF only, max 10MB)', validators=[FileAllowed(['pdf'], 'Only PDF files are allowed.'), Optional()])
     terms_agreement = BooleanField('I confirm I have the legal right to upload this PDF and agree to the Terms of Service.', validators=[DataRequired()])
@@ -38,6 +42,36 @@ class AddBookForm(FlaskForm):
     genre = StringField('Genre', validators=[Optional()])
     isbn = StringField('ISBN', validators=[Optional()])
     published_date = StringField('Published Date', validators=[Optional()])
+
+class EditBookForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    authors = StringField('Authors', validators=[DataRequired()])
+    page_count = IntegerField('Page Count', validators=[Optional()])
+    description = TextAreaField('Description', validators=[Optional()])
+    status = SelectField('Status', choices=[('to_read', 'To Read'), ('reading', 'Currently Reading'), ('finished', 'Finished')], validators=[DataRequired()])
+    pdf_file = FileField('Replace PDF (optional, max 10MB)', validators=[FileAllowed(['pdf'], 'Only PDF files are allowed.'), Optional()])
+    terms_agreement = BooleanField('I confirm I have the legal right to upload this PDF and agree to the Terms of Service.', validators=[Optional()])
+
+class DeleteBookForm(FlaskForm):
+    submit = HiddenField('Submit', default='delete', validators=[DataRequired()])
+
+class UpdateProgressForm(FlaskForm):
+    current_page = IntegerField('Current Page', validators=[DataRequired(), NumberRange(min=0)])
+    session_notes = TextAreaField('Session Notes', validators=[Optional()])
+    duration_minutes = IntegerField('Duration (Minutes)', validators=[Optional(), NumberRange(min=0)])
+
+class AddTakeawayForm(FlaskForm):
+    takeaway = TextAreaField('Key Takeaway', validators=[DataRequired()])
+    page_reference = StringField('Page Reference', validators=[Optional()])
+
+class AddQuoteForm(FlaskForm):
+    quote = TextAreaField('Quote', validators=[DataRequired()])
+    page = StringField('Page', validators=[Optional()])
+    context = TextAreaField('Context', validators=[Optional()])
+
+class RateBookForm(FlaskForm):
+    rating = IntegerField('Rating', validators=[DataRequired(), NumberRange(min=0, max=5)])
+    review = TextAreaField('Review', validators=[Optional()])
 
 @nook_bp.route('/')
 @login_required
@@ -211,40 +245,31 @@ def add_book():
 @nook_bp.route('/edit_book/<book_id>', methods=['GET', 'POST'])
 @login_required
 def edit_book(book_id):
+    form = EditBookForm()
     try:
         user_id = ObjectId(current_user.id)
         book = current_app.mongo.db.books.find_one({'_id': ObjectId(book_id), 'user_id': user_id})
         if not book:
             flash('Book not found.', 'danger')
             return redirect(url_for('nook.my_uploads'))
-        if request.method == 'POST':
-            # Check user agreement for new uploads
-            if 'pdf_file' in request.files and request.files['pdf_file'].filename != '' and not request.form.get('agree_terms'):
+        
+        if form.validate_on_submit():
+            # Check terms agreement for new PDF uploads
+            if form.pdf_file.data and not form.terms_agreement.data:
                 flash('You must agree to the terms before uploading.', 'danger')
                 return redirect(request.url)
             
-            # Form fields: use .get() and provide defaults
-            title = request.form.get('title', '')
-            authors = [a.strip() for a in request.form.get('authors', '').split(',')]
-            page_count = int(request.form.get('page_count', 0))
-            description = request.form.get('description', '')
-            status = request.form.get('status', 'to_read')
+            # Form fields
             update = {
-                'title': title,
-                'authors': authors,
-                'page_count': page_count,
-                'description': description,
-                'status': status
+                'title': form.title.data,
+                'authors': [a.strip() for a in form.authors.data.split(',')],
+                'page_count': form.page_count.data or 0,
+                'description': form.description.data,
+                'status': form.status.data
             }
-            pdf_file = request.files.get('pdf_file')
-            if pdf_file and pdf_file.filename != '':
-                if not pdf_file.filename.lower().endswith('.pdf'):
-                    flash('Only PDF files are allowed.', 'danger')
-                    return redirect(request.url)
-                if pdf_file.mimetype != 'application/pdf':
-                    flash('Invalid file type.', 'danger')
-                    return redirect(request.url)
-                pdf_file.seek(0, 2)
+            pdf_file = form.pdf_file.data
+            if pdf_file:
+                pdf_file.seek(0, os.SEEK_END)
                 file_size = pdf_file.tell()
                 pdf_file.seek(0)
                 if file_size > 10 * 1024 * 1024:
@@ -263,13 +288,21 @@ def edit_book(book_id):
                 current_app.activity_logger.log_activity(
                     user_id=user_id,
                     action='pdf_upload',
-                    description=f'Uploaded new PDF for book: {title}',
+                    description=f'Uploaded new PDF for book: {form.title.data}',
                     metadata={'book_id': book_id, 'filename': pdf_filename}
                 )
             current_app.mongo.db.books.update_one({'_id': ObjectId(book_id)}, {'$set': update})
             flash('Book updated successfully!', 'success')
             return redirect(url_for('nook.my_uploads'))
-        return render_template('nook/edit_book.html', book=book)
+        
+        # Pre-populate form with existing book data
+        form.title.data = book.get('title', '')
+        form.authors.data = ', '.join(book.get('authors', []))
+        form.page_count.data = book.get('page_count', 0)
+        form.description.data = book.get('description', '')
+        form.status.data = book.get('status', 'to_read')
+        
+        return render_template('nook/edit_book.html', form=form, book=book)
     except Exception as e:
         logger.error(f"Error editing book {book_id}: {str(e)}", exc_info=True)
         flash(f"An error occurred: {str(e)}", "danger")
@@ -278,6 +311,7 @@ def edit_book(book_id):
 @nook_bp.route('/delete_book/<book_id>', methods=['POST'])
 @login_required
 def delete_book(book_id):
+    form = DeleteBookForm()
     try:
         user_id = ObjectId(current_user.id)
         book = current_app.mongo.db.books.find_one({'_id': ObjectId(book_id), 'user_id': user_id})
@@ -285,40 +319,46 @@ def delete_book(book_id):
             flash('Book not found.', 'danger')
             return redirect(url_for('nook.my_uploads'))
 
-        # Delete associated PDF file if it exists
-        if book.get('pdf_path'):
-            pdf_path_full = os.path.join(current_app.root_path, 'static', book['pdf_path'])
-            if os.path.exists(pdf_path_full):
-                try:
-                    os.remove(pdf_path_full)
-                    logger.info(f"Deleted PDF file: {pdf_path_full}")
-                except OSError as e:
-                    logger.error(f"Error deleting PDF file {pdf_path_full}: {str(e)}")
+        if form.validate_on_submit():
+            # Delete associated PDF file if it exists
+            if book.get('pdf_path'):
+                pdf_path_full = os.path.join(current_app.root_path, 'static', book['pdf_path'])
+                if os.path.exists(pdf_path_full):
+                    try:
+                        os.remove(pdf_path_full)
+                        logger.info(f"Deleted PDF file: {pdf_path_full}")
+                    except OSError as e:
+                        logger.error(f"Error deleting PDF file {pdf_path_full}: {str(e)}")
 
-        # Delete the book from the database
-        current_app.mongo.db.books.delete_one({'_id': ObjectId(book_id), 'user_id': user_id})
-        logger.info(f"Book {book_id} deleted by user {user_id}")
+            # Delete the book from the database
+            current_app.mongo.db.books.delete_one({'_id': ObjectId(book_id), 'user_id': user_id})
+            logger.info(f"Book {book_id} deleted by user {user_id}")
 
-        # Log deletion
-        current_app.activity_logger.log_activity(
-            user_id=user_id,
-            action='book_deletion',
-            description=f'Deleted book: {book["title"]}',
-            metadata={'book_id': book_id}
-        )
+            # Log deletion
+            current_app.activity_logger.log_activity(
+                user_id=user_id,
+                action='book_deletion',
+                description=f'Deleted book: {book["title"]}',
+                metadata={'book_id': book_id}
+            )
 
-        # Handle reward points
-        RewardService.award_points(
-            user_id=user_id,
-            points=-5,
-            source='nook',
-            description=f'Deleted book: {book["title"]}',
-            category='book_management',
-            reference_id=str(book_id)
-        )
+            # Handle reward points
+            RewardService.award_points(
+                user_id=user_id,
+                points=-5,
+                source='nook',
+                description=f'Deleted book: {book["title"]}',
+                category='book_management',
+                reference_id=str(book_id)
+            )
 
-        flash('Book deleted successfully!', 'success')
-        return redirect(url_for('nook.my_uploads'))
+            flash('Book deleted successfully!', 'success')
+            return redirect(url_for('nook.my_uploads'))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"Error: {error}", "danger")
+            return redirect(url_for('nook.my_uploads'))
     except Exception as e:
         logger.error(f"Error deleting book {book_id}: {str(e)}", exc_info=True)
         flash(f"An error occurred: {str(e)}", "danger")
@@ -391,7 +431,22 @@ def search_books_route():
     query = request.args.get('q', '')
     if query:
         books = search_books(query)
-        return jsonify(books)
+        # Sanitize book data to prevent XSS
+        sanitized_books = []
+        for book in books:
+            sanitized_book = {
+                'id': book.get('id', ''),
+                'title': book.get('title', '').replace('<', '&lt;').replace('>', '&gt;'),
+                'authors': [author.replace('<', '&lt;').replace('>', '&gt;') for author in book.get('authors', [])],
+                'description': book.get('description', '').replace('<', '&lt;').replace('>', '&gt;'),
+                'cover_image': book.get('cover_image', ''),
+                'page_count': book.get('page_count', 0),
+                'genre': book.get('genre', '').replace('<', '&lt;').replace('>', '&gt;'),
+                'isbn': book.get('isbn', ''),
+                'published_date': book.get('published_date', '')
+            }
+            sanitized_books.append(sanitized_book)
+        return jsonify(sanitized_books)
     return jsonify([])
 
 @nook_bp.route('/book/<book_id>')
@@ -423,17 +478,23 @@ def book_detail(book_id):
 @nook_bp.route('/update_progress/<book_id>', methods=['POST'])
 @login_required
 def update_progress(book_id):
+    form = UpdateProgressForm()
     try:
         user_id = ObjectId(current_user.id)
-        current_page = int(request.form.get('current_page', 0))
-        session_notes = request.form.get('session_notes', '')
-        
         book = current_app.mongo.db.books.find_one({
             '_id': ObjectId(book_id),
             'user_id': user_id
         })
         
-        if book:
+        if not book:
+            flash('Book not found.', 'danger')
+            return redirect(url_for('nook.book_detail', book_id=book_id))
+        
+        if form.validate_on_submit():
+            current_page = form.current_page.data
+            session_notes = form.session_notes.data
+            duration_minutes = form.duration_minutes.data or 0
+            
             old_page = book.get('current_page', 0)
             pages_read = max(0, current_page - old_page)
             
@@ -452,7 +513,7 @@ def update_progress(book_id):
                 'end_page': current_page,
                 'date': datetime.utcnow(),
                 'notes': session_notes,
-                'duration_minutes': int(request.form.get('duration_minutes', 0))
+                'duration_minutes': duration_minutes
             }
             current_app.mongo.db.reading_sessions.insert_one(session_data)
             
@@ -499,8 +560,12 @@ def update_progress(book_id):
                 flash('Congratulations! You finished the book! 🎉', 'success')
             
             flash('Progress updated!', 'success')
-        
-        return redirect(url_for('nook.book_detail', book_id=book_id))
+            return redirect(url_for('nook.book_detail', book_id=book_id))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"Error in {field}: {error}", "danger")
+            return redirect(url_for('nook.book_detail', book_id=book_id))
     except Exception as e:
         logger.error(f"Error updating progress for book {book_id}: {str(e)}", exc_info=True)
         flash(f"An error occurred: {str(e)}", "danger")
@@ -509,35 +574,39 @@ def update_progress(book_id):
 @nook_bp.route('/add_takeaway/<book_id>', methods=['POST'])
 @login_required
 def add_takeaway(book_id):
+    form = AddTakeawayForm()
     try:
         user_id = ObjectId(current_user.id)
-        takeaway = request.form.get('takeaway', '')
-        page_reference = request.form.get('page_reference', '')
-        
-        takeaway_data = {
-            'text': takeaway,
-            'page_reference': page_reference,
-            'date': datetime.utcnow(),
-            'id': str(ObjectId())
-        }
-        
-        current_app.mongo.db.books.update_one(
-            {'_id': ObjectId(book_id), 'user_id': user_id},
-            {'$push': {'key_takeaways': takeaway_data}}
-        )
-        
-        # Award points for adding takeaway
-        RewardService.award_points(
-            user_id=user_id,
-            points=3,
-            source='nook',
-            description='Added key takeaway',
-            category='content_creation',
-            reference_id=str(book_id)
-        )
-        
-        flash('Key takeaway added!', 'success')
-        return redirect(url_for('nook.book_detail', book_id=book_id))
+        if form.validate_on_submit():
+            takeaway_data = {
+                'text': form.takeaway.data,
+                'page_reference': form.page_reference.data,
+                'date': datetime.utcnow(),
+                'id': str(ObjectId())
+            }
+            
+            current_app.mongo.db.books.update_one(
+                {'_id': ObjectId(book_id), 'user_id': user_id},
+                {'$push': {'key_takeaways': takeaway_data}}
+            )
+            
+            # Award points for adding takeaway
+            RewardService.award_points(
+                user_id=user_id,
+                points=3,
+                source='nook',
+                description='Added key takeaway',
+                category='content_creation',
+                reference_id=str(book_id)
+            )
+            
+            flash('Key takeaway added!', 'success')
+            return redirect(url_for('nook.book_detail', book_id=book_id))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"Error in {field}: {error}", "danger")
+            return redirect(url_for('nook.book_detail', book_id=book_id))
     except Exception as e:
         logger.error(f"Error adding takeaway for book {book_id}: {str(e)}", exc_info=True)
         flash(f"An error occurred: {str(e)}", "danger")
@@ -546,45 +615,48 @@ def add_takeaway(book_id):
 @nook_bp.route('/add_quote/<book_id>', methods=['POST'])
 @login_required
 def add_quote(book_id):
+    form = AddQuoteForm()
     try:
         user_id = ObjectId(current_user.id)
-        quote = request.form.get('quote', '')
-        page = request.form.get('page', '')
-        context = request.form.get('context', '')
-        
-        quote_data = {
-            'text': quote,
-            'page': page,
-            'context': context,
-            'date': datetime.utcnow(),
-            'id': str(ObjectId())
-        }
-        
-        current_app.mongo.db.books.update_one(
-            {'_id': ObjectId(book_id), 'user_id': user_id},
-            {'$push': {'quotes': quote_data}}
-        )
-        
-        # Log quote submission
-        current_app.activity_logger.log_activity(
-            user_id=user_id,
-            action='quote_submission',
-            description=f'Submitted quote for book: {book_id}',
-            metadata={'book_id': book_id, 'quote': quote}
-        )
-        
-        # Award points for adding quote
-        RewardService.award_points(
-            user_id=user_id,
-            points=2,
-            source='nook',
-            description='Added quote',
-            category='content_creation',
-            reference_id=str(book_id)
-        )
-        
-        flash('Quote added!', 'success')
-        return redirect(url_for('nook.book_detail', book_id=book_id))
+        if form.validate_on_submit():
+            quote_data = {
+                'text': form.quote.data,
+                'page': form.page.data,
+                'context': form.context.data,
+                'date': datetime.utcnow(),
+                'id': str(ObjectId())
+            }
+            
+            current_app.mongo.db.books.update_one(
+                {'_id': ObjectId(book_id), 'user_id': user_id},
+                {'$push': {'quotes': quote_data}}
+            )
+            
+            # Log quote submission
+            current_app.activity_logger.log_activity(
+                user_id=user_id,
+                action='quote_submission',
+                description=f'Submitted quote for book: {book_id}',
+                metadata={'book_id': book_id, 'quote': form.quote.data}
+            )
+            
+            # Award points for adding quote
+            RewardService.award_points(
+                user_id=user_id,
+                points=2,
+                source='nook',
+                description='Added quote',
+                category='content_creation',
+                reference_id=str(book_id)
+            )
+            
+            flash('Quote added!', 'success')
+            return redirect(url_for('nook.book_detail', book_id=book_id))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"Error in {field}: {error}", "danger")
+            return redirect(url_for('nook.book_detail', book_id=book_id))
     except Exception as e:
         logger.error(f"Error adding quote for book {book_id}: {str(e)}", exc_info=True)
         flash(f"An error occurred: {str(e)}", "danger")
@@ -593,32 +665,36 @@ def add_quote(book_id):
 @nook_bp.route('/rate_book/<book_id>', methods=['POST'])
 @login_required
 def rate_book(book_id):
+    form = RateBookForm()
     try:
         user_id = ObjectId(current_user.id)
-        rating = int(request.form.get('rating', 0))
-        review = request.form.get('review', '')
-        
-        current_app.mongo.db.books.update_one(
-            {'_id': ObjectId(book_id), 'user_id': user_id},
-            {'$set': {
-                'rating': rating,
-                'review': review,
-                'rated_at': datetime.utcnow()
-            }}
-        )
-        
-        # Award points for rating
-        RewardService.award_points(
-            user_id=user_id,
-            points=5,
-            source='nook',
-            description='Rated a book',
-            category='engagement',
-            reference_id=str(book_id)
-        )
-        
-        flash('Book rated successfully!', 'success')
-        return redirect(url_for('nook.book_detail', book_id=book_id))
+        if form.validate_on_submit():
+            current_app.mongo.db.books.update_one(
+                {'_id': ObjectId(book_id), 'user_id': user_id},
+                {'$set': {
+                    'rating': form.rating.data,
+                    'review': form.review.data,
+                    'rated_at': datetime.utcnow()
+                }}
+            )
+            
+            # Award points for rating
+            RewardService.award_points(
+                user_id=user_id,
+                points=5,
+                source='nook',
+                description='Rated a book',
+                category='engagement',
+                reference_id=str(book_id)
+            )
+            
+            flash('Book rated successfully!', 'success')
+            return redirect(url_for('nook.book_detail', book_id=book_id))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"Error in {field}: {error}", "danger")
+            return redirect(url_for('nook.book_detail', book_id=book_id))
     except Exception as e:
         logger.error(f"Error rating book {book_id}: {str(e)}", exc_info=True)
         flash(f"An error occurred: {str(e)}", "danger")
