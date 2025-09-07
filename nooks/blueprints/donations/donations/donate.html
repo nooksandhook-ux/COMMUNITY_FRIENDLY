@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Donate - Nooks{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5">
+                <h2 class="card-title text-center fw-bold text-primary mb-4">Support Nooks</h2>
+                <p class="text-center text-muted mb-4">
+                    Your donation helps keep Nooks free and accessible for readers worldwide. Choose a sponsorship tier and make a difference!
+                </p>
+                <form method="POST" action="{{ url_for('donations.donate') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        <label for="tier" class="form-label fw-bold">Sponsorship Tier</label>
+                        {{ form.tier(class="form-select", id="tier") }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label fw-bold">Donation Amount (NGN)</label>
+                        {{ form.amount(class="form-control", id="amount", placeholder="Enter amount") }}
+                    </div>
+                    <div class="text-center">
+                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                    </div>
+                </form>
+                <div class="mt-4">
+                    <h5 class="fw-bold">Why Donate?</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Support free access to reading and productivity tools</li>
+                        <li class="list-group-item">Earn exclusive donor badges and rewards</li>
+                        <li class="list-group-item">Contribute to our mission of promoting literacy</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
