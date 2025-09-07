@@ -78,6 +78,11 @@
                             <i class="bi bi-people"></i> Nooks Club
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('donations.index') }}">
+                            <i class="bi bi-heart-fill"></i> Donate
+                        </a>
+                    </li>
                     {% endif %}
                 </ul>
                 
@@ -91,6 +96,8 @@
                             <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('auth.settings') }}">Settings</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('themes.index') }}">Themes</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('donations.history') }}">Donation History</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('donations.submit_testimonial') }}">Submit Testimonial</a></li>
                             {% if current_user.is_admin %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('admin.index') }}">
@@ -151,6 +158,12 @@
                 </li>
                 <li class="list-inline-item">
                     <a href="{{ url_for('general.fair_use') }}" class="text-muted text-decoration-none">Fair Use</a>
+                </li>
+                <li class="list-inline-item">
+                    <a href="{{ url_for('donations.index') }}" class="text-muted text-decoration-none">Donate</a>
+                </li>
+                <li class="list-inline-item">
+                    <a href="{{ url_for('donations.testimonials') }}" class="text-muted text-decoration-none">Testimonials</a>
                 </li>
             </ul>
             <p class="mb-0">&copy; 2025 Nooks. Track your reading and productivity.</p>
