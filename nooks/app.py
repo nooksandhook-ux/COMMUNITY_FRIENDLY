@@ -28,7 +28,7 @@ from blueprints.api.routes import api_bp
 from blueprints.quotes.routes import quotes_bp
 from blueprints.nooks_club.routes import nooks_club_bp
 from blueprints.mini_modules.routes import mini_modules_bp
-from blueprints.analytics.routes import analytics_bp
+from blueprints.analytics import analytics_bp, configure_cache  # Import configure_cache
 from blueprints.donations.routes import donations_bp
 
 # Import breadcrumb helper
@@ -62,8 +62,8 @@ def create_app():
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
     
-    # Initialize Flask-Caching
-    cache = Cache(app)
+    # Initialize Flask-Caching for analytics blueprint
+    configure_cache(app)  # Call configure_cache from analytics blueprint
     
     # Register breadcrumb helper
     register_breadcrumbs(app)
