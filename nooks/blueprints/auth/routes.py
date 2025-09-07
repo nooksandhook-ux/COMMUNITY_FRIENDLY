@@ -17,7 +17,7 @@ auth_bp = Blueprint('auth', __name__, template_folder='templates')
 
 # Flask-WTF Form for Login
 class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
+    identifier = StringField('Email or Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Sign In')
 
@@ -66,11 +66,11 @@ def login():
     form = LoginForm()
     if request.method == 'POST':
         if form.validate_on_submit():
-            email = form.email.data
+            identifier = form.identifier.data
             password = form.password.data
 
-            logger.info(f"Login attempt for email: {email}")
-            user = UserModel.authenticate_user(email, password)
+            logger.info(f"Login attempt for identifier: {identifier}")
+            user = UserModel.authenticate_user(identifier, password)
 
             if user:
                 login_user(User(user))  # Set Flask-Login session
@@ -85,15 +85,15 @@ def login():
             else:
                 user_exists = current_app.mongo.db.users.find_one({
                     '$or': [
-                        {'email': {'$regex': f'^{email}$', '$options': 'i'}},
-                        {'username': {'$regex': f'^{email}$', '$options': 'i'}}
+                        {'email': {'$regex': f'^{identifier}$', '$options': 'i'}},
+                        {'username': {'$regex': f'^{identifier}$', '$options': 'i'}}
                     ]
                 })
                 if not user_exists:
-                    logger.warning(f"Login failed for email: {email} - User not found")
+                    logger.warning(f"Login failed for identifier: {identifier} - User not found")
                     flash('Email or username not registered', 'error')
                 else:
-                    logger.warning(f"Login failed for email: {email} - Incorrect password")
+                    logger.warning(f"Login failed for identifier: {identifier} - Incorrect password")
                     flash('Incorrect password', 'error')
         else:
             logger.warning(f"Login form validation failed: {form.errors}")
