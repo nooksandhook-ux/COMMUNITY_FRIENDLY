@@ -41,7 +41,6 @@ footer {
     flex-direction: column;
     justify-content: space-between;
     color: #222;
-    text-shadow: 0.5px 0.5px 1px rgba(0,0,0,0.15);
     transition: transform 0.2s ease-in-out;
     min-height: auto;
     padding: 1.5rem; 
@@ -439,15 +438,6 @@ footer {
 nav[aria-label="breadcrumb"] {
     display: none;
 }
-
-.admin-actions {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
 .card:hover .admin-actions,
 .p-2:hover .admin-actions {
   opacity: 1;
@@ -464,10 +454,7 @@ nav[aria-label="breadcrumb"] {
   cursor: pointer;
   color: #888;
 }
-.admin-menu {
-  display: none;
-  /*...rest of styles... */
-}.admin-menu.show {
+.admin-menu.show {
   display: block;
 }
 .admin-menu-btn {
@@ -477,12 +464,11 @@ nav[aria-label="breadcrumb"] {
 }
 
 .admin-menu {
-  display: none;
   position: absolute;
   top: 100%;
   left: 0;
-  background: #fff;
-  border: 1px solid #ccc;
+  background: #121212;
+  border: 1px solid #121212;
   border-radius: 4px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   z-index: 1000;
@@ -491,14 +477,17 @@ nav[aria-label="breadcrumb"] {
 .admin-actions:hover .admin-menu {
   display: block;
 }
-
+.admin-actions {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
 .admin-menu button {
   display: block;
   width: 100%;
-  text-align: left;
   padding: 5px 10px;
-  border: none;
-  background: none;
 }
 
 .admin-menu button:hover {
