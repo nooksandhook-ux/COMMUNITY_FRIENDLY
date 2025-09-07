@@ -50,13 +50,18 @@ function loadPosts() {
       if (data.posts) {
         data.posts.forEach(post => {
           const card = document.createElement('div');
-          card.className = 'card mb-2';
+          card.className = 'card mb-2 position-relative';
           card.innerHTML = `
             <div class="card-body">
               <p class="card-text">${post.content}</p>
               <p class="card-text"><small class="text-muted">Posted by: ${post.username}</small></p>
               {% if is_admin %}
-              <button class="btn btn-danger btn-sm" onclick="deletePost('${post._id}')">Delete</button>
+              <div class="admin-actions">
+                <button class="btn btn-sm btn-outline-secondary admin-menu-btn">...</button>
+                <div class="admin-menu">
+                  <button class="btn btn-danger btn-sm" onclick="deletePost('${post._id}')">Delete</button>
+                </div>
+              </div>
               {% endif %}
             </div>
           `;
@@ -95,11 +100,16 @@ function loadAdmins() {
         data.admin_usernames.forEach((username, index) => {
           const adminId = data.admins[index];
           const card = document.createElement('div');
-          card.className = 'card mb-2';
+          card.className = 'card mb-2 position-relative';
           card.innerHTML = `
             <div class="card-body">
               <p class="card-text">Admin: ${username}</p>
-              <button class="btn btn-danger btn-sm" onclick="removeAdmin('${adminId}')">Remove Admin</button>
+              <div class="admin-actions">
+                <button class="btn btn-sm btn-outline-secondary admin-menu-btn">...</button>
+                <div class="admin-menu">
+                  <button class="btn btn-danger btn-sm" onclick="removeAdmin('${adminId}')">Remove Admin</button>
+                </div>
+              </div>
             </div>
           `;
           adminList.appendChild(card);
