@@ -8,6 +8,7 @@ from datetime import datetime
 import logging
 from integrations.payment import OpayPayment
 from blueprints.rewards.donor_services import DonorRewardService
+from . import donations_bp  # Import the Blueprint from __init__.py
 
 logger = logging.getLogger(__name__)
 
