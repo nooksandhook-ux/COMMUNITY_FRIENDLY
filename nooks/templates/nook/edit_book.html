@@ -1,53 +1,125 @@
 {% extends "base.html" %}
-{% block title %}Edit Book{% endblock %}
+{% block title %}Edit Book - Nook{% endblock %}
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4 text-warning"><i class="bi bi-pencil-square me-2"></i>Edit Book</h1>
     <form method="POST" enctype="multipart/form-data">
-        {{ form.csrf_token }} <!-- Added CSRF token -->
+        <!-- CSRF token included for security -->
+        {{ form.hidden_tag() }}
         <div class="mb-3">
-            <label for="title" class="form-label">Title *</label>
-            <input type="text" class="form-control" id="title" name="title" value="{{ book.title }}" required>
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control", required=True) }}
+            {% if form.title.errors %}
+                <ul class="text-danger">
+                    {% for error in form.title.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
         <div class="mb-3">
-            <label for="authors" class="form-label">Authors *</label>
-            <input type="text" class="form-control" id="authors" name="authors" value="{{ book.authors | join(', ') }}" required>
+            {{ form.authors.label(class="form-label") }}
+            {{ form.authors(class="form-control", required=True) }}
+            {% if form.authors.errors %}
+                <ul class="text-danger">
+                    {% for error in form.authors.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
         <div class="mb-3">
-            <label for="page_count" class="form-label">Page Count</label>
-            <input type="number" class="form-control" id="page_count" name="page_count" value="{{ book.page_count }}" min="1">
+            {{ form.page_count.label(class="form-label") }}
+            {{ form.page_count(class="form-control", min="1") }}
+            {% if form.page_count.errors %}
+                <ul class="text-danger">
+                    {% for error in form.page_count.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
         <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea class="form-control" id="description" name="description" rows="3">{{ book.description }}</textarea>
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control", rows="3") }}
+            {% if form.description.errors %}
+                <ul class="text-danger">
+                    {% for error in form.description.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
         <div class="mb-3">
-            <label for="status" class="form-label">Status</label>
-            <select class="form-select" id="status" name="status">
-                <option value="to_read" {% if book.status == 'to_read' %}selected{% endif %}>To Read</option>
-                <option value="reading" {% if book.status == 'reading' %}selected{% endif %}>Currently Reading</option>
-                <option value="finished" {% if book.status == 'finished' %}selected{% endif %}>Finished</option>
-            </select>
+            {{ form.status.label(class="form-label") }}
+            {{ form.status(class="form-select") }}
+            {% if form.status.errors %}
+                <ul class="text-danger">
+                    {% for error in form.status.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
         <div class="mb-3">
-            <label for="pdf_file" class="form-label">Replace PDF (optional, max 10MB)</label>
-            <input type="file" class="form-control" id="pdf_file" name="pdf_file" accept="application/pdf">
-            <input type="hidden" id="is_encrypted" name="is_encrypted" value="true"> <!-- Indicate encryption -->
+            {{ form.pdf_file.label(class="form-label") }}
+            {{ form.pdf_file(class="form-control", accept="application/pdf", id="pdf_file") }}
+            {% if form.pdf_file.errors %}
+                <ul class="text-danger">
+                    {% for error in form.pdf_file.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
             {% if book.pdf_path %}
             <div class="form-text">
-                Current PDF: {{ 'Encrypted' if book.is_encrypted else 'Unencrypted' }} | 
-                <a href="{{ url_for('nook.read_book', book_id=book._id) }}">Read</a>
+                Current PDF: Encrypted | 
+                <a href="{{ url_for('nook.serve_pdf', book_id=book._id) }}">Read</a>
             </div>
             {% endif %}
         </div>
         <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="terms_agreement" name="terms_agreement" required>
-            <label class="form-check-label" for="terms_agreement">
-                I confirm I have the legal right to upload this PDF and agree to the <a href="{{ url_for('general.terms') }}" target="_blank">Terms of Service</a>.
-            </label>
+            {{ form.terms_agreement(class="form-check-input", id="terms_agreement") }}
+            {{ form.terms_agreement.label(class="form-check-label") }}
+            {% if form.terms_agreement.errors %}
+                <ul class="text-danger">
+                    {% for error in form.terms_agreement.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
         <button type="submit" class="btn btn-warning"><i class="bi bi-save me-2"></i>Save Changes</button>
         <a href="{{ url_for('nook.my_uploads') }}" class="btn btn-secondary ms-2">Cancel</a>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Client-side validation for PDF uploads
+document.getElementById('pdf_file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const termsCheckbox = document.getElementById('terms_agreement');
+    if (file) {
+        if (!file.name.toLowerCase().endswith('.pdf')) {
+            alert('Only PDF files are allowed.');
+            e.target.value = '';
+            termsCheckbox.checked = false;
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size exceeds 10MB limit.');
+            e.target.value = '';
+            termsCheckbox.checked = false;
+            return;
+        }
+        // Enable terms checkbox only if a valid file is selected
+        termsCheckbox.disabled = false;
+    } else {
+        termsCheckbox.checked = false;
+        termsCheckbox.disabled = true;
+    }
+});
+</script>
 {% endblock %}
