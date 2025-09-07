@@ -71,7 +71,8 @@ def view_club(club_id):
         is_admin = is_club_admin(club, current_user.id)
         is_member = str(current_user.id) in [str(m) for m in club.get('members', [])]
         creator_username = UserModel.get_username_by_id(club['creator_id']) or club['creator_id']
-        return render_template('nooks_club/club_detail.html', club=club, club_id=club_id, is_admin=is_admin, is_member=is_member, creator_username=creator_username, csrf_token=generate_csrf())
+        club_name = club.get('name', 'Unknown Club')
+        return render_template('nooks_club/club_detail.html', club=club, club_id=club_id, club_name=club_name, is_admin=is_admin, is_member=is_member, creator_username=creator_username, csrf_token=generate_csrf())
     except Exception as e:
         logger.error(f"Error accessing club {club_id} for user {current_user.id}: {str(e)}", exc_info=True)
         flash(f"An error occurred: {str(e)}", "danger")
@@ -82,8 +83,12 @@ def view_club(club_id):
 def join_club(club_id):
     try:
         logger.info(f"User {current_user.id} attempting to join club {club_id}")
+        club = ClubModel.get_club(club_id)
+        if not club:
+            flash("Club not found.", "danger")
+            return redirect(url_for('nooks_club.index'))
         ClubModel.add_member(club_id, str(current_user.id))
-        flash('Joined club successfully!', 'success')
+        flash(f"Joined {club.get('name', 'club')} successfully!", 'success')
         return redirect(url_for('nooks_club.view_club', club_id=club_id))
     except Exception as e:
         logger.error(f"Error joining club {club_id} for user {current_user.id}: {str(e)}", exc_info=True)
@@ -101,7 +106,7 @@ def create_club():
             topic = request.form.get('topic', '')
             logger.info(f"User {current_user.id} creating club: {name}")
             ClubModel.create_club(name, description, topic, str(current_user.id))
-            flash('Club created successfully!', 'success')
+            flash(f"Club '{name}' created successfully!", 'success')
             return redirect(url_for('nooks_club.created_clubs'))
         return render_template('nooks_club/create_club.html', form=form, csrf_token=generate_csrf())
     except Exception as e:
@@ -114,6 +119,10 @@ def create_club():
 def create_post(club_id):
     try:
         logger.info(f"User {current_user.id} creating post in club {club_id}")
+        club = ClubModel.get_club(club_id)
+        if not club:
+            flash("Club not found.", "danger")
+            return redirect(url_for('nooks_club.index'))
         content = request.form.get('post')
         ClubPostModel.create_post(club_id, str(current_user.id), content)
         flash('Post created successfully!', 'success')
@@ -133,7 +142,8 @@ def club_chat(club_id):
             flash("Club not found.", "danger")
             return redirect(url_for('nooks_club.index'))
         is_admin = is_club_admin(club, current_user.id)
-        return render_template('nooks_club/chat.html', club_id=club_id, is_admin=is_admin, csrf_token=generate_csrf())
+        club_name = club.get('name', 'Unknown Club')
+        return render_template('nooks_club/chat.html', club_id=club_id, club_name=club_name, is_admin=is_admin, csrf_token=generate_csrf())
     except Exception as e:
         logger.error(f"Error accessing chat for club {club_id} for user {current_user.id}: {str(e)}", exc_info=True)
         flash(f"An error occurred: {str(e)}", "danger")
@@ -168,7 +178,7 @@ def api_create_club():
         topic = data.get('topic', '')
         logger.info(f"User {current_user.id} creating club via API: {name}")
         result = ClubModel.create_club(name, description, topic, str(current_user.id))
-        return jsonify({'club_id': str(result.inserted_id)}), 201
+        return jsonify({'club_id': str(result.inserted_id), 'club_name': name}), 201
     except Exception as e:
         logger.error(f"Error creating club via API for user {current_user.id}: {str(e)}", exc_info=True)
         return jsonify({'error': 'An error occurred'}), 500
@@ -198,8 +208,11 @@ def api_get_club(club_id):
 def api_join_club(club_id):
     try:
         logger.info(f"User {current_user.id} joining club {club_id} via API")
+        club = ClubModel.get_club(club_id)
+        if not club:
+            return jsonify({'error': 'Club not found'}), 404
         ClubModel.add_member(club_id, str(current_user.id))
-        return jsonify({'message': 'Joined club'})
+        return jsonify({'message': f"Joined {club.get('name', 'club')}"}), 200
     except Exception as e:
         logger.error(f"Error joining club {club_id} via API for user {current_user.id}: {str(e)}", exc_info=True)
         return jsonify({'error': 'An error occurred'}), 500
@@ -319,9 +332,10 @@ def api_add_club_admin(club_id):
             return jsonify({'error': 'Only club admins can promote others'}), 403
         data = request.json
         user_id = data.get('user_id')
+        username = UserModel.get_username_by_id(user_id) or user_id
         logger.info(f"User {current_user.id} promoting user {user_id} to admin in club {club_id}")
         ClubModel.add_admin(club_id, user_id)
-        return jsonify({'message': 'User promoted to admin'})
+        return jsonify({'message': f"{username} promoted to admin"})
     except Exception as e:
         logger.error(f"Error promoting admin in club {club_id} for user {current_user.id}: {str(e)}", exc_info=True)
         return jsonify({'error': 'An error occurred'}), 500
@@ -337,9 +351,10 @@ def api_remove_club_admin(club_id, user_id):
             return jsonify({'error': 'Only club admins can demote others'}), 403
         if len(club.get('admins', [])) <= 1:
             return jsonify({'error': 'Cannot remove last admin'}), 400
+        username = UserModel.get_username_by_id(user_id) or user_id
         logger.info(f"User {current_user.id} demoting user {user_id} from admin in club {club_id}")
         current_app.mongo.db.clubs.update_one({'_id': club['_id']}, {'$pull': {'admins': user_id}})
-        return jsonify({'message': 'User demoted from admin'})
+        return jsonify({'message': f"{username} demoted from admin"})
     except Exception as e:
         logger.error(f"Error demoting admin {user_id} in club {club_id} for user {current_user.id}: {str(e)}", exc_info=True)
         return jsonify({'error': 'An error occurred'}), 500
@@ -418,7 +433,7 @@ def api_quiz_leaderboard():
                 'score': {'$sum': {'$cond': ['$is_correct', 1, 0]}},
                 'attempts': {'$sum': 1}
             }},
-            {'$.hs': {'score': -1}},
+            {'$sort': {'score': -1}},
             {'$limit': 50}
         ]
         leaderboard_data = list(current_app.mongo.db.quiz_answers.aggregate(pipeline))
