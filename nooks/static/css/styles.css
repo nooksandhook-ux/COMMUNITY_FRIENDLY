@@ -439,3 +439,16 @@ footer {
 nav[aria-label="breadcrumb"] {
     display: none;
 }
+
+.donation-card .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+.donation-card .btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+.donation-card .btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: white;
+}
