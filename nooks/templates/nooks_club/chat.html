@@ -116,7 +116,22 @@ document.getElementById('chat-form').addEventListener('submit', (e) => {
       .catch(error => console.error('Error sending message:', error));
   }
 });
-document.addEventListener('DOMContentLoaded', loadMessages);
+document.addEventListener('DOMContentLoaded', () => {
+  loadMessages();
+  document.querySelectorAll('.admin-menu-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling; // assumes menu is right after button
+      if(menu) menu.classList.toggle('show');
+    });
+  });
+  // Close menus if clicked outside
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.admin-menu.show').forEach(menu => {
+      menu.classList.remove('show');
+    });
+  });
+});
 </script>
 {% endblock %}
 {% endblock %}
