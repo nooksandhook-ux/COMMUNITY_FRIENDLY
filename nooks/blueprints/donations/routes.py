@@ -7,7 +7,7 @@ from bson import ObjectId
 from datetime import datetime
 import logging
 from blueprints.integrations.payment import OpayPayment
-from blueprints.rewards.donor_services import DonorRewardService
+from blueprints.donations.donor_services import DonorRewardService
 from . import donations_bp  # Import the Blueprint from __init__.py
 
 logger = logging.getLogger(__name__)
@@ -147,4 +147,5 @@ def payment_callback():
 def payment_success():
     flash('Thank you for your donation! Your support helps sustain Nooks.', 'success')
     return redirect(url_for('general.home'))
+
 
