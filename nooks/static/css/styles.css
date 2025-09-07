@@ -453,6 +453,23 @@ nav[aria-label="breadcrumb"] {
   opacity: 1;
 }
 
+.password-toggle-wrapper {
+  position: relative;
+}
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #888;
+}
+.admin-menu {
+  display: none;
+  /*...rest of styles... */
+}.admin-menu.show {
+  display: block;
+}
 .admin-menu-btn {
   font-size: 16px;
   padding: 2px 8px;
