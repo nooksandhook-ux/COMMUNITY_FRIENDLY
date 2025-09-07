@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container">
-  <h2>Club Chat: {{ club_id }}</h2>
+  <h2>Club Chat: {{ club_name }}</h2>
   <nav class="mb-3">
-    <a href="{{ url_for('nooks_club.view_club', club_id=club_id) }}" class="btn btn-outline-secondary">Back to Club</a>
+    <a href="{{ url_for('nooks_club.view_club', club_id=club_id) }}" class="btn btn-outline-secondary">Back to {{ club_name }}</a>
   </nav>
   <div id="club-chat-box" data-club-id="{{ club_id }}">
     <div id="chat-box" class="card mb-2" style="height:300px;overflow-y:auto;"></div>
