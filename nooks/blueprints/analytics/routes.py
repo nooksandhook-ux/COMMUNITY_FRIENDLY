@@ -6,11 +6,9 @@ import io
 import csv
 import logging
 from flask import current_app
-from . import analytics_bp  # Import the Blueprint from __init__.py
+from . import analytics_bp, cache  # Import both analytics_bp and cache from __init__.py
 
 logger = logging.getLogger(__name__)
-
-# Cache is  initialized in __init__.py, so no need to redefine it here
 
 @analytics_bp.route('/transparency')
 @cache.cached(timeout=300)  # Cache for 5 minutes
