@@ -1,0 +1,1 @@
+# Quotes blueprint for managing book quotes and verification

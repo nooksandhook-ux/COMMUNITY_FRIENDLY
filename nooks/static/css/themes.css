@@ -1,0 +1,327 @@
+/* Theme-specific styles for Nook & Hook */
+
+/* Light Theme (Default) */
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --border-color: #dee2e6;
+    --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #adb5bd;
+    --border-color: #495057;
+    --shadow: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .card {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .navbar {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Retro Theme */
+[data-theme="retro"] {
+    --bg-primary: #FFF8DC;
+    --bg-secondary: #F5DEB3;
+    --text-primary: #2F4F4F;
+    --text-secondary: #8B4513;
+    --accent-color: #D2691E;
+    --border-color: #DEB887;
+}
+
+[data-theme="retro"] body {
+    background: linear-gradient(135deg, #FFF8DC 0%, #F5DEB3 100%);
+    color: var(--text-primary);
+    font-family: 'Georgia', serif;
+}
+
+[data-theme="retro"] .card {
+    color: var(--text-primary);
+    box-shadow: 4px 4px 8px var(--shadow);
+}
+
+[data-theme="retro"] .btn-primary {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* Neon Theme */
+[data-theme="neon"] {
+    --bg-primary: #0a0a0a;
+    --bg-secondary: #1a1a1a;
+    --text-primary: #00FFFF;
+    --text-secondary: #FF00FF;
+    --accent-color: #00FF00;
+    --border-color: #00FFFF;
+}
+
+[data-theme="neon"] body {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    color: var(--text-primary);
+}
+
+[data-theme="neon"] .card {
+    color: var(--text-primary);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+[data-theme="neon"] .btn-primary {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #000000;
+    text-shadow: 0 0 10px var(--accent-color);
+}
+
+[data-theme="neon"] h1, [data-theme="neon"] h2, [data-theme="neon"] h3 {
+    text-shadow: 0 0 10px currentColor;
+}
+
+/* Anime Theme */
+[data-theme="anime"] {
+    --bg-primary: #FFF0F5;
+    --bg-secondary: #FFE4E1;
+    --text-primary: #4B0082;
+    --text-secondary: #9370DB;
+    --accent-color: #FF69B4;
+    --border-color: #DDA0DD;
+}
+
+[data-theme="anime"] body {
+    background: linear-gradient(135deg, #FFF0F5 0%, #FFE4E1 50%, #E6E6FA 100%);
+    color: var(--text-primary);
+}
+
+[data-theme="anime"] .card {
+    color: var(--text-primary);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+}
+
+[data-theme="anime"] .btn-primary {
+    background: linear-gradient(45deg, #FF69B4, #9370DB);
+    border: none;
+    border-radius: 25px;
+}
+
+/* Forest Theme */
+[data-theme="forest"] {
+    --bg-primary: #F0FFF0;
+    --bg-secondary: #E0FFE0;
+    --text-primary: #2F4F4F;
+    --text-secondary: #228B22;
+    --accent-color: #32CD32;
+    --border-color: #8FBC8F;
+}
+
+[data-theme="forest"] body {
+    background: linear-gradient(135deg, #F0FFF0 0%, #E0FFE0 100%);
+    color: var(--text-primary);
+}
+
+[data-theme="forest"] .card {
+    color: var(--text-primary);
+    box-shadow: 0 2px 10px rgba(34, 139, 34, 0.2);
+}
+
+/* Ocean Theme */
+[data-theme="ocean"] {
+    --bg-primary: #F0F8FF;
+    --bg-secondary: #E0F6FF;
+    --text-primary: #2F4F4F;
+    --text-secondary: #4682B4;
+    --accent-color: #00BFFF;
+    --border-color: #87CEEB;
+}
+
+[data-theme="ocean"] body {
+    background: linear-gradient(135deg, #F0F8FF 0%, #E0F6FF 100%);
+    color: var(--text-primary);
+}
+
+[data-theme="ocean"] .card {
+    color: var(--text-primary);
+    box-shadow: 0 2px 10px rgba(70, 130, 180, 0.2);
+}
+
+/* Timer Theme Styles */
+.timer-theme-light {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    color: #333333;
+}
+
+.timer-theme-dark {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    color: #ffffff;
+}
+
+.timer-theme-retro {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+    color: #8B4513;
+}
+
+.timer-theme-neon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #00FFFF;
+    text-shadow: 0 0 10px currentColor;
+}
+
+.timer-theme-anime {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #4B0082;
+}
+
+.timer-theme-forest {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #2F4F4F;
+}
+
+.timer-theme-ocean {
+    background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+    color: #2F4F4F;
+}
+
+.timer-theme-space {
+    background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+    color: #ffffff;
+    text-shadow: 0 0 10px #00BFFF;
+}
+
+.timer-theme-zen {
+    background: linear-gradient(135deg, #f7f7f7 0%, #e8e8e8 100%);
+    color: #555555;
+}
+
+.timer-active {
+    animation: pulse 2s infinite;
+}
+
+/* Animation Classes */
+.theme-transition {
+    transition: all 0.3s ease-in-out;
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.glow-effect {
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); }
+    to { box-shadow: 0 0 30px rgba(0, 255, 255, 0.8); }
+}
+
+/* Responsive Theme Adjustments */
+@media (max-width: 768px) {
+    [data-theme="retro"] .card {
+        box-shadow: 2px 2px 4px var(--shadow);
+    }
+    
+    [data-theme="neon"] .card {
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+    
+    [data-theme="anime"] .card {
+        box-shadow: 0 2px 10px rgba(255, 105, 180, 0.3);
+    }
+}
+
+/* Theme Preview Cards */
+.theme-preview-card {
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+    border: 3px solid transparent;
+}
+
+.theme-preview-card:hover {
+    transform: translateY(-5px);
+}
+
+.theme-preview-card.active {
+    border-color: #0d6efd;
+    transform: translateY(-5px);
+}
+
+.theme-preview-content {
+    height: 150px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* Badge Styles */
+.badge-item {
+    transition: transform 0.2s ease-in-out;
+}
+
+.badge-item:hover {
+    transform: scale(1.05);
+}
+
+.badge-earned {
+    opacity: 1;
+}
+
+.badge-locked {
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
+/* Progress Bars with Themes */
+[data-theme="neon"] .progress-bar {
+    background: linear-gradient(90deg, #00FFFF, #FF00FF);
+    box-shadow: 0 0 10px currentColor;
+}
+
+[data-theme="anime"] .progress-bar {
+    background: linear-gradient(90deg, #FF69B4, #9370DB);
+}
+
+[data-theme="retro"] .progress-bar {
+    background: linear-gradient(90deg, #D2691E, #8B4513);
+}
+
+/* Custom Scrollbars for Dark Themes */
+[data-theme="dark"] ::-webkit-scrollbar {
+    width: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+[data-theme="neon"] ::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    box-shadow: 0 0 5px currentColor;
+}

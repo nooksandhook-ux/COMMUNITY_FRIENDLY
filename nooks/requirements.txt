@@ -1,0 +1,16 @@
+Flask==2.3.3
+Flask-PyMongo==2.3.0
+Flask-Login
+pymongo==4.5.0
+Werkzeug==2.3.7
+requests==2.31.0
+python-dotenv==1.0.0
+gunicorn==21.2.0
+dnspython==2.4.2
+Flask-WTF
+Flask-SocketIO==5.3.6
+cryptography
+email_validator
+
+
+
