@@ -440,15 +440,50 @@ nav[aria-label="breadcrumb"] {
     display: none;
 }
 
-.donation-card .btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
+.admin-actions {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
-.donation-card .btn-outline-danger {
-    color: #dc3545;
-    border-color: #dc3545;
+
+.card:hover .admin-actions,
+.p-2:hover .admin-actions {
+  opacity: 1;
 }
-.donation-card .btn-outline-danger:hover {
-    background-color: #dc3545;
-    color: white;
+
+.admin-menu-btn {
+  font-size: 16px;
+  padding: 2px 8px;
+  border-radius: 50%;
+}
+
+.admin-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 1000;
+}
+
+.admin-actions:hover .admin-menu {
+  display: block;
+}
+
+.admin-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 5px 10px;
+  border: none;
+  background: none;
+}
+
+.admin-menu button:hover {
+  background: #f8f9fa;
 }
