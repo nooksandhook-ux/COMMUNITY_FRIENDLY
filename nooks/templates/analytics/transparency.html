@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Transparency Dashboard - Nooks{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5">
+                <h2 class="card-title text-center fw-bold text-primary mb-4">Nooks Transparency Dashboard</h2>
+                {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% else %}
+                    <p class="text-center text-muted mb-4">
+                        See how your support impacts Nooks' mission to promote literacy and productivity.
+                    </p>
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Total Donations</h5>
+                                    <p class="card-text display-4">₦{{ total_donations | int }}</p>
+                                    <p class="text-muted">{{ donation_count }} contributions</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Verified Quotes</h5>
+                                    <p class="card-text display-4">{{ verified_quotes }}</p>
+                                    <p class="text-muted">Inspirational insights shared</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Active Users</h5>
+                                    <p class="card-text display-4">{{ active_users }}</p>
+                                    <p class="text-muted">Last 30 days</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Donation Breakdown by Tier</h5>
+                                    <canvas id="tierChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <a href="{{ url_for('analytics.export_report') }}" class="btn btn-primary">Download Impact Report</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('tierChart').getContext('2d');
+        const tierData = {
+            labels: ['Bronze', 'Silver', 'Gold'],
+            datasets: [{
+                label: 'Donation Amounts (NGN)',
+                data: [
+                    {{ tier_data.bronze.total | default(0) }},
+                    {{ tier_data.silver.total | default(0) }},
+                    {{ tier_data.gold.total | default(0) }}
+                ],
+                backgroundColor: ['#cd7f32', '#c0c0c0', '#ffd700'],
+                borderColor: ['#8b4513', '#808080', '#b8860b'],
+                borderWidth: 1
+            }]
+        };
+        new Chart(ctx, {
+            type: 'bar',
+            data: tierData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Amount (NGN)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
