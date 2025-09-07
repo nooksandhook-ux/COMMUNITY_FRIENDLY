@@ -69,7 +69,8 @@ class DatabaseManager:
             'user_preferences', 'notifications', 'activity_log',
             'quotes', 'transactions', 'user_purchases',
             'clubs', 'club_posts', 'club_chat_messages',
-            'flashcards', 'quiz_questions', 'quiz_answers', 'user_progress'
+            'flashcards', 'quiz_questions', 'quiz_answers', 'user_progress',
+            'donations', 'testimonials'  # Added new collections
         ]
         existing_collections = current_app.mongo.db.list_collection_names()
         
@@ -157,14 +158,14 @@ class DatabaseManager:
             current_app.mongo.db.user_purchases.create_index([("user_id", 1), ("item_id", 1)])
             current_app.mongo.db.user_purchases.create_index([("user_id", 1), ("type", 1)])
             
-            # Clubs collection indexes
-            current_app.mongo.db.clubs.create_index([("creator_id", 1)])
-            current_app.mongo.db.clubs.create_index([("members", 1)])
-            current_app.mongo.db.clubs.create_index("created_at")
+            # Donations collection indexes
+            current_app.mongo.db.donations.create_index([("user_id", 1), ("status", 1)])
+            current_app.mongo.db.donations.create_index("transaction_id", unique=True)
+            current_app.mongo.db.donations.create_index("created_at")
             
-            # Club posts and chat messages indexes
-            current_app.mongo.db.club_posts.create_index([("club_id", 1), ("created_at", -1)])
-            current_app.mongo.db.club_chat_messages.create_index([("club_id", 1), ("timestamp", -1)])
+            # Testimonials collection indexes
+            current_app.mongo.db.testimonials.create_index([("user_id", 1), ("status", 1)])
+            current_app.mongo.db.testimonials.create_index("created_at")
             
             logger.info("Database indexes created successfully")
             
@@ -492,6 +493,249 @@ class UserProgressModel:
     @staticmethod
     def get_progress(user_id, module):
         return current_app.mongo.db.user_progress.find_one({'user_id': user_id, 'module': module})
+
+class DonationModel:
+    """Donation model for managing donation records"""
+    
+    @staticmethod
+    def create_donation(user_id, amount, tier, transaction_id, status='pending'):
+        """Create a new donation record"""
+        try:
+            donation_data = {
+                'user_id': ObjectId(user_id),
+                'amount': float(amount),
+                'tier': tier,
+                'transaction_id': transaction_id,
+                'status': status,
+                'created_at': datetime.utcnow(),
+                'completed_at': None,
+                'failed_at': None
+            }
+            result = current_app.mongo.db.donations.insert_one(donation_data)
+            logger.info(f"Created donation for user {user_id}: {transaction_id}")
+            
+            ActivityLogger.log_activity(
+                user_id=user_id,
+                action='donation_created',
+                description=f'Created {tier.title()} tier donation of ₦{amount}',
+                metadata={'transaction_id': transaction_id}
+            )
+            
+            return result.inserted_id
+        except Exception as e:
+            logger.error(f"Error creating donation for user {user_id}: {str(e)}")
+            raise
+
+    @staticmethod
+    def update_donation_status(transaction_id, status, extra_fields=None):
+        """Update donation status and additional fields"""
+        try:
+            update_data = {'status': status}
+            if status == 'completed':
+                update_data['completed_at'] = datetime.utcnow()
+            elif status == 'failed':
+                update_data['failed_at'] = datetime.utcnow()
+            if extra_fields:
+                update_data.update(extra_fields)
+                
+            result = current_app.mongo.db.donations.update_one(
+                {'transaction_id': transaction_id},
+                {'$set': update_data}
+            )
+            if result.modified_count > 0:
+                logger.info(f"Updated donation status for transaction {transaction_id} to {status}")
+                
+                donation = current_app.mongo.db.donations.find_one({'transaction_id': transaction_id})
+                if donation and status == 'completed':
+                    ActivityLogger.log_activity(
+                        user_id=donation['user_id'],
+                        action='donation_completed',
+                        description=f'Completed {donation["tier"].title()} tier donation of ₦{donation["amount"]}',
+                        metadata={'transaction_id': transaction_id}
+                    )
+                return True
+            logger.warning(f"No donation found for transaction {transaction_id}")
+            return False
+        except Exception as e:
+            logger.error(f"Error updating donation {transaction_id}: {str(e)}")
+            raise
+
+    @staticmethod
+    def get_user_donations(user_id):
+        """Retrieve all donations for a user"""
+        try:
+            donations = current_app.mongo.db.donations.find({'user_id': ObjectId(user_id)}).sort('created_at', -1)
+            return list(donations)
+        except Exception as e:
+            logger.error(f"Error fetching donations for user {user_id}: {str(e)}")
+            raise
+
+    @staticmethod
+    def get_donation_by_transaction(transaction_id):
+        """Retrieve a donation by transaction ID"""
+        try:
+            donation = current_app.mongo.db.donations.find_one({'transaction_id': transaction_id})
+            return donation
+        except Exception as e:
+            logger.error(f"Error fetching donation for transaction {transaction_id}: {str(e)}")
+            raise
+
+    @staticmethod
+    def get_donation_statistics():
+        """Get donation statistics system-wide"""
+        try:
+            pipeline = [
+                {'$match': {'status': 'completed'}},
+                {'$group': {
+                    '_id': '$tier',
+                    'count': {'$sum': 1},
+                    'total_amount': {'$sum': '$amount'}
+                }}
+            ]
+            results = list(current_app.mongo.db.donations.aggregate(pipeline))
+            
+            stats = {
+                'bronze': {'count': 0, 'total_amount': 0},
+                'silver': {'count': 0, 'total_amount': 0},
+                'gold': {'count': 0, 'total_amount': 0}
+            }
+            
+            for result in results:
+                tier = result['_id']
+                if tier in stats:
+                    stats[tier] = {
+                        'count': result['count'],
+                        'total_amount': result['total_amount']
+                    }
+                    
+            total_donations = sum(item['total_amount'] for item in results)
+            total_count = sum(item['count'] for item in results)
+            
+            return {
+                'by_tier': stats,
+                'total_donations': total_donations,
+                'total_count': total_count
+            }
+        except Exception as e:
+            logger.error(f"Error getting donation statistics: {str(e)}")
+            return {}
+
+class TestimonialModel:
+    """Testimonial model for managing user testimonials"""
+    
+    @staticmethod
+    def create_testimonial(user_id, content, status='pending'):
+        """Create a new testimonial"""
+        try:
+            testimonial_data = {
+                'user_id': ObjectId(user_id),
+                'content': content.strip(),
+                'status': status,
+                'created_at': datetime.utcnow(),
+                'updated_at': datetime.utcnow(),
+                'approved_at': None,
+                'rejected_at': None,
+                'rejection_reason': None
+            }
+            result = current_app.mongo.db.testimonials.insert_one(testimonial_data)
+            logger.info(f"Created testimonial for user {user_id}")
+            
+            ActivityLogger.log_activity(
+                user_id=user_id,
+                action='testimonial_submitted',
+                description='Submitted a new testimonial',
+                metadata={'testimonial_id': str(result.inserted_id)}
+            )
+            
+            return result.inserted_id
+        except Exception as e:
+            logger.error(f"Error creating testimonial for user {user_id}: {str(e)}")
+            raise
+
+    @staticmethod
+    def update_testimonial_status(testimonial_id, status, rejection_reason=None):
+        """Update testimonial status"""
+        try:
+            update_data = {'status': status, 'updated_at': datetime.utcnow()}
+            if status == 'approved':
+                update_data['approved_at'] = datetime.utcnow()
+            elif status == 'rejected':
+                update_data['rejected_at'] = datetime.utcnow()
+                update_data['rejection_reason'] = rejection_reason or "Testimonial could not be verified"
+                
+            result = current_app.mongo.db.testimonials.update_one(
+                {'_id': ObjectId(testimonial_id)},
+                {'$set': update_data}
+            )
+            if result.modified_count > 0:
+                logger.info(f"Updated testimonial {testimonial_id} to status {status}")
+                
+                testimonial = current_app.mongo.db.testimonials.find_one({'_id': ObjectId(testimonial_id)})
+                if testimonial:
+                    ActivityLogger.log_activity(
+                        user_id=testimonial['user_id'],
+                        action=f'testimonial_{status}',
+                        description=f'Testimonial {status}: {rejection_reason or "Approved"}',
+                        metadata={'testimonial_id': str(testimonial_id)}
+                    )
+                return True
+            logger.warning(f"No testimonial found for ID {testimonial_id}")
+            return False
+        except Exception as e:
+            logger.error(f"Error updating testimonial {testimonial_id}: {str(e)}")
+            raise
+
+    @staticmethod
+    def get_approved_testimonials(limit=10):
+        """Retrieve approved testimonials"""
+        try:
+            testimonials = current_app.mongo.db.testimonials.find(
+                {'status': 'approved'}
+            ).sort('approved_at', -1).limit(limit)
+            return list(testimonials)
+        except Exception as e:
+            logger.error(f"Error fetching approved testimonials: {str(e)}")
+            raise
+
+    @staticmethod
+    def get_user_testimonials(user_id):
+        """Retrieve all testimonials for a user"""
+        try:
+            testimonials = current_app.mongo.db.testimonials.find(
+                {'user_id': ObjectId(user_id)}
+            ).sort('created_at', -1)
+            return list(testimonials)
+        except Exception as e:
+            logger.error(f"Error fetching testimonials for user {user_id}: {str(e)}")
+            raise
+
+    @staticmethod
+    def get_testimonial_statistics():
+        """Get testimonial statistics system-wide"""
+        try:
+            pipeline = [
+                {'$group': {
+                    '_id': '$status',
+                    'count': {'$sum': 1}
+                }}
+            ]
+            results = list(current_app.mongo.db.testimonials.aggregate(pipeline))
+            
+            stats = {
+                'pending': 0,
+                'approved': 0,
+                'rejected': 0
+            }
+            
+            for result in results:
+                status = result['_id']
+                if status in stats:
+                    stats[status] = result['count']
+                    
+            return stats
+        except Exception as e:
+            logger.error(f"Error getting testimonial statistics: {str(e)}")
+            return {}
 
 class UserModel:
     """User model with CRUD operations and utilities"""
@@ -1125,6 +1369,28 @@ REWARD_SCHEMA = {
     'description': {'type': 'string', 'required': True},
     'category': {'type': 'string'},
     'date': {'type': 'datetime', 'required': True}
+}
+
+DONATION_SCHEMA = {
+    'user_id': {'type': 'objectid', 'required': True},
+    'amount': {'type': 'float', 'required': True},
+    'tier': {'type': 'string', 'allowed': ['bronze', 'silver', 'gold'], 'required': True},
+    'transaction_id': {'type': 'string', 'required': True, 'unique': True},
+    'status': {'type': 'string', 'allowed': ['pending', 'completed', 'failed'], 'default': 'pending'},
+    'created_at': {'type': 'datetime', 'required': True},
+    'completed_at': {'type': 'datetime'},
+    'failed_at': {'type': 'datetime'}
+}
+
+TESTIMONIAL_SCHEMA = {
+    'user_id': {'type': 'objectid', 'required': True},
+    'content': {'type': 'string', 'required': True},
+    'status': {'type': 'string', 'allowed': ['pending', 'approved', 'rejected'], 'default': 'pending'},
+    'created_at': {'type': 'datetime', 'required': True},
+    'updated_at': {'type': 'datetime', 'required': True},
+    'approved_at': {'type': 'datetime'},
+    'rejected_at': {'type': 'datetime'},
+    'rejection_reason': {'type': 'string'}
 }
 
 class QuoteModel:
