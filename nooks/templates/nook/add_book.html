@@ -32,10 +32,11 @@
                 
                 <!-- Manual Entry Form -->
                 <form method="POST" id="add-book-form" enctype="multipart/form-data">
-                    {{ form.hidden_tag() }} <!-- Includes CSRF token and hidden fields -->
+                    <!-- CSRF token included for security -->
+                    {{ form.hidden_tag() }}
                     <div class="mb-3">
                         {{ form.pdf_file.label(class="form-label") }}
-                        {{ form.pdf_file(class="form-control", accept="application/pdf") }}
+                        {{ form.pdf_file(class="form-control", accept="application/pdf", id="pdf_file") }}
                         {% if form.pdf_file.errors %}
                             <ul class="text-danger">
                                 {% for error in form.pdf_file.errors %}
@@ -43,10 +44,10 @@
                                 {% endfor %}
                             </ul>
                         {% endif %}
-                        <div class="form-text">Optional: Upload your own book as a PDF file. Files must be encrypted.</div>
+                        <div class="form-text">Optional: Upload your own book as a PDF file (max 10MB). Files must be encrypted.</div>
                     </div>
                     <div class="mb-3 form-check">
-                        {{ form.terms_agreement(class="form-check-input") }}
+                        {{ form.terms_agreement(class="form-check-input", id="terms_agreement") }}
                         {{ form.terms_agreement.label(class="form-check-label") }}
                         {% if form.terms_agreement.errors %}
                             <ul class="text-danger">
@@ -115,6 +116,41 @@
                             </ul>
                         {% endif %}
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.genre.label(class="form-label") }}
+                            {{ form.genre(class="form-control") }}
+                            {% if form.genre.errors %}
+                                <ul class="text-danger">
+                                    {% for error in form.genre.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.isbn.label(class="form-label") }}
+                            {{ form.isbn(class="form-control") }}
+                            {% if form.isbn.errors %}
+                                <ul class="text-danger">
+                                    {% for error in form.isbn.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.published_date.label(class="form-label") }}
+                        {{ form.published_date(class="form-control") }}
+                        {% if form.published_date.errors %}
+                            <ul class="text-danger">
+                                {% for error in form.published_date.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a href="{{ url_for('nook.index') }}" class="btn btn-secondary">Cancel</a>
                         <button type="submit" class="btn btn-success">
@@ -130,6 +166,31 @@
 
 {% block extra_scripts %}
 <script>
+// Client-side validation for PDF uploads
+document.getElementById('pdf_file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const termsCheckbox = document.getElementById('terms_agreement');
+    if (file) {
+        if (!file.name.toLowerCase().endswith('.pdf')) {
+            alert('Only PDF files are allowed.');
+            e.target.value = '';
+            termsCheckbox.checked = false;
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size exceeds 10MB limit.');
+            e.target.value = '';
+            termsCheckbox.checked = false;
+            return;
+        }
+        // Enable terms checkbox only if a valid file is selected
+        termsCheckbox.disabled = false;
+    } else {
+        termsCheckbox.checked = false;
+        termsCheckbox.disabled = true;
+    }
+});
+
 // Auto-search as user types
 let searchTimeout;
 document.getElementById('search-query').addEventListener('input', function(e) {
@@ -144,5 +205,73 @@ document.getElementById('search-query').addEventListener('input', function(e) {
         document.getElementById('book-search-results').innerHTML = '';
     }
 });
+
+// Search books and render results securely
+function searchBooks(query) {
+    fetch(`/nook/search_books?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            const resultsDiv = document.getElementById('book-search-results');
+            resultsDiv.innerHTML = ''; // Clear previous results
+            data.forEach(book => {
+                // Create elements to avoid direct HTML injection
+                const colDiv = document.createElement('div');
+                colDiv.className = 'col-md-4 mb-3';
+                
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'card';
+                
+                const cardBody = document.createElement('div');
+                cardBody.className = 'card-body';
+                
+                const title = document.createElement('h5');
+                title.className = 'card-title';
+                title.textContent = book.title || 'No title';
+                
+                const authors = document.createElement('p');
+                authors.className = 'card-text';
+                authors.textContent = book.authors && book.authors.length ? `By ${book.authors.join(', ')}` : 'By Unknown';
+                
+                const button = document.createElement('button');
+                button.className = 'btn btn-primary';
+                button.textContent = 'Select Book';
+                button.onclick = () => fillForm(
+                    book.id,
+                    book.title || '',
+                    book.authors ? book.authors.join(', ') : '',
+                    book.description || '',
+                    book.cover_image || '',
+                    book.page_count || 0,
+                    book.genre || '',
+                    book.isbn || '',
+                    book.published_date || ''
+                );
+                
+                cardBody.appendChild(title);
+                cardBody.appendChild(authors);
+                cardBody.appendChild(button);
+                cardDiv.appendChild(cardBody);
+                colDiv.appendChild(cardDiv);
+                resultsDiv.appendChild(colDiv);
+            });
+        })
+        .catch(error => {
+            console.error('Error searching books:', error);
+            document.getElementById('book-search-results').innerHTML = '<p class="text-danger">Error loading search results.</p>';
+        });
+}
+
+// Fill form with selected book data
+function fillForm(id, title, authors, description, cover_image, page_count, genre, isbn, published_date) {
+    document.getElementById('google_books_id').value = id;
+    document.getElementById('title').value = title;
+    document.getElementById('authors').value = authors;
+    document.getElementById('description').value = description;
+    document.getElementById('cover_image').value = cover_image;
+    document.getElementById('page_count').value = page_count;
+    document.getElementById('genre').value = genre;
+    document.getElementById('isbn').value = isbn;
+    document.getElementById('published_date').value = published_date;
+}
 </script>
 {% endblock %}
