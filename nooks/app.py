@@ -42,7 +42,8 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
     app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE'] = True  # Enable for HTTPS in production
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['WTF_CSRF_TIME_LIMIT'] = 7200
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
     
     # Initialize MongoDB
@@ -186,3 +187,4 @@ app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+
