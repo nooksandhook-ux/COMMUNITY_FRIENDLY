@@ -24,11 +24,16 @@ socket.on('connect', () => {
 socket.on('chat_message', (data) => {
   const chatBox = document.getElementById('chat-box');
   const message = document.createElement('div');
-  message.className = 'p-2';
+  message.className = 'p-2 position-relative';
   message.innerHTML = `
     <p>${data.message} <small class="text-muted">by ${data.username}</small></p>
     {% if is_admin %}
-    <button class="btn btn-danger btn-sm" onclick="deleteMessage('${data.message_id}')">Delete</button>
+    <div class="admin-actions">
+      <button class="btn btn-sm btn-outline-secondary admin-menu-btn">...</button>
+      <div class="admin-menu">
+        <button class="btn btn-danger btn-sm" onclick="deleteMessage('${data.message_id}')">Delete</button>
+      </div>
+    </div>
     {% endif %}
   `;
   chatBox.appendChild(message);
@@ -43,11 +48,16 @@ function loadMessages() {
       if (data.messages) {
         data.messages.forEach(msg => {
           const message = document.createElement('div');
-          message.className = 'p-2';
+          message.className = 'p-2 position-relative';
           message.innerHTML = `
             <p>${msg.message} <small class="text-muted">by ${msg.username}</small></p>
             {% if is_admin %}
-            <button class="btn btn-danger btn-sm" onclick="deleteMessage('${msg._id}')">Delete</button>
+            <div class="admin-actions">
+              <button class="btn btn-sm btn-outline-secondary admin-menu-btn">...</button>
+              <div class="admin-menu">
+                <button class="btn btn-danger btn-sm" onclick="deleteMessage('${msg._id}')">Delete</button>
+              </div>
+            </div>
             {% endif %}
           `;
           chatBox.appendChild(message);
