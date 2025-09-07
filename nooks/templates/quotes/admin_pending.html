@@ -1,0 +1,533 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Pending Quotes - Admin{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Pending Quote Verification</h2>
+                <div>
+                    <button class="btn btn-success me-2" id="bulkApproveBtn" disabled>
+                        <i class="fas fa-check"></i> Bulk Approve
+                    </button>
+                    <button class="btn btn-danger" id="bulkRejectBtn" disabled>
+                        <i class="fas fa-times"></i> Bulk Reject
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ stats.pending.count }}</h4>
+                                    <p class="mb-0">Pending</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-clock fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ stats.verified.count }}</h4>
+                                    <p class="mb-0">Verified</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>{{ stats.rejected.count }}</h4>
+                                    <p class="mb-0">Rejected</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-times-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4>₦{{ stats.verified.total_reward }}</h4>
+                                    <p class="mb-0">Total Paid</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-money-bill-wave fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Quotes -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Quotes Awaiting Verification</h5>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="selectAll">
+                            <label class="form-check-label" for="selectAll">
+                                Select All
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if quotes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th width="50">
+                                            <input type="checkbox" id="selectAllHeader" class="form-check-input">
+                                        </th>
+                                        <th>User</th>
+                                        <th>Book</th>
+                                        <th>Quote</th>
+                                        <th>Page</th>
+                                        <th>Submitted</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for quote in quotes %}
+                                    <tr data-quote-id="{{ quote._id }}">
+                                        <td>
+                                            <input type="checkbox" class="form-check-input quote-checkbox" 
+                                                   value="{{ quote._id }}">
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong>{{ quote.user.username }}</strong><br>
+                                                <small class="text-muted">{{ quote.user.email }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if quote.book.cover_url %}
+                                                <img src="{{ quote.book.cover_url }}" alt="Book cover" 
+                                                     class="me-2" style="width: 40px; height: 60px; object-fit: cover;">
+                                                {% endif %}
+                                                <div>
+                                                    <strong>{{ quote.book.title }}</strong><br>
+                                                    <small class="text-muted">
+                                                        {% if quote.book.authors %}
+                                                            by {{ quote.book.authors|join(', ') }}
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="quote-preview" style="max-width: 300px;">
+                                                {% if quote.quote_text|length > 150 %}
+                                                    <div class="quote-short">
+                                                        {{ quote.quote_text[:150] }}...
+                                                        <a href="#" class="text-primary expand-quote">Show more</a>
+                                                    </div>
+                                                    <div class="quote-full" style="display: none;">
+                                                        {{ quote.quote_text }}
+                                                        <a href="#" class="text-primary collapse-quote">Show less</a>
+                                                    </div>
+                                                {% else %}
+                                                    {{ quote.quote_text }}
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>{{ quote.page_number }}</td>
+                                        <td>
+                                            {{ quote.submitted_at.strftime('%Y-%m-%d') }}<br>
+                                            <small class="text-muted">{{ quote.submitted_at.strftime('%H:%M') }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-success approve-btn" 
+                                                        data-quote-id="{{ quote._id }}">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger reject-btn" 
+                                                        data-quote-id="{{ quote._id }}">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-info" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#quoteDetailModal{{ loop.index }}">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Quote Detail Modal -->
+                                    <div class="modal fade" id="quoteDetailModal{{ loop.index }}" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Quote Verification Details</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row">
+                                                        <div class="col-md-8">
+                                                            <h6>User Information</h6>
+                                                            <p><strong>Username:</strong> {{ quote.user.username }}</p>
+                                                            <p><strong>Email:</strong> {{ quote.user.email }}</p>
+                                                            
+                                                            <h6 class="mt-4">Book Information</h6>
+                                                            <p><strong>Title:</strong> {{ quote.book.title }}</p>
+                                                            {% if quote.book.authors %}
+                                                            <p><strong>Authors:</strong> {{ quote.book.authors|join(', ') }}</p>
+                                                            {% endif %}
+                                                            {% if quote.book.isbn %}
+                                                            <p><strong>ISBN:</strong> {{ quote.book.isbn }}</p>
+                                                            {% endif %}
+                                                            <p><strong>Total Pages:</strong> {{ quote.book.total_pages or 'Unknown' }}</p>
+                                                            
+                                                            <h6 class="mt-4">Quote Details</h6>
+                                                            <p><strong>Page Number:</strong> {{ quote.page_number }}</p>
+                                                            <p><strong>Submitted:</strong> {{ quote.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                                            <p><strong>Reward Amount:</strong> ₦{{ quote.reward_amount }}</p>
+                                                            
+                                                            <h6 class="mt-4">Quote Text</h6>
+                                                            <blockquote class="blockquote border-start border-primary ps-3">
+                                                                <p>"{{ quote.quote_text }}"</p>
+                                                            </blockquote>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            {% if quote.book.cover_url %}
+                                                            <img src="{{ quote.book.cover_url }}" alt="Book cover" 
+                                                                 class="img-fluid mb-3">
+                                                            {% endif %}
+                                                            
+                                                            <div class="d-grid gap-2">
+                                                                <button class="btn btn-success approve-btn" 
+                                                                        data-quote-id="{{ quote._id }}"
+                                                                        data-bs-dismiss="modal">
+                                                                    <i class="fas fa-check"></i> Approve Quote
+                                                                </button>
+                                                                <button class="btn btn-danger reject-btn" 
+                                                                        data-quote-id="{{ quote._id }}"
+                                                                        data-bs-dismiss="modal">
+                                                                    <i class="fas fa-times"></i> Reject Quote
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if total_pending > 20 %}
+                        <nav aria-label="Quotes pagination">
+                            <ul class="pagination justify-content-center">
+                                {% set total_pages = (total_pending + 19) // 20 %}
+                                {% for page_num in range(1, total_pages + 1) %}
+                                    <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for('quotes.admin_pending', page=page_num) }}">
+                                            {{ page_num }}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h4>All caught up!</h4>
+                            <p class="text-muted">No pending quotes to verify at the moment.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Rejection Reason Modal -->
+<div class="modal fade" id="rejectionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rejection Reason</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="rejectionReason" class="form-label">Why is this quote being rejected?</label>
+                    <textarea class="form-control" id="rejectionReason" rows="3" 
+                              placeholder="Enter the reason for rejection..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmReject">Reject Quote</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentQuoteId = null;
+let selectedQuotes = [];
+
+// Quote expansion/collapse
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('expand-quote')) {
+        e.preventDefault();
+        const quotePreview = e.target.closest('.quote-preview');
+        quotePreview.querySelector('.quote-short').style.display = 'none';
+        quotePreview.querySelector('.quote-full').style.display = 'block';
+    }
+    
+    if (e.target.classList.contains('collapse-quote')) {
+        e.preventDefault();
+        const quotePreview = e.target.closest('.quote-preview');
+        quotePreview.querySelector('.quote-short').style.display = 'block';
+        quotePreview.querySelector('.quote-full').style.display = 'none';
+    }
+});
+
+// Checkbox handling
+document.getElementById('selectAll').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.quote-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = this.checked;
+    });
+    updateSelectedQuotes();
+});
+
+document.getElementById('selectAllHeader').addEventListener('change', function() {
+    document.getElementById('selectAll').checked = this.checked;
+    document.getElementById('selectAll').dispatchEvent(new Event('change'));
+});
+
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('quote-checkbox')) {
+        updateSelectedQuotes();
+    }
+});
+
+function updateSelectedQuotes() {
+    selectedQuotes = Array.from(document.querySelectorAll('.quote-checkbox:checked'))
+                          .map(cb => cb.value);
+    
+    const bulkApproveBtn = document.getElementById('bulkApproveBtn');
+    const bulkRejectBtn = document.getElementById('bulkRejectBtn');
+    
+    if (selectedQuotes.length > 0) {
+        bulkApproveBtn.disabled = false;
+        bulkRejectBtn.disabled = false;
+        bulkApproveBtn.textContent = `Bulk Approve (${selectedQuotes.length})`;
+        bulkRejectBtn.textContent = `Bulk Reject (${selectedQuotes.length})`;
+    } else {
+        bulkApproveBtn.disabled = true;
+        bulkRejectBtn.disabled = true;
+        bulkApproveBtn.textContent = 'Bulk Approve';
+        bulkRejectBtn.textContent = 'Bulk Reject';
+    }
+}
+
+// Individual approve/reject buttons
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('approve-btn') || e.target.closest('.approve-btn')) {
+        const btn = e.target.classList.contains('approve-btn') ? e.target : e.target.closest('.approve-btn');
+        const quoteId = btn.dataset.quoteId;
+        approveQuote(quoteId);
+    }
+    
+    if (e.target.classList.contains('reject-btn') || e.target.closest('.reject-btn')) {
+        const btn = e.target.classList.contains('reject-btn') ? e.target : e.target.closest('.reject-btn');
+        const quoteId = btn.dataset.quoteId;
+        currentQuoteId = quoteId;
+        const modal = new bootstrap.Modal(document.getElementById('rejectionModal'));
+        modal.show();
+    }
+});
+
+// Bulk operations
+document.getElementById('bulkApproveBtn').addEventListener('click', function() {
+    if (selectedQuotes.length === 0) return;
+    
+    if (confirm(`Are you sure you want to approve ${selectedQuotes.length} quotes?`)) {
+        bulkVerifyQuotes('approve');
+    }
+});
+
+document.getElementById('bulkRejectBtn').addEventListener('click', function() {
+    if (selectedQuotes.length === 0) return;
+    
+    currentQuoteId = 'bulk';
+    const modal = new bootstrap.Modal(document.getElementById('rejectionModal'));
+    modal.show();
+});
+
+// Rejection confirmation
+document.getElementById('confirmReject').addEventListener('click', function() {
+    const reason = document.getElementById('rejectionReason').value.trim();
+    if (!reason) {
+        alert('Please provide a reason for rejection.');
+        return;
+    }
+    
+    if (currentQuoteId === 'bulk') {
+        bulkVerifyQuotes('reject', reason);
+    } else {
+        rejectQuote(currentQuoteId, reason);
+    }
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('rejectionModal'));
+    modal.hide();
+    document.getElementById('rejectionReason').value = '';
+});
+
+function approveQuote(quoteId) {
+    fetch(`{{ url_for('quotes.admin_verify_quote', quote_id='QUOTE_ID') }}`.replace('QUOTE_ID', quoteId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'approve'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the row from the table
+            const row = document.querySelector(`tr[data-quote-id="${quoteId}"]`);
+            if (row) {
+                row.remove();
+            }
+            
+            // Show success message
+            showAlert('success', data.message);
+            
+            // Update statistics (simple approach - reload page)
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert('danger', data.error || 'Failed to approve quote');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Error approving quote');
+    });
+}
+
+function rejectQuote(quoteId, reason) {
+    fetch(`{{ url_for('quotes.admin_verify_quote', quote_id='QUOTE_ID') }}`.replace('QUOTE_ID', quoteId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'reject',
+            rejection_reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the row from the table
+            const row = document.querySelector(`tr[data-quote-id="${quoteId}"]`);
+            if (row) {
+                row.remove();
+            }
+            
+            showAlert('success', data.message);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert('danger', data.error || 'Failed to reject quote');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Error rejecting quote');
+    });
+}
+
+function bulkVerifyQuotes(action, reason = '') {
+    fetch('{{ url_for("quotes.admin_bulk_verify") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            quote_ids: selectedQuotes,
+            action: action,
+            rejection_reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message);
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert('danger', data.error || 'Failed to process quotes');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Error processing quotes');
+    });
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Auto-refresh every 30 seconds
+setInterval(function() {
+    if (document.visibilityState === 'visible') {
+        location.reload();
+    }
+}, 30000);
+</script>
+{% endblock %}

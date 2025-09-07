@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Add Book - Nook{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Book
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Search Books -->
+                <div class="mb-4">
+                    <label for="search-query" class="form-label">Search Books</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search-query" 
+                               placeholder="Search by title, author, or ISBN...">
+                        <button class="btn btn-outline-secondary" type="button" onclick="searchBooks(document.getElementById('search-query').value)">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                    <small class="text-muted">Search Google Books to auto-populate book details</small>
+                </div>
+                
+                <!-- Search Results -->
+                <div id="book-search-results" class="row mb-4"></div>
+                
+                <hr>
+                
+                <!-- Manual Entry Form -->
+                <form method="POST" id="add-book-form" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }} <!-- Includes CSRF token and hidden fields -->
+                    <div class="mb-3">
+                        {{ form.pdf_file.label(class="form-label") }}
+                        {{ form.pdf_file(class="form-control", accept="application/pdf") }}
+                        {% if form.pdf_file.errors %}
+                            <ul class="text-danger">
+                                {% for error in form.pdf_file.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <div class="form-text">Optional: Upload your own book as a PDF file. Files must be encrypted.</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.terms_agreement(class="form-check-input") }}
+                        {{ form.terms_agreement.label(class="form-check-label") }}
+                        {% if form.terms_agreement.errors %}
+                            <ul class="text-danger">
+                                {% for error in form.terms_agreement.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            {{ form.title.label(class="form-label") }}
+                            {{ form.title(class="form-control", required=True) }}
+                            {% if form.title.errors %}
+                                <ul class="text-danger">
+                                    {% for error in form.title.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                            {% if form.status.errors %}
+                                <ul class="text-danger">
+                                    {% for error in form.status.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.authors.label(class="form-label") }}
+                            {{ form.authors(class="form-control", placeholder="Separate multiple authors with commas", required=True) }}
+                            {% if form.authors.errors %}
+                                <ul class="text-danger">
+                                    {% for error in form.authors.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.page_count.label(class="form-label") }}
+                            {{ form.page_count(class="form-control", min="1") }}
+                            {% if form.page_count.errors %}
+                                <ul class="text-danger">
+                                    {% for error in form.page_count.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="3") }}
+                        {% if form.description.errors %}
+                            <ul class="text-danger">
+                                {% for error in form.description.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('nook.index') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-plus-circle me-2"></i>Add Book
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Auto-search as user types
+let searchTimeout;
+document.getElementById('search-query').addEventListener('input', function(e) {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim();
+    
+    if (query.length >= 3) {
+        searchTimeout = setTimeout(() => {
+            searchBooks(query);
+        }, 500);
+    } else if (query.length === 0) {
+        document.getElementById('book-search-results').innerHTML = '';
+    }
+});
+</script>
+{% endblock %}

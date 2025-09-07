@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Edit Book{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-warning"><i class="bi bi-pencil-square me-2"></i>Edit Book</h1>
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.csrf_token }} <!-- Added CSRF token -->
+        <div class="mb-3">
+            <label for="title" class="form-label">Title *</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ book.title }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="authors" class="form-label">Authors *</label>
+            <input type="text" class="form-control" id="authors" name="authors" value="{{ book.authors | join(', ') }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="page_count" class="form-label">Page Count</label>
+            <input type="number" class="form-control" id="page_count" name="page_count" value="{{ book.page_count }}" min="1">
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="3">{{ book.description }}</textarea>
+        </div>
+        <div class="mb-3">
+            <label for="status" class="form-label">Status</label>
+            <select class="form-select" id="status" name="status">
+                <option value="to_read" {% if book.status == 'to_read' %}selected{% endif %}>To Read</option>
+                <option value="reading" {% if book.status == 'reading' %}selected{% endif %}>Currently Reading</option>
+                <option value="finished" {% if book.status == 'finished' %}selected{% endif %}>Finished</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="pdf_file" class="form-label">Replace PDF (optional, max 10MB)</label>
+            <input type="file" class="form-control" id="pdf_file" name="pdf_file" accept="application/pdf">
+            <input type="hidden" id="is_encrypted" name="is_encrypted" value="true"> <!-- Indicate encryption -->
+            {% if book.pdf_path %}
+            <div class="form-text">
+                Current PDF: {{ 'Encrypted' if book.is_encrypted else 'Unencrypted' }} | 
+                <a href="{{ url_for('nook.read_book', book_id=book._id) }}">Read</a>
+            </div>
+            {% endif %}
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="terms_agreement" name="terms_agreement" required>
+            <label class="form-check-label" for="terms_agreement">
+                I confirm I have the legal right to upload this PDF and agree to the <a href="{{ url_for('general.terms') }}" target="_blank">Terms of Service</a>.
+            </label>
+        </div>
+        <button type="submit" class="btn btn-warning"><i class="bi bi-save me-2"></i>Save Changes</button>
+        <a href="{{ url_for('nook.my_uploads') }}" class="btn btn-secondary ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "admin/base.html" %}
+{% block title %}Manage Uploaded Books{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-success"><i class="bi bi-book me-2"></i>Manage Uploaded Books</h1>
+    <div class="mb-3">
+        <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Admin Dashboard
+        </a>
+    </div>
+    <form method="get" class="mb-4">
+        <div class="row g-2">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="q" placeholder="Search by title, author, or user..." value="{{ request.args.get('q', '') }}">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="reading" {% if request.args.get('status') == 'reading' %}selected{% endif %}>Reading</option>
+                    <option value="finished" {% if request.args.get('status') == 'finished' %}selected{% endif %}>Finished</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-search"></i> Filter</button>
+            </div>
+        </div>
+    </form>
+    {% if books %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Authors</th>
+                    <th>User</th>
+                    <th>Status</th>
+                    <th>PDF</th>
+                    <th>Progress</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in books %}
+                <tr>
+                    <td>{{ book.title }}</td>
+                    <td>{{ book.authors | join(', ') }}</td>
+                    <td>{{ book.user_email or book.user_id }}</td>
+                    <td>{{ book.status.title() }}</td>
+                    <td>
+                        {% if book.pdf_path %}
+                        <a href="/static/{{ book.pdf_path }}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="bi bi-file-earmark-pdf"></i> View</a>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>{{ book.current_page or 0 }} / {{ book.page_count or '?' }}</td>
+                    <td>
+                        <a href="{{ url_for('nook.book_detail', book_id=book._id) }}" class="btn btn-success btn-sm mb-1"><i class="bi bi-eye"></i> Open</a>
+                        <form action="{{ url_for('admin.delete_book', book_id=book._id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this book?');">
+                            <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No uploaded books found.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Nooks{% endblock %}
+
+{% block content %}
+{% if current_user.is_authenticated %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="bi bi-graph-up me-2"></i>Dashboard</h1>
+    <div class="btn-group" role="group">
+        <a href="{{ url_for('nook.index') }}" class="btn btn-nook">
+            <i class="bi bi-book me-1"></i>Nook
+        </a>
+        <a href="{{ url_for('hook.index') }}" class="btn btn-hook">
+            <i class="bi bi-stopwatch me-1"></i>Hook
+        </a>
+    </div>
+</div>
+
+<!-- Overview Cards -->
+<div class="cards-container">
+    <div class="row mb-4 g-0">
+        <div class="col-md-3">
+            <div class="card total-books-card overview-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-book display-4 mb-2"></i>
+                    <h3 class="fw-bold">{{ books | length }}</h3>
+                    <p class="mb-0">Total Books</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card completed-tasks-card overview-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle display-4 mb-2"></i>
+                    <h3 class="fw-bold">{{ tasks | length }}</h3>
+                    <p class="mb-0">Completed Tasks</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card reading-streak-card overview-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-fire display-4 mb-2"></i>
+                    <h3 class="fw-bold">{{ reading_streak }}</h3>
+                    <p class="mb-0">Reading Streak</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card task-streak-card overview-card">
+                <div class="card-body text-center">
+                    <i class="bi bi-lightning display-4 mb-2"></i>
+                    <h3 class="fw-bold">{{ task_streak }}</h3>
+                    <p class="mb-0">Task Streak</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="cards-container">
+    <div class="row mb-4 g-0">
+        <div class="col-md-6">
+            <div class="card reading-progress-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Reading Progress</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="readingChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card task-analytics-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Task Analytics</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="taskChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="cards-container">
+    <div class="row g-0">
+        <div class="col-md-6">
+            <div class="card recent-books-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Books</h5>
+                    <div class="card-buttons">
+                        <a href="{{ url_for('nook.index') }}" class="btn btn-sm btn-nook">
+                            <span>View All</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if books %}
+                        <div class="list-group list-group-flush">
+                            {% for book in books[:5] %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ book.title[:40] }}{% if book.title|length > 40 %}...{% endif %}</h6>
+                                    <small class="text-muted">by {{ book.authors | join(', ') }}</small>
+                                </div>
+                                <span class="badge 
+                                    {% if book.status == 'reading' %}bg-warning text-dark
+                                    {% elif book.status == 'finished' %}bg-nook
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ book.status.title() }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No books added yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card recent-rewards-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Rewards</h5>
+                    <small class="text-muted">Points earned</small>
+                </div>
+                <div class="card-body">
+                    {% if rewards %}
+                        <div class="list-group list-group-flush">
+                            {% for reward in rewards %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ reward.description }}</h6>
+                                    <small class="text-muted">
+                                        <i class="bi bi-{{ 'book' if reward.source == 'nook' else 'stopwatch' }} me-1"></i>
+                                        {{ reward.source.title() }} • {{ reward.date.strftime('%m/%d %H:%M') }}
+                                    </small>
+                                </div>
+                                <span class="badge bg-primary">+{{ reward.points }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No rewards yet</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12 text-center">
+        <h1 class="display-4 fw-bold text-primary">Welcome to Nook & Hook</h1>
+        <p class="lead text-muted">Please log in to access your dashboard.</p>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-login btn-lg">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-register btn-lg">Register</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Reading Progress Chart
+    const readingCtx = document.getElementById('readingChart').getContext('2d');
+    
+    fetch('/api/reading/progress')
+        .then(response => response.json())
+        .then(data => {
+            const labels = Object.keys(data).sort();
+            const values = labels.map(date => data[date]);
+            
+            new Chart(readingCtx, {
+                type: 'line',
+                data: {
+                    labels: labels.map(date => new Date(date).toLocaleDateString()),
+                    datasets: [{
+                        label: 'Pages Read',
+                        data: values,
+                        borderColor: 'var(--nook-color)',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+    
+    // Task Analytics Chart
+    const taskCtx = document.getElementById('taskChart').getContext('2d');
+    
+    fetch('/api/tasks/analytics')
+        .then(response => response.json())
+        .then(data => {
+            const categories = Object.keys(data.categories);
+            const counts = categories.map(cat => data.categories[cat].count);
+            
+            new Chart(taskCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: categories.map(cat => cat.charAt(0).toUpperCase() + cat.slice(1)),
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: [
+                            'var(--primary-color)',
+                            'var(--nook-color)',
+                            '#dc3545',
+                            '#ffc107',
+                            'var(--hook-color)',
+                            '#6f42c1'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+});
+</script>
+{% endblock %}

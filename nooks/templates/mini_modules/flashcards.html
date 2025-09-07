@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <h2>Flashcards</h2>
+  <form method="post">
+    <input type="text" name="front" placeholder="Front" class="form-control mb-2" required>
+    <input type="text" name="back" placeholder="Back" class="form-control mb-2" required>
+    <button type="submit" class="btn btn-success">Add Flashcard</button>
+  </form>
+  <div class="card-list mt-3">
+    <!-- Loop flashcards here -->
+    <div class="card">Sample Flashcard</div>
+  </div>
+</div>
+{% endblock %}

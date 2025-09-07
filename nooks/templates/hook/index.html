@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Hook - Productivity Timer{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-info">
+        <i class="bi bi-stopwatch me-2"></i>Hook - Productivity Timer
+    </h1>
+    <a href="{{ url_for('hook.timer') }}" class="btn btn-info">
+        <i class="bi bi-play-circle me-2"></i>Start Timer
+    </a>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3 class="fw-bold">{{ today_tasks }}</h3>
+                <p class="mb-0">Tasks Today</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3 class="fw-bold">{{ completed_tasks | length }}</h3>
+                <p class="mb-0">Total Completed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3 class="fw-bold">
+                    {% if active_timer %}
+                        <i class="bi bi-play-fill"></i>
+                    {% else %}
+                        <i class="bi bi-pause-fill"></i>
+                    {% endif %}
+                </h3>
+                <p class="mb-0">
+                    {% if active_timer %}Active{% else %}Ready{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Timer -->
+{% if active_timer %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-play-circle me-2"></i>Active Timer
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <h4 class="fw-bold">{{ active_timer.task_name }}</h4>
+                <p class="text-muted">{{ active_timer.timer_type.title() }} Session</p>
+                <a href="{{ url_for('hook.timer') }}" class="btn btn-info">
+                    <i class="bi bi-stopwatch me-2"></i>Go to Timer
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Start -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Start</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('hook.timer') }}?preset=pomodoro" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-clock me-2"></i>Pomodoro<br>
+                            <small>25 min</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('hook.timer') }}?preset=short" class="btn btn-outline-warning w-100">
+                            <i class="bi bi-clock me-2"></i>Short Break<br>
+                            <small>5 min</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('hook.timer') }}?preset=long" class="btn btn-outline-success w-100">
+                            <i class="bi bi-clock me-2"></i>Long Break<br>
+                            <small>15 min</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('hook.timer') }}?preset=custom" class="btn btn-outline-info w-100">
+                            <i class="bi bi-gear me-2"></i>Custom<br>
+                            <small>Your choice</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Tasks -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Completed Tasks</h5>
+                <a href="{{ url_for('hook.history') }}" class="btn btn-sm btn-outline-info">
+                    <i class="bi bi-clock-history me-1"></i>View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if completed_tasks %}
+                    <div class="list-group list-group-flush">
+                        {% for task in completed_tasks[:5] %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 fw-bold">{{ task.task_name }}</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock me-1"></i>{{ task.duration }} min
+                                    <span class="mx-2">•</span>
+                                    <i class="bi bi-tag me-1"></i>{{ task.category.title() }}
+                                    <span class="mx-2">•</span>
+                                    {{ task.completed_at.strftime('%m/%d %H:%M') }}
+                                </small>
+                            </div>
+                            <div>
+                                <span class="badge 
+                                    {% if task.timer_type == 'work' %}bg-primary
+                                    {% else %}bg-success{% endif %}">
+                                    {{ task.timer_type.title() }}
+                                </span>
+                                <span class="ms-2">{{ task.mood }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-clock-history display-4 text-muted"></i>
+                        <h5 class="mt-3 text-muted">No completed tasks yet</h5>
+                        <p class="text-muted">Start your first focus session to see your progress here!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

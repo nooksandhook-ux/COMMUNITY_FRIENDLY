@@ -1,0 +1,141 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Feedback Management - Nook & Hook{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Feedback Management</h1>
+</div>
+
+<!-- Feedback Statistics -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_feedback }}</h4>
+                        <p class="mb-0">Total Feedback</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-chat-square-text fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.feedback.recent or 0 }}</h4>
+                        <p class="mb-0">Recent Feedback (Last 7 Days)</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Controls -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('admin.feedback') }}">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="status" class="form-label">Filter by Status</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="all" {% if current_status == 'all' %}selected{% endif %}>All</option>
+                                <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="reviewed" {% if current_status == 'reviewed' %}selected{% endif %}>Reviewed</option>
+                                <option value="responded" {% if current_status == 'responded' %}selected{% endif %}>Responded</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 align-self-end mb-3">
+                            <button type="submit" class="btn btn-primary">Apply Filter</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Feedback Entries</h5>
+            </div>
+            <div class="card-body">
+                {% if feedback_entries %}
+                <div class="list-group list-group-flush">
+                    {% for feedback in feedback_entries %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ feedback.name }}</h6>
+                            <small>{{ feedback.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                        </div>
+                        <p class="mb-1"><strong>Email:</strong> {{ feedback.email }}</p>
+                        <p class="mb-1"><strong>Message:</strong> {{ feedback.message }}</p>
+                        <p class="mb-1"><strong>Status:</strong> {{ feedback.status|capitalize }}</p>
+                        {% if feedback.response %}
+                        <p class="mb-1"><strong>Response:</strong> {{ feedback.response }}</p>
+                        <p class="mb-1"><strong>Responded at:</strong> {{ feedback.responded_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('admin.update_feedback_status', feedback_id=feedback._id) }}" class="mt-2">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <select name="status" class="form-select">
+                                        <option value="pending" {% if feedback.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="reviewed" {% if feedback.status == 'reviewed' %}selected{% endif %}>Reviewed</option>
+                                        <option value="responded" {% if feedback.status == 'responded' %}selected{% endif %}>Responded</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <textarea name="response" class="form-control" placeholder="Enter response (optional)" rows="2">{{ feedback.response or '' }}</textarea>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <button type="submit" class="btn btn-primary w-100">Update Status</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No feedback entries found</p>
+                {% endif %}
+                
+                <!-- Pagination -->
+                {% if total_feedback > per_page %}
+                <nav aria-label="Feedback pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.feedback', page=page-1, status=current_status) }}">Previous</a>
+                        </li>
+                        {% endif %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Page {{ page }}</span>
+                        </li>
+                        {% if has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.feedback', page=page+1, status=current_status) }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

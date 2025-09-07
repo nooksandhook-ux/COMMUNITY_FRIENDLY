@@ -1,0 +1,310 @@
+{% extends "base.html" %}
+
+{% block title %}Reward Shop - Nook & Hook{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">🛍️ Reward Shop</h1>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-primary fs-6 me-3">
+                        💰 {{ user_points }} Points
+                    </span>
+                    <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Rewards
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Welcome to the Reward Shop!</strong> 
+                Spend your hard-earned points on themes, customizations, and mystery boxes. 
+                Items marked with ✅ are already owned.
+            </div>
+        </div>
+    </div>
+
+    <!-- Themes Section -->
+    {% if categories.get('theme') %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">🎨 Themes</h4>
+            <div class="row">
+                {% for item in categories['theme'] %}
+                <div class="col-md-4 col-lg-3 mb-3">
+                    <div class="card h-100 {% if item.owned %}border-success{% elif not item.affordable %}border-secondary{% endif %}">
+                        <div class="card-body text-center">
+                            <div class="fs-1 mb-2">{{ item.icon }}</div>
+                            <h6 class="card-title">{{ item.name }}</h6>
+                            <p class="card-text small text-muted">{{ item.description }}</p>
+                            <div class="mt-auto">
+                                {% if item.owned %}
+                                    <span class="badge bg-success">✅ Owned</span>
+                                {% else %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-primary">{{ item.cost }} pts</span>
+                                        <button class="btn btn-sm {% if item.affordable %}btn-primary{% else %}btn-secondary{% endif %} purchase-btn"
+                                                data-item-id="{{ item.id }}"
+                                                data-item-name="{{ item.name }}"
+                                                data-item-cost="{{ item.cost }}"
+                                                {% if not item.affordable %}disabled{% endif %}>
+                                            {% if item.affordable %}Buy{% else %}Can't Afford{% endif %}
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Avatar Frames Section -->
+    {% if categories.get('avatar_frame') %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">🖼️ Avatar Frames</h4>
+            <div class="row">
+                {% for item in categories['avatar_frame'] %}
+                <div class="col-md-4 col-lg-3 mb-3">
+                    <div class="card h-100 {% if item.owned %}border-success{% elif not item.affordable %}border-secondary{% endif %}">
+                        <div class="card-body text-center">
+                            <div class="fs-1 mb-2">{{ item.icon }}</div>
+                            <h6 class="card-title">{{ item.name }}</h6>
+                            <p class="card-text small text-muted">{{ item.description }}</p>
+                            <div class="mt-auto">
+                                {% if item.owned %}
+                                    <span class="badge bg-success">✅ Owned</span>
+                                {% else %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-primary">{{ item.cost }} pts</span>
+                                        <button class="btn btn-sm {% if item.affordable %}btn-primary{% else %}btn-secondary{% endif %} purchase-btn"
+                                                data-item-id="{{ item.id }}"
+                                                data-item-name="{{ item.name }}"
+                                                data-item-cost="{{ item.cost }}"
+                                                {% if not item.affordable %}disabled{% endif %}>
+                                            {% if item.affordable %}Buy{% else %}Can't Afford{% endif %}
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Titles Section -->
+    {% if categories.get('title') %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">🏷️ Profile Titles</h4>
+            <div class="row">
+                {% for item in categories['title'] %}
+                <div class="col-md-4 col-lg-3 mb-3">
+                    <div class="card h-100 {% if item.owned %}border-success{% elif not item.affordable %}border-secondary{% endif %}">
+                        <div class="card-body text-center">
+                            <div class="fs-1 mb-2">{{ item.icon }}</div>
+                            <h6 class="card-title">{{ item.name }}</h6>
+                            <p class="card-text small text-muted">{{ item.description }}</p>
+                            <div class="mt-auto">
+                                {% if item.owned %}
+                                    <span class="badge bg-success">✅ Owned</span>
+                                {% else %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-primary">{{ item.cost }} pts</span>
+                                        <button class="btn btn-sm {% if item.affordable %}btn-primary{% else %}btn-secondary{% endif %} purchase-btn"
+                                                data-item-id="{{ item.id }}"
+                                                data-item-name="{{ item.name }}"
+                                                data-item-cost="{{ item.cost }}"
+                                                {% if not item.affordable %}disabled{% endif %}>
+                                            {% if item.affordable %}Buy{% else %}Can't Afford{% endif %}
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Mystery Boxes Section -->
+    {% if categories.get('mystery_box') %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">🎁 Mystery Boxes</h4>
+            <div class="row">
+                {% for item in categories['mystery_box'] %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100 border-warning">
+                        <div class="card-body text-center">
+                            <div class="fs-1 mb-2">{{ item.icon }}</div>
+                            <h6 class="card-title">{{ item.name }}</h6>
+                            <p class="card-text small text-muted">{{ item.description }}</p>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-warning text-dark">{{ item.cost }} pts</span>
+                                    <button class="btn btn-sm {% if item.affordable %}btn-warning{% else %}btn-secondary{% endif %} purchase-btn"
+                                            data-item-id="{{ item.id }}"
+                                            data-item-name="{{ item.name }}"
+                                            data-item-cost="{{ item.cost }}"
+                                            {% if not item.affordable %}disabled{% endif %}>
+                                        {% if item.affordable %}Open Box{% else %}Can't Afford{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Boosters Section -->
+    {% if categories.get('booster') %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">⚡ Boosters</h4>
+            <div class="row">
+                {% for item in categories['booster'] %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100 border-info">
+                        <div class="card-body text-center">
+                            <div class="fs-1 mb-2">{{ item.icon }}</div>
+                            <h6 class="card-title">{{ item.name }}</h6>
+                            <p class="card-text small text-muted">{{ item.description }}</p>
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-info">{{ item.cost }} pts</span>
+                                    <button class="btn btn-sm {% if item.affordable %}btn-info{% else %}btn-secondary{% endif %} purchase-btn"
+                                            data-item-id="{{ item.id }}"
+                                            data-item-name="{{ item.name }}"
+                                            data-item-cost="{{ item.cost }}"
+                                            {% if not item.affordable %}disabled{% endif %}>
+                                        {% if item.affordable %}Activate{% else %}Can't Afford{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Purchase Confirmation Modal -->
+<div class="modal fade" id="purchaseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Purchase</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to purchase <strong id="itemName"></strong> for <strong id="itemCost"></strong> points?</p>
+                <p class="text-muted small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmPurchase">Purchase</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">🎉 Purchase Successful!</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="successMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Awesome!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentItemId = null;
+    
+    // Handle purchase button clicks
+    document.querySelectorAll('.purchase-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            const itemName = this.dataset.itemName;
+            const itemCost = this.dataset.itemCost;
+            
+            currentItemId = itemId;
+            document.getElementById('itemName').textContent = itemName;
+            document.getElementById('itemCost').textContent = itemCost;
+            
+            new bootstrap.Modal(document.getElementById('purchaseModal')).show();
+        });
+    });
+    
+    // Handle purchase confirmation
+    document.getElementById('confirmPurchase').addEventListener('click', function() {
+        if (!currentItemId) return;
+        
+        fetch('{{ url_for("rewards.purchase_item") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                item_id: currentItemId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            bootstrap.Modal.getInstance(document.getElementById('purchaseModal')).hide();
+            
+            if (data.status === 'success') {
+                document.getElementById('successMessage').textContent = data.message;
+                new bootstrap.Modal(document.getElementById('successModal')).show();
+                
+                // Reload page after success modal is closed
+                document.getElementById('successModal').addEventListener('hidden.bs.modal', function() {
+                    location.reload();
+                });
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing your purchase.');
+        });
+    });
+});
+</script>
+{% endblock %}

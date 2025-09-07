@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <h2>Daily Quiz</h2>
+  <div id="quiz-timer" class="mb-2"></div>
+  <div id="quiz-question" class="mb-3">Press Start to begin!</div>
+  <div id="quiz-options"></div>
+  <button class="btn btn-success mt-3" onclick="startQuiz()">Start Quiz</button>
+</div>
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+{% endblock %}
+{% endblock %}

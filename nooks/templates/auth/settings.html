@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Nook & Hook{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-gear me-2"></i>Account Settings
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Flash Messages -->
+                {% for message in get_flashed_messages(with_categories=true) %}
+                    <div class="alert alert-{{ message[0] }}">{{ message[1] }}</div>
+                {% endfor %}
+
+                <!-- General Settings Form -->
+                <h5 class="mb-3">General Settings</h5>
+                <form id="general-settings-form" method="POST" action="{{ url_for('auth.update_general_settings') }}">
+                    {{ form.csrf_token }}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="theme" class="form-label">Theme</label>
+                            {{ form.theme(class="form-select") }}
+                            {% for error in form.theme.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="default_timer_duration" class="form-label">Default Timer Duration (minutes)</label>
+                            {{ form.default_timer_duration(class="form-control", min="1", max="120") }}
+                            {% for error in form.default_timer_duration.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                {{ form.notifications(class="form-check-input") }}
+                                <label class="form-check-label" for="notifications">
+                                    Enable notifications
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                {{ form.timer_sound(class="form-check-input") }}
+                                <label class="form-check-label" for="timer_sound">
+                                    Enable timer sounds
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                {{ form.animations(class="form-check-input") }}
+                                <label class="form-check-label" for="animations">
+                                    Enable animations
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                {{ form.compact_mode(class="form-check-input") }}
+                                <label class="form-check-label" for="compact_mode">
+                                    Compact mode
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="timer_theme" class="form-label">Timer Theme</label>
+                            {{ form.timer_theme(class="form-select") }}
+                            {% for error in form.timer_theme.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="dashboard_layout" class="form-label">Dashboard Layout</label>
+                            {{ form.dashboard_layout(class="form-select") }}
+                            {% for error in form.dashboard_layout.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-primary", id="general-submit", disabled=true) }}
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <!-- Avatar Customization Form -->
+                <h5 class="mb-3">Avatar Customization</h5>
+                <form id="avatar-form" method="POST" action="{{ url_for('auth.update_avatar_settings') }}">
+                    {{ avatar_form.csrf_token }}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="avatar_style" class="form-label">Avatar Style</label>
+                            {{ avatar_form.avatar_style(class="form-select", id="avatar_style") }}
+                            {% for error in avatar_form.avatar_style.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="hair" class="form-label">Hair Style</label>
+                            {{ avatar_form.hair(class="form-select", id="hair", multiple=true) }}
+                            {% for error in avatar_form.hair.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="background_color" class="form-label">Background Color</label>
+                            {{ avatar_form.background_color(class="form-select", id="background_color", multiple=true) }}
+                            {% for error in avatar_form.background_color.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                {{ avatar_form.flip(class="form-check-input", id="flip") }}
+                                <label class="form-check-label" for="flip">
+                                    Flip Avatar
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 text-center position-relative">
+                        <img id="avatar-preview" src="" alt="Avatar Preview" class="border rounded" style="width: 100px; height: 100px;">
+                        <div id="avatar-loading" class="spinner-border spinner-border-sm text-primary position-absolute" style="display: none; top: 50%; left: 50%; transform: translate(-50%, -50%);" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        {{ avatar_form.submit(class="btn btn-primary", id="avatar-submit", disabled=true) }}
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <!-- Change Password Form -->
+                <h5 class="mb-3">Change Password</h5>
+                <form id="password-form" method="POST" action="{{ url_for('auth.change_password') }}">
+                    {{ change_password_form.csrf_token }}
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Current Password</label>
+                        {{ change_password_form.current_password(class="form-control", id="current_password") }}
+                        <div id="current_password_error" class="invalid-feedback d-block" style="display: none;"></div>
+                        {% for error in change_password_form.current_password.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </3>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            {{ change_password_form.new_password(class="form-control", id="new_password") }}
+                            <div id="new_password_error" class="invalid-feedback d-block" style="display: none;"></div>
+                            {% for error in change_password_form.new_password.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="confirm_password" class="form-label">Confirm New Password</label>
+                            {{ change_password_form.confirm_password(class="form-control", id="confirm_password") }}
+                            <div id="confirm_password_error" class="invalid-feedback d-block" style="display: none;"></div>
+                            {% for error in change_password_form.confirm_password.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        {{ change_password_form.submit(class="btn btn-warning", id="password-submit", disabled=true) }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Debounce function to limit the rate of function execution
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function showLoadingSpinner() {
+        document.getElementById('avatar-loading').style.display = 'block';
+        document.getElementById('avatar-preview').style.opacity = '0.5';
+    }
+
+    function hideLoadingSpinner() {
+        document.getElementById('avatar-loading').style.display = 'none';
+        document.getElementById('avatar-preview').style.opacity = '1';
+    }
+
+    function updateAvatarOptions(style) {
+        showLoadingSpinner();
+        fetch(`/themes/api/avatar_customization_options/${style}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error fetching avatar options:', data.error);
+                    hideLoadingSpinner();
+                    return;
+                }
+                const hairSelect = document.querySelector('#hair');
+                const bgSelect = document.querySelector('#background_color');
+                hairSelect.innerHTML = data.hair.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+                bgSelect.innerHTML = data.backgroundColor.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+                updateAvatarPreview(style);
+            })
+            .catch(error => {
+                console.error('Error fetching avatar options:', error);
+                hideLoadingSpinner();
+            });
+    }
+
+    // Debounced version of updateAvatarOptions
+    const debouncedUpdateAvatarOptions = debounce(updateAvatarOptions, 300);
+
+    function updateAvatarPreview(style) {
+        showLoadingSpinner();
+        fetch(`/themes/api/avatar_preview/${style}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.avatar_url) {
+                    document.getElementById('avatar-preview').src = data.avatar_url;
+                }
+                hideLoadingSpinner();
+            })
+            .catch(error => {
+                console.error('Error fetching avatar preview:', error);
+                hideLoadingSpinner();
+            });
+    }
+
+    // Real-time password validation
+    function validatePasswordFields() {
+        const currentPassword = document.getElementById('current_password').value;
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+        const submitBtn = document.getElementById('password-submit');
+
+        // Clear previous error messages
+        document.getElementById('current_password_error').style.display = 'none';
+        document.getElementById('new_password_error').style.display = 'none';
+        document.getElementById('confirm_password_error').style.display = 'none';
+
+        let hasErrors = false;
+
+        if (currentPassword || newPassword || confirmPassword) {
+            if (!currentPassword) {
+                document.getElementById('current_password_error').textContent = 'Current password is required';
+                document.getElementById('current_password_error').style.display = 'block';
+                hasErrors = true;
+            }
+            if (newPassword && newPassword.length < 6) {
+                document.getElementById('new_password_error').textContent = 'New password must be at least 6 characters';
+                document.getElementById('new_password_error').style.display = 'block';
+                hasErrors = true;
+            }
+            if (newPassword && !confirmPassword) {
+                document.getElementById('confirm_password_error').textContent = 'Please confirm your new password';
+                document.getElementById('confirm_password_error').style.display = 'block';
+                hasErrors = true;
+            }
+            if (newPassword && confirmPassword && newPassword !== confirmPassword) {
+                document.getElementById('confirm_password_error').textContent = 'Passwords do not match';
+                document.getElementById('confirm_password_error').style.display = 'block';
+                hasErrors = true;
+            }
+            if (!newPassword && confirmPassword) {
+                document.getElementById('new_password_error').textContent = 'Please enter a new password';
+                document.getElementById('new_password_error').style.display = 'block';
+                hasErrors = true;
+            }
+        }
+
+        submitBtn.disabled = hasErrors || (!currentPassword && !newPassword && !confirmPassword);
+    }
+
+    // Client-side validation to enable/disable submit buttons
+    function monitorFormChanges(formId, submitBtnId) {
+        const form = document.getElementById(formId);
+        const submitBtn = document.getElementById(submitBtnId);
+        const inputs = form.querySelectorAll('input, select');
+        let hasChanges = false;
+
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                hasChanges = true;
+                if (formId !== 'password-form') {
+                    submitBtn.disabled = false;
+                }
+            });
+            if (formId === 'password-form') {
+                input.addEventListener('input', validatePasswordFields);
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            if (!hasChanges) {
+                e.preventDefault();
+                alert('No changes detected. Please modify at least one field.');
+                return;
+            }
+            if (formId === 'password-form') {
+                const currentPassword = document.getElementById('current_password').value;
+                const newPassword = document.getElementById('new_password').value;
+                const confirmPassword = document.getElementById('confirm_password').value;
+                
+                // Clear previous error messages
+                document.getElementById('current_password_error').style.display = 'none';
+                document.getElementById('new_password_error').style.display = 'none';
+                document.getElementById('confirm_password_error').style.display = 'none';
+
+                let hasErrors = false;
+
+                if (!currentPassword) {
+                    document.getElementById('current_password_error').textContent = 'Current password is required';
+                    document.getElementById('current_password_error').style.display = 'block';
+                    hasErrors = true;
+                }
+                if (newPassword && newPassword.length < 6) {
+                    document.getElementById('new_password_error').textContent = 'New password must be at least 6 characters';
+                    document.getElementById('new_password_error').style.display = 'block';
+                    hasErrors = true;
+                }
+                if (newPassword && !confirmPassword) {
+                    document.getElementById('confirm_password_error').textContent = 'Please confirm your new password';
+                    document.getElementById('confirm_password_error').style.display = 'block';
+                    hasErrors = true;
+                }
+                if (newPassword && confirmPassword && newPassword !== confirmPassword) {
+                    document.getElementById('confirm_password_error').textContent = 'Passwords do not match';
+                    document.getElementById('confirm_password_error').style.display = 'block';
+                    hasErrors = true;
+                }
+                if (!newPassword && confirmPassword) {
+                    document.getElementById('new_password_error').textContent = 'Please enter a new password';
+                    document.getElementById('new_password_error').style.display = 'block';
+                    hasErrors = true;
+                }
+
+                if (hasErrors) {
+                    e.preventDefault();
+                }
+            }
+        });
+    }
+
+    // Initialize form monitoring
+    monitorFormChanges('general-settings-form', 'general-submit');
+    monitorFormChanges('avatar-form', 'avatar-submit');
+    monitorFormChanges('password-form', 'password-submit');
+
+    // Initialize avatar options and preview
+    document.querySelector('#avatar_style').addEventListener('change', (e) => debouncedUpdateAvatarOptions(e.target.value));
+    window.onload = () => debouncedUpdateAvatarOptions('{{ avatar_form.avatar_style.data }}');
+</script>
+{% endblock %}

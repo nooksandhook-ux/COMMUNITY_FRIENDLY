@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Progress Tracker - Nook & Hook{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">📈 Progress Tracker</h1>
+                <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Rewards
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Streaks -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2">📚</div>
+                    <h5 class="card-title">Reading Streak</h5>
+                    <h2 class="text-primary">{{ reading_streak }} days</h2>
+                    <p class="text-muted">Keep reading daily to maintain your streak!</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <div class="fs-1 mb-2">⚡</div>
+                    <h5 class="card-title">Productivity Streak</h5>
+                    <h2 class="text-success">{{ productivity_streak }} days</h2>
+                    <p class="text-muted">Complete tasks daily to grow your streak!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Goal Completions -->
+    {% if recent_goals %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">🎯 Recent Goal Achievements</h4>
+            <div class="row">
+                {% for goal in recent_goals %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title">{{ goal.description }}</h6>
+                                    <p class="text-muted small mb-1">{{ goal.date.strftime('%B %d, %Y') }}</p>
+                                    <span class="badge bg-warning text-dark">+{{ goal.points }} points</span>
+                                </div>
+                                <div class="fs-3">🏆</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Progress Towards Next Achievements -->
+    {% if progress_data %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">🎯 Progress Towards Milestones</h4>
+            <div class="row">
+                {% if progress_data.books %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">📚 Books Finished</h6>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-primary" 
+                                     style="width: {{ progress_data.books.percentage }}%"></div>
+                            </div>
+                            <p class="small text-muted mb-0">
+                                {{ progress_data.books.current }} / {{ progress_data.books.target }} books
+                                ({{ "%.1f"|format(progress_data.books.percentage) }}%)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if progress_data.tasks %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">✅ Tasks Completed</h6>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-success" 
+                                     style="width: {{ progress_data.tasks.percentage }}%"></div>
+                            </div>
+                            <p class="small text-muted mb-0">
+                                {{ progress_data.tasks.current }} / {{ progress_data.tasks.target }} tasks
+                                ({{ "%.1f"|format(progress_data.tasks.percentage) }}%)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if progress_data.points %}
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">💰 Points Earned</h6>
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-warning" 
+                                     style="width: {{ progress_data.points.percentage }}%"></div>
+                            </div>
+                            <p class="small text-muted mb-0">
+                                {{ progress_data.points.current }} / {{ progress_data.points.target }} points
+                                ({{ "%.1f"|format(progress_data.points.percentage) }}%)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Next Badges to Earn -->
+    {% if next_badges %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">🏅 Next Badges to Earn</h4>
+            <div class="row">
+                {% for badge_info in next_badges %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="card-title">{{ badge_info.badge.name }}</h6>
+                                    <p class="text-muted small">{{ badge_info.badge.description }}</p>
+                                </div>
+                                <div class="fs-3">{{ badge_info.badge.icon }}</div>
+                            </div>
+                            
+                            <div class="progress mb-2">
+                                <div class="progress-bar" 
+                                     style="width: {{ badge_info.progress }}%"
+                                     class="{% if badge_info.badge.tier == 'bronze' %}bg-warning{% elif badge_info.badge.tier == 'silver' %}bg-secondary{% elif badge_info.badge.tier == 'gold' %}bg-warning{% else %}bg-primary{% endif %}"></div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    {{ badge_info.current }} / {{ badge_info.target }}
+                                </small>
+                                <span class="badge {% if badge_info.badge.tier == 'bronze' %}bg-warning text-dark{% elif badge_info.badge.tier == 'silver' %}bg-secondary{% elif badge_info.badge.tier == 'gold' %}bg-warning text-dark{% else %}bg-primary{% endif %}">
+                                    {{ badge_info.badge.tier.title() }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tips for Progress -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h5 class="card-title">💡 Tips for Faster Progress</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>📚 Reading Goals</h6>
+                            <ul class="small">
+                                <li>Read 500+ pages in a week for bonus points</li>
+                                <li>Submit quotes to show active engagement</li>
+                                <li>Finish complete book series for extra rewards</li>
+                                <li>Maintain daily reading streaks</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>⚡ Productivity Goals</h6>
+                            <ul class="small">
+                                <li>Complete 10+ tasks in one day for milestone bonus</li>
+                                <li>Focus for 3+ hours daily for marathon rewards</li>
+                                <li>Maintain consistent daily task completion</li>
+                                <li>Use longer focus sessions for better rewards</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Timer - Hook{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Timer Display -->
+            <div class="card shadow-lg border-0 timer-theme-{{ theme or 'light' }}">
+                <div class="card-body text-center p-5">
+                    <div id="timer-display" class="timer-display mb-4">
+                        <span id="minutes">25</span>:<span id="seconds">00</span>
+                    </div>
+                    
+                    <div id="timer-info" class="mb-4">
+                        <h4 id="task-name" class="fw-bold">Ready to Focus</h4>
+                        <p id="timer-type" class="text-muted">Work Session</p>
+                    </div>
+                    
+                    <!-- Timer Controls -->
+                    <div class="timer-controls mb-4">
+                        <button id="start-btn" class="btn btn-success btn-lg">
+                            <i class="bi bi-play-fill"></i> Start
+                        </button>
+                        <button id="pause-btn" class="btn btn-warning btn-lg" style="display: none;">
+                            <i class="bi bi-pause-fill"></i> Pause
+                        </button>
+                        <button id="stop-btn" class="btn btn-danger btn-lg" style="display: none;">
+                            <i class="bi bi-stop-fill"></i> Stop
+                        </button>
+                        <button id="reset-btn" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-arrow-clockwise"></i> Reset
+                        </button>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="progress mb-4" style="height: 10px;">
+                        <div id="progress-bar" class="progress-bar bg-success" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Timer Setup -->
+            <div class="card mt-4" id="timer-setup">
+                <div class="card-header">
+                    <h5 class="mb-0">Setup Timer</h5>
+                </div>
+                <div class="card-body">
+                    <form id="timer-form">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="task_name" class="form-label">Task Name</label>
+                                <input type="text" class="form-control" id="task_name" name="task_name" 
+                                       placeholder="What are you working on?" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="duration" class="form-label">Duration (minutes)</label>
+                                <input type="number" class="form-control" id="duration" name="duration" 
+                                       value="25" min="1" max="120" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="timer_type" class="form-label">Type</label>
+                                <select class="form-select" id="timer_type" name="timer_type">
+                                    <option value="work">Work</option>
+                                    <option value="break">Break</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" id="category" name="category">
+                                    <option value="general">General</option>
+                                    <option value="work">Work</option>
+                                    <option value="study">Study</option>
+                                    <option value="creative">Creative</option>
+                                    <option value="exercise">Exercise</option>
+                                    <option value="personal">Personal</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Quick Presets</label>
+                                <div class="btn-group w-100" role="group">
+                                    <button type="button" class="btn btn-outline-danger preset-btn" data-duration="25" data-type="work">
+                                        Pomodoro
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning preset-btn" data-duration="5" data-type="break">
+                                        Short Break
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success preset-btn" data-duration="15" data-type="break">
+                                        Long Break
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Completion Modal -->
+            <div class="modal fade" id="completionModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Session Complete!</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <i class="bi bi-check-circle display-1 text-success mb-3"></i>
+                            <h4>Great job!</h4>
+                            <p>You completed your focus session.</p>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">How are you feeling?</label>
+                                <div class="btn-group" role="group">
+                                    <input type="radio" class="btn-check" name="mood" id="mood1" value="😊" checked>
+                                    <label class="btn btn-outline-primary" for="mood1">😊</label>
+                                    
+                                    <input type="radio" class="btn-check" name="mood" id="mood2" value="😎">
+                                    <label class="btn btn-outline-primary" for="mood2">😎</label>
+                                    
+                                    <input type="radio" class="btn-check" name="mood" id="mood3" value="🤔">
+                                    <label class="btn btn-outline-primary" for="mood3">🤔</label>
+                                    
+                                    <input type="radio" class="btn-check" name="mood" id="mood4" value="😴">
+                                    <label class="btn btn-outline-primary" for="mood4">😴</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-success" id="complete-session">Complete Session</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+{% endblock %}

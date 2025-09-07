@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <h2>Quiz Leaderboard</h2>
+  <table class="table" id="quiz-leaderboard-table"></table>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/quiz_leaderboard.js') }}"></script>
+<script>loadQuizLeaderboard();</script>
+{% endblock %}

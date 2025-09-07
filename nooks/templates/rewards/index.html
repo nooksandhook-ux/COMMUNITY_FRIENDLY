@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Rewards - Nook & Hook{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-warning">
+        <i class="bi bi-trophy me-2"></i>Rewards & Achievements
+    </h1>
+    <div class="btn-group" role="group">
+        <a href="{{ url_for('rewards.shop') }}" class="btn btn-warning">
+            <i class="bi bi-shop me-1"></i>Shop
+        </a>
+        <a href="{{ url_for('rewards.progress') }}" class="btn btn-outline-warning">
+            <i class="bi bi-graph-up me-1"></i>Progress
+        </a>
+        <a href="{{ url_for('rewards.history') }}" class="btn btn-outline-warning">
+            <i class="bi bi-clock-history me-1"></i>History
+        </a>
+        <a href="{{ url_for('rewards.badges') }}" class="btn btn-outline-warning">
+            <i class="bi bi-award me-1"></i>Badges
+        </a>
+        <a href="{{ url_for('rewards.leaderboard') }}" class="btn btn-outline-warning">
+            <i class="bi bi-bar-chart me-1"></i>Leaderboard
+        </a>
+    </div>
+</div>
+
+<!-- User Level and Points -->
+<div class="row mb-4 cards-container">
+    <div class="col-md-4">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <i class="bi bi-star-fill display-3 mb-2"></i>
+                <h2 class="fw-bold">Level {{ current_level }}</h2>
+                <p class="mb-0">{{ total_points }} Total Points</p>
+                <div class="progress mt-2">
+                    <div class="progress-bar bg-warning" 
+                         style="width: {{ ((total_points % (current_level ** 2 * 100)) / (current_level ** 2 * 100) * 100) | round(1) }}%">
+                    </div>
+                </div>
+                <small>{{ points_to_next_level }} points to Level {{ current_level + 1 }}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card nook-card">
+            <div class="card-body text-center">
+                <i class="bi bi-award display-3 mb-2"></i>
+                <h2 class="fw-bold">{{ badges | length }}</h2>
+                <p class="mb-0">Badges Earned</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card hook-card">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up display-3 mb-2"></i>
+                <h2 class="fw-bold">{{ stats.recent_activity.count or 0 }}</h2>
+                <p class="mb-0">Recent Activities</p>
+                <small>Last 30 days</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Badges -->
+{% if badges %}
+<div class="row mb-4 cards-container">
+    <div class="col-12">
+        <div class="card recent-rewards-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Badges</h5>
+                <a href="{{ url_for('rewards.badges') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for badge in badges[:6] %}
+                    <div class="col-md-2 col-sm-4 mb-3 text-center">
+                        <div class="badge-item p-3 border rounded">
+                            <div class="badge-icon mb-2" style="font-size: 2rem;">🏆</div>
+                            <h6 class="fw-bold">{{ badge.description }}</h6>
+                            <small class="text-muted">{{ badge.earned_at.strftime('%m/%d/%Y') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Points Breakdown -->
+<div class="row mb-4 cards-container">
+    <div class="col-md-6">
+        <div class="card nook-card">
+            <div class="card-header">
+                <h5 class="mb-0">Points by Source</h5>
+            </div>
+            <div class="card-body">
+                {% if stats.points_by_source %}
+                    {% for source, data in stats.points_by_source.items() %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <i class="bi bi-{{ 'book' if source == 'nook' else 'stopwatch' if source == 'hook' else 'gear' }} me-2"></i>
+                            <strong>{{ source.title() }}</strong>
+                        </div>
+                        <div>
+                            <span class="badge bg-primary">{{ data.total_points }} pts</span>
+                            <small class="text-muted">({{ data.count }} activities)</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center">No points earned yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card hook-card">
+            <div class="card-header">
+                <h5 class="mb-0">Points by Category</h5>
+            </div>
+            <div class="card-body">
+                {% if stats.points_by_category %}
+                    {% for category, data in stats.points_by_category.items() %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <strong>{{ category.replace('_', ' ').title() }}</strong>
+                        </div>
+                        <div>
+                            <span class="badge bg-secondary">{{ data.total_points }} pts</span>
+                            <small class="text-muted">({{ data.count }})</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center">No categories yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Rewards -->
+<div class="row cards-container">
+    <div class="col-12">
+        <div class="card recent-rewards-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Rewards</h5>
+                <a href="{{ url_for('rewards.history') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_rewards %}
+                    <div class="list-group list-group-flush">
+                        {% for reward in recent_rewards %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 fw-bold">{{ reward.description }}</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-{{ 'book' if reward.source == 'nook' else 'stopwatch' if reward.source == 'hook' else 'gear' }} me-1"></i>
+                                    {{ reward.source.title() }} • {{ reward.category.replace('_', ' ').title() }}
+                                    • {{ reward.date.strftime('%m/%d %H:%M') }}
+                                </small>
+                            </div>
+                            <span class="badge bg-warning text-dark">+{{ reward.points }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-trophy display-4 text-muted"></i>
+                        <h5 class="mt-3 text-muted">No rewards yet</h5>
+                        <p class="text-muted">Start using Nook and Hook to earn your first rewards!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

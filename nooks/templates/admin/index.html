@@ -1,0 +1,172 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Dashboard - Nook & Hook{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Admin Dashboard</h1>
+</div>
+
+<!-- System Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.users.total }}</h4>
+                        <p class="mb-0">Total Users</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-people fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.books.total }}</h4>
+                        <p class="mb-0">Total Books</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-book fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ pending_quotes_count or 0 }}</h4>
+                        <p class="mb-0">Pending Quotes</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-quote fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ stats.feedback.total or 0 }}</h4>
+                        <p class="mb-0">Total Feedback</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-chat-square-text fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('quotes.admin_pending') }}" class="btn btn-warning btn-lg w-100">
+                            <i class="bi bi-quote"></i><br>
+                            Verify Quotes
+                            {% if pending_quotes_count %}
+                            <span class="badge bg-light text-dark ms-2">{{ pending_quotes_count }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('admin.users') }}" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-people"></i><br>
+                            Manage Users
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('admin.rewards') }}" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-trophy"></i><br>
+                            View Rewards
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('admin.feedback') }}" class="btn btn-info btn-lg w-100">
+                            <i class="bi bi-chat-square-text"></i><br>
+                            View Feedback
+                            {% if stats.feedback.recent %}
+                            <span class="badge bg-light text-dark ms-2">{{ stats.feedback.recent }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Recent Users</h6>
+            </div>
+            <div class="card-body">
+                {% if recent_users %}
+                <div class="list-group list-group-flush">
+                    {% for user in recent_users %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ user.username }}</strong><br>
+                            <small class="text-muted">{{ user.email }}</small>
+                        </div>
+                        <small class="text-muted">{{ user.created_at.strftime('%Y-%m-%d') }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No recent users</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Recent Books</h6>
+            </div>
+            <div class="card-body">
+                {% if recent_books %}
+                <div class="list-group list-group-flush">
+                    {% for book in recent_books %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ book.title }}</h6>
+                            <small>{{ book.added_at.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        {% if book.authors %}
+                        <p class="mb-1 text-muted">by {{ book.authors|join(', ') }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No recent books</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

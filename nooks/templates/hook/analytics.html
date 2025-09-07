@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Task Analytics - Nook & Hook{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="text-warning">
+            <i class="bi bi-graph-up me-2"></i>Task Analytics
+        </h1>
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-warning">
+                <i class="bi bi-trophy me-1"></i>Rewards
+            </a>
+            <a href="{{ url_for('rewards.shop') }}" class="btn btn-outline-warning">
+                <i class="bi bi-shop me-1"></i>Shop
+            </a>
+            <a href="{{ url_for('rewards.progress') }}" class="btn btn-outline-warning">
+                <i class="bi bi-graph-up me-1"></i>Progress
+            </a>
+            <a href="{{ url_for('rewards.history') }}" class="btn btn-outline-warning">
+                <i class="bi bi-clock-history me-1"></i>Reward History
+            </a>
+            <a href="{{ url_for('rewards.badges') }}" class="btn btn-outline-warning">
+                <i class="bi bi-award me-1"></i>Badges
+            </a>
+            <a href="{{ url_for('rewards.leaderboard') }}" class="btn btn-outline-warning">
+                <i class="bi bi-bar-chart me-1"></i>Leaderboard
+            </a>
+            <a href="{{ url_for('hook.history') }}" class="btn btn-outline-warning">
+                <i class="bi bi-clock-history me-1"></i>Task History
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle-fill display-4 mb-2"></i>
+                    <h2 class="fw-bold">{{ analytics.total_tasks }}</h2>
+                    <p class="mb-0">Total Tasks</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-stopwatch display-4 mb-2"></i>
+                    <h2 class="fw-bold">{{ analytics.total_time | round(0) }} min</h2>
+                    <p class="mb-0">Total Focus Time</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock display-4 mb-2"></i>
+                    <h2 class="fw-bold">{{ analytics.avg_session | round(1) }} min</h2>
+                    <p class="mb-0">Avg. Session Length</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <i class="bi bi-fire display-4 mb-2"></i>
+                    <h2 class="fw-bold">{{ analytics.productivity_streak }} days</h2>
+                    <p class="mb-0">Productivity Streak</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-sun display-4 mb-2"></i>
+                    <h2 class="fw-bold">{{ analytics.best_time_of_day }}</h2>
+                    <p class="mb-0">Best Time of Day</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks by Category -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Tasks by Category</h5>
+        </div>
+        <div class="card-body">
+            {% if analytics.tasks_by_category %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Task Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category, count in analytics.tasks_by_category.items() %}
+                                <tr>
+                                    <td>{{ category | replace('_', ' ') | capitalize | default('General') }}</td>
+                                    <td>{{ count }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-pie-chart display-4 text-muted"></i>
+                    <h5 class="mt-3 text-muted">No category data</h5>
+                    <p class="text-muted">Complete tasks to see category breakdown.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tasks by Mood -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Tasks by Mood</h5>
+        </div>
+        <div class="card-body">
+            {% if analytics.tasks_by_mood %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mood</th>
+                                <th>Task Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mood, count in analytics.tasks_by_mood.items() %}
+                                <tr>
+                                    <td>{{ mood | default('😊') }}</td>
+                                    <td>{{ count }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-emoji-smile display-4 text-muted"></i>
+                    <h5 class="mt-3 text-muted">No mood data</h5>
+                    <p class="text-muted">Complete tasks with mood ratings to see breakdown.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Productivity Trend (Placeholder) -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Productivity Trend</h5>
+        </div>
+        <div class="card-body">
+            {% if analytics.productivity_trend %}
+                <div class="text-center">
+                    <p class="text-muted">Productivity trend data would be displayed here (e.g., chart or graph).</p>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-graph-up display-4 text-muted"></i>
+                    <h5 class="mt-3 text-muted">No trend data</h5>
+                    <p class="text-muted">Complete more tasks to see productivity trends.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

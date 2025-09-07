@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Nook & Hook{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-person-circle me-2"></i>Profile
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        {% set avatar = user.preferences.avatar or {'style': 'avataaars', 'options': {'hair': ['short01'], 'backgroundColor': ['#ffffff'], 'flip': False}} %}
+                        {% set avatar_url = 'https://api.dicebear.com/9.x/' + avatar.style + '/svg?seed=' + user.username %}
+                        {% for key, value in avatar.options.items() %}
+                            {% if key != 'flip' %}
+                                {% set avatar_url = avatar_url + '&' + key + '=' + (value[0] if value else '') %}
+                            {% else %}
+                                {% set avatar_url = avatar_url + '&flip=' + (value|string).lower() %}
+                            {% endif %}
+                        {% endfor %}
+                        <img src="{{ avatar_url }}" alt="User Avatar" class="border rounded" style="width: 100px; height: 100px;">
+                        <h5 class="mt-2">{{ user.username }}</h5>
+                        <p class="text-muted">{{ user.email }}</p>
+                    </div>
+                    <div class="col-md-8">
+                        <h6>Account Information</h6>
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>Username:</strong></td>
+                                <td>{{ user.username }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td>{{ user.email }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Member Since:</strong></td>
+                                <td>{{ user.created_at.strftime('%B %d, %Y') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Points:</strong></td>
+                                <td>{{ user.total_points or 0 }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Level:</strong></td>
+                                <td>{{ user.level or 1 }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

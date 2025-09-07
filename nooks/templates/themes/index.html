@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% block title %}Themes and Avatars{% endblock %}
+    {% block head %}
+    <style>
+        .theme-preview, .avatar-preview {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        .theme-card, .avatar-card {
+            margin-bottom: 20px;
+        }
+    </style>
+    {% endblock %}
+</head>
+<body>
+    {% extends "base.html" %}
+    {% block content %}
+    <h1>Customize Themes and Avatars</h1>
+    
+    <h2>Current Theme: {{ current_theme|title }}</h2>
+    <h3>Available Themes</h3>
+    <div class="row">
+        {% for theme in themes %}
+            {% set purchased = theme.name in purchased_themes or theme.name in ['light', 'dark', 'retro', 'neon', 'anime'] %}
+            <div class="col-md-4 theme-card">
+                <h4>{{ theme.display_name }}</h4>
+                <p>{{ theme.description }}</p>
+                <img src="{{ theme.preview_image|default('#') }}" alt="{{ theme.display_name }} preview" class="theme-preview">
+                <ul>
+                    {% for feature in theme.features %}
+                        <li>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+                {% if purchased %}
+                    <form action="{{ url_for('themes.set_theme') }}" method="POST">
+                        <input type="hidden" name="theme" value="{{ theme.name }}">
+                        <button type="submit" class="btn btn-primary">Apply Theme</button>
+                    </form>
+                {% else %}
+                    <span class="text-muted">(Purchase Required)</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    
+    <h2>Current Avatar: {{ current_avatar.style|title }}</h2>
+    <h3>Available Avatars</h3>
+    <div class="row">
+        {% for avatar in avatars %}
+            <div class="col-md-4 avatar-card">
+                <h4>{{ avatar.display_name }}</h4>
+                <p>{{ avatar.description }}</p>
+                <img src="{{ url_for('themes.api_avatar_preview', style=avatar.style) }}" alt="{{ avatar.display_name }} preview" class="avatar-preview">
+                {% if avatar.free or avatar.style in purchased_styles %}
+                    <form action="{{ url_for('themes.set_avatar') }}" method="POST">
+                        <input type="hidden" name="avatar_style" value="{{ avatar.style }}">
+                        <button type="submit" class="btn btn-primary">Apply Avatar</button>
+                    </form>
+                    <a href="{{ url_for('themes.customize_avatar') }}" class="btn btn-secondary">Customize</a>
+                {% else %}
+                    <span class="text-muted">(Purchase Required)</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    
+    <a href="{{ url_for('themes.customize') }}" class="btn btn-info mt-3">Advanced Customization</a>
+    <a href="{{ url_for('auth.profile') }}" class="btn btn-secondary mt-3">Back to Profile</a>
+    {% endblock %}
+    {% block scripts %}
+    <script>
+        // Fetch avatar previews dynamically
+        document.querySelectorAll('.avatar-preview').forEach(img => {
+            fetch(img.src)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.avatar_url) {
+                        img.src = data.avatar_url;
+                    }
+                });
+        });
+    </script>
+    {% endblock %}
+</body>
+</html>

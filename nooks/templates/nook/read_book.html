@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Read: {{ book.title }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4 text-success"><i class="bi bi-book me-2"></i>Reading: {{ book.title }}</h1>
+    <div class="mb-3 d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('nook.book_detail', book_id=book._id) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Book Details
+        </a>
+        <div class="btn-group">
+            <button id="prev-page" class="btn btn-outline-primary btn-sm"><i class="bi bi-chevron-left"></i> Previous</button>
+            <button id="next-page" class="btn btn-outline-primary btn-sm">Next <i class="bi bi-chevron-right"></i></button>
+        </div>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="text-center mb-3">
+                <span id="page-info">Page <span id="current-page">1</span> of <span id="total-pages">1</span></span>
+                <span class="ms-3 text-muted">({{ 'Encrypted' if book.is_encrypted else 'Unencrypted' }})</span>
+            </div>
+            <div style="position: relative; width: 100%; height: 80vh; overflow: auto;">
+                <canvas id="pdf-canvas" class="mx-auto d-block"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="mt-3 text-muted small">
+        This PDF is for personal use only. Sharing or downloading is prohibited.
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.min.mjs" type="module"></script>
+<script type="module">
+    import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.min.mjs';
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.worker.min.mjs';
+
+    const pdfUrl = "{{ pdf_url | safe }}";
+    const canvas = document.getElementById('pdf-canvas');
+    const context = canvas.getContext('2d');
+    let pdfDoc = null;
+    let pageNum = {{ book.current_page | default(1) }};
+    let pageRendering = false;
+    let pageNumPending = null;
+    const scale = 1.5;
+
+    const currentPageSpan = document.getElementById('current-page');
+    const totalPagesSpan = document.getElementById('total-pages');
+
+    async function renderPage(num) {
+        if (pageRendering) {
+            pageNumPending = num;
+            return;
+        }
+        pageRendering = true;
+
+        try {
+            const page = await pdfDoc.getPage(num);
+            const viewport = page.getViewport({ scale: scale });
+
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            await page.render({
+                canvasContext: context,
+                viewport: viewport
+            }).promise;
+
+            currentPageSpan.textContent = num;
+            totalPagesSpan.textContent = pdfDoc.numPages;
+
+            // Log page access
+            fetch('{{ url_for("nook.log_page_access", book_id=book._id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': '{{ form.csrf_token }}' // Added CSRF token
+                },
+                body: JSON.stringify({ page_number: num })
+            });
+
+            pageRendering = false;
+
+            if (pageNumPending !== null) {
+                renderPage(pageNumPending);
+                pageNumPending = null;
+            }
+        } catch (error) {
+            console.error('Error rendering page:', error);
+            pageRendering = false;
+        }
+    }
+
+    async function loadPdf() {
+        try {
+            pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
+            renderPage(pageNum);
+        } catch (error) {
+            console.error('Error loading PDF:', error);
+            alert('Failed to load the PDF. Please try again.');
+        }
+    }
+
+    document.getElementById('prev-page').addEventListener('click', () => {
+        if (pageNum <= 1) return;
+        pageNum--;
+        renderPage(pageNum);
+    });
+
+    document.getElementById('next-page').addEventListener('click', () => {
+        if (pageNum >= pdfDoc.numPages) return;
+        pageNum++;
+        renderPage(pageNum);
+    });
+
+    loadPdf();
+</script>
+{% endblock %}

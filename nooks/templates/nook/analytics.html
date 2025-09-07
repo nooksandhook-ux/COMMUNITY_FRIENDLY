@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Nook - Reading Analytics{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="text-success">
+            <i class="bi bi-graph-up me-2"></i>Reading Analytics
+        </h1>
+        <a href="{{ url_for('nook.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Analytics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="fw-bold">{{ analytics.total_books }}</h3>
+                    <p class="mb-0">Total Books</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="fw-bold">{{ analytics.total_pages }}</h3>
+                    <p class="mb-0">Pages Read</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="fw-bold">{{ analytics.reading_streak }}</h3>
+                    <p class="mb-0">Day Reading Streak</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning text-white shadow-sm">
+                <div class="card-body text-center">
+                    <h3 class="fw-bold">{{ analytics.avg_rating | round(1) }}</h3>
+                    <p class="mb-0">Average Rating</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Books by Status -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5>Books by Status</h5>
+            {% if analytics.books_by_status %}
+                <div class="row">
+                    {% for status, count in analytics.books_by_status.items() %}
+                        <div class="col-md-3">
+                            <div class="card shadow-sm">
+                                <div class="card-body text-center">
+                                    <h6 class="fw-bold">{{ status.title() }}</h6>
+                                    <p class="mb-0">{{ count }} Book{% if count != 1 %}s{% endif %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">No books recorded.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Books by Genre -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5>Books by Genre</h5>
+            {% if analytics.books_by_genre %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Genre</th>
+                                <th>Books</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for genre, count in analytics.books_by_genre.items() %}
+                                <tr>
+                                    <td>{{ genre }}</td>
+                                    <td>{{ count }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No genres recorded.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Reading Trend (Placeholder) -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5>Reading Trend</h5>
+            {% if analytics.reading_trend %}
+                <p class="text-muted">Reading trend data will be displayed here.</p>
+                <!-- Placeholder for future chart or visualization -->
+            {% else %}
+                <p class="text-muted">No reading trend data available.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

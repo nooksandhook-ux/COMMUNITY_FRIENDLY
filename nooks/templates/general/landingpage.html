@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-center mb-4 bg-light py-5 text-center">
+    <div>
+        <h1 class="text-primary">
+            <i class="bi bi-book me-2"></i>Welcome to Nooks
+        </h1>
+        <p class="lead">Track your reading, boost your productivity, and earn rewards!</p>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-rocket-takeoff me-2"></i>Get Started
+        </a>
+    </div>
+</div>
+<section class="cta-section text-center py-5 bg-primary text-white">
+    <h2>Join Our Community</h2>
+    <p>Start your journey of personal growth and earn ₦10 for every verified quote from your favorite books.</p>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg">
+        <i class="bi bi-person-plus me-2"></i>Sign Up Now
+    </a>
+</section>
+<section class="faq-section py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-4">Why Nooks?</h2>
+        <div class="accordion" id="faqAccordion">
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faq1">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
+                        Why should I use Nooks?
+                    </button>
+                </h3>
+                <div id="collapse1" class="accordion-collapse collapse show" aria-labelledby="faq1" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Nooks is designed for Nigerian readers, combining reading tracking and productivity tools with a unique reward system. It helps you grow personally while earning ₦10 per verified book quote to cover small expenses like airtime or data.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faq2">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                        How does Nooks help me read more?
+                    </button>
+                </h3>
+                <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="faq2" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        With Nooks, you can track your reading progress, set goals, and earn points and badges for every book you read. Our gamified system keeps you motivated, while detailed analytics help you build consistent reading habits.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faq3">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                        How can I boost my productivity with Nooks?
+                    </button>
+                </h3>
+                <div id="collapse3" class="accordion-collapse collapse" aria-labelledby="faq3" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Hook section offers a customizable Pomodoro timer with vibrant themes to keep you focused. Track tasks, analyze productivity patterns, and earn rewards for completed sessions, making work more engaging and effective.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faq4">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4" aria-expanded="false" aria-controls="collapse4">
+                        What makes the reward system special?
+                    </button>
+                </h3>
+                <div id="collapse4" class="accordion-collapse collapse" aria-labelledby="faq4" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Our quote-based reward system lets you earn ₦10 for every verified non-fiction book quote, helping you afford small daily needs. Plus, earn points and badges for reading and productivity to unlock exciting achievements!
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h3 class="accordion-header" id="faq5">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5" aria-expanded="false" aria-controls="collapse5">
+                        Why is Nooks perfect for Nigerians?
+                    </button>
+                </h3>
+                <div id="collapse5" class="accordion-collapse collapse" aria-labelledby="faq5" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        Tailored for Nigerian users, Nooks supports your personal growth with tools to track reading and productivity, while offering financial rewards that resonate with local needs, like airtime or snacks, all in a mobile-friendly, offline-capable app.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="partner-section py-5 bg-white text-center">
+    <div class="container">
+        <h2>Partner with Nooks</h2>
+        <p class="lead">We’re helping Nigerians grow through reading. Let’s collaborate to make a bigger impact — from rewards to literacy campaigns.</p>
+        <a href="https://wa.me/+2348133128979" class="btn btn-primary btn-lg">
+            <i class="bi bi-whatsapp me-2"></i>Reach Out to Our Team
+        </a>
+    </div>
+</section>
+{% endblock %}

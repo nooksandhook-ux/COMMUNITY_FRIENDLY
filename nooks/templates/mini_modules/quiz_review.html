@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <h2>Quiz Review</h2>
+  <div id="quiz-review"></div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/quiz_review.js') }}"></script>
+<script>loadQuizReview();</script>
+{% endblock %}
