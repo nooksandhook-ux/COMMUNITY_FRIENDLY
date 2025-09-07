@@ -128,8 +128,6 @@ A comprehensive Flask web application owned by the non-profit organization **Noo
 
 NOOKS is a modular Flask web application owned by **NooksBridge**, a non-profit organization dedicated to promoting literacy and productivity, with a focus on engaging Nigerian readers through a quote-based reward system. Users can track their reading, join book clubs, participate in real-time discussions, create flashcards, take quizzes, earn rewards, and support the platform through donations—all in a clean, mobile-friendly interface with secure book uploads and anti-piracy measures.
 
----
-
 ## Tech Stack
 
 - **Backend**: Flask, Flask-PyMongo, Flask-Login, Flask-SocketIO, Gunicorn (production)
@@ -137,8 +135,6 @@ NOOKS is a modular Flask web application owned by **NooksBridge**, a non-profit 
 - **Frontend**: Jinja2 templates, Bootstrap 5, custom CSS/JS, Socket.IO, Chart.js
 - **Integrations**: Google Books API, OPay Checkout (payment gateway), DiceBear (avatar generation)
 - **Deployment**: Procfile (Heroku/Render-ready), Python 3.10+
-
----
 
 ## Setup & Installation
 
@@ -197,8 +193,6 @@ NOOKS is a modular Flask web application owned by **NooksBridge**, a non-profit 
    - Open `http://localhost:5000`
    - Admin panel: `/admin` (default: `admin`/`admin123`)
 
----
-
 ## Directory Structure (Key Parts)
 
 ```
@@ -223,9 +217,10 @@ static/
     ...
 integrations/
     payment.py           # Payment gateway integration (e.g., OPay Checkout)
+utils/
+    breadcrumbs.py       # Dynamic breadcrumb generation
+    decorators.py        # Custom decorators for route handling
 ```
-
----
 
 ## Deployment on Render
 
@@ -245,8 +240,6 @@ integrations/
 
 4. **Database**: Initializes automatically on first run with admin user
 
----
-
 ## Database Features
 
 - **Comprehensive Models**: Schema with validation for users, books, quotes, tasks, clubs, flashcards, quizzes, rewards, donations, testimonials, transactions
@@ -260,8 +253,6 @@ integrations/
 - **Transactions Collection**: Logs reward type, amount, and status
 
 For detailed database documentation, see DATABASE_SETUP.md
-
----
 
 ## Secure Book Upload Feature
 
@@ -280,8 +271,6 @@ For detailed database documentation, see DATABASE_SETUP.md
   - Clear status indicators (e.g., “Private”, “Encrypted”)
   - Quotes from uploaded books follow standard verification process
 
----
-
 ## Quote-Based Reward System (Nigerian Readers)
 
 - **Purpose**: Incentivizes reading by rewarding Nigerian users ₦10 per verified quote, supporting small expenses (e.g., airtime, data, snacks)
@@ -298,8 +287,6 @@ For detailed database documentation, see DATABASE_SETUP.md
   - User authentication and book ownership verification
   - Duplicate quote detection, page number validation, manual verification
   - Rate limiting, IP-based fraud detection, audit trail
-
----
 
 ## Usage
 
@@ -345,8 +332,6 @@ For detailed database documentation, see DATABASE_SETUP.md
 - Track progress over time
 - Monitor streaks, achievements, donation impact, and quote earnings
 - Analyze reading, productivity, and donor patterns
-
----
 
 ## API Endpoints
 
@@ -473,8 +458,6 @@ For detailed database documentation, see DATABASE_SETUP.md
 - `GET /api/export/user_data` - Export user data
 - `GET /api/donations/transactions` - Donation transaction logs
 
----
-
 ## 🎮 Gamification System
 
 ### Point System
@@ -506,8 +489,6 @@ For detailed database documentation, see DATABASE_SETUP.md
 - **Level 3**: 400–899 points
 - **And so on...**
 
----
-
 ## 🎨 Theme System
 
 ### Available Themes
@@ -532,8 +513,6 @@ For detailed database documentation, see DATABASE_SETUP.md
 - **Space Timer**: Cosmic theme
 - **Zen Timer**: Peaceful and minimalist
 
----
-
 ## 📱 PWA Features
 
 ### Installation
@@ -557,8 +536,6 @@ For detailed database documentation, see DATABASE_SETUP.md
 - **Responsive Design**: Works on all screen sizes
 - **Touch Optimized**: Mobile-friendly interactions
 
----
-
 ## 🔧 Technical Features
 
 ### Database Schema
@@ -575,6 +552,15 @@ For detailed database documentation, see DATABASE_SETUP.md
 - **Donations**: Donation records, sponsorship tiers, transaction logs
 - **Testimonials**: User impact stories and testimonials
 - **Transactions**: Reward type, amount, status
+
+### Breadcrumb Navigation
+
+- **Dynamic Breadcrumbs**: Automatically generated navigation trail for all pages, displayed in `base.html` using Bootstrap 5 breadcrumb component
+- **Implementation**: Integrated directly in `base.html` with a helper function in `utils/breadcrumbs.py` for dynamic generation based on request endpoint
+- **Coverage**: Supports all major endpoints (e.g., `/dashboard`, `/nook`, `/hook/timer`, `/nooks_club`, `/admin`, etc.) with hierarchical navigation (e.g., Home > Nook > Read)
+- **Extensibility**: Configurable breadcrumb mappings in `utils/breadcrumbs.py` allow easy addition of new endpoints
+- **User Experience**: Enhances navigation clarity, showing users their current location within the app’s structure
+- **Registration**: Helper function registered as a Jinja2 global via `register_breadcrumbs(app)` in `app.py`
 
 ### Security
 
@@ -595,8 +581,6 @@ For detailed database documentation, see DATABASE_SETUP.md
 - **Pagination**: Large dataset handling
 - **API Optimization**: Efficient data serialization
 
----
-
 ## Security & Fair Use
 
 At NooksBridge, we prioritize user safety, copyright respect, and fair access to knowledge through the NOOKS app. Here’s how we protect content while promoting literacy:
@@ -609,8 +593,6 @@ At NooksBridge, we prioritize user safety, copyright respect, and fair access to
 - **Clear User Responsibility**: Terms hold users accountable for uploaded content, ensuring compliance with intellectual property rights
 - **Donor Transparency**: Public dashboards and audit logs at `/donations/transactions` ensure trust
 - **Mission-Driven**: NooksBridge is a non-profit; NOOKS rewards reading, respects authors, and builds a community-centered ecosystem
-
----
 
 ## Impact and Goals
 
@@ -632,8 +614,6 @@ At NooksBridge, we prioritize user safety, copyright respect, and fair access to
 - Promotes literacy and productivity in a community-driven ecosystem
 - Supports NooksBridge’s non-profit mission to advance education
 
----
-
 ## Future Enhancements
 
 - **Quote Verification**: OCR or ML for automated quote checking, community verification by trusted users, publisher partnerships
@@ -643,8 +623,6 @@ At NooksBridge, we prioritize user safety, copyright respect, and fair access to
 - **API Expansion**: Open APIs for third-party mini-apps or integrations
 - **Notifications**: Real-time/email alerts for club activity, quiz results, quote approvals, or donation confirmations
 
----
-
 ## Contributing
 
 1. Fork the repository
@@ -653,24 +631,16 @@ At NooksBridge, we prioritize user safety, copyright respect, and fair access to
 4. Add tests if applicable
 5. Submit a pull request
 
----
-
 ## License
 
 INTERNAL USE ONLY: This codebase is proprietary and confidential to NooksBridge. Unauthorized access, use, or distribution is prohibited.
-
----
 
 ## Support
 
 For support, please open an issue on GitHub or contact the NooksBridge development team.
 
----
-
 ## Credits
 
 Developed by Warpiiv and contributors for **NooksBridge**. Special thanks to the open-source community!
-
----
 
 **NOOKS** - Track your reading journey, boost productivity, engage in book clubs, and support literacy with NooksBridge, all in one beautiful, gamified experience! 📚⏱️💸
