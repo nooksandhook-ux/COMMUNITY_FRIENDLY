@@ -28,8 +28,9 @@ from blueprints.api.routes import api_bp
 from blueprints.quotes.routes import quotes_bp
 from blueprints.nooks_club.routes import nooks_club_bp
 from blueprints.mini_modules.routes import mini_modules_bp
-from blueprints.analytics import analytics_bp, configure_cache  # Import configure_cache
+from blueprints.analytics import analytics_bp, configure_cache
 from blueprints.donations.routes import donations_bp
+from blueprints.testimonials.routes import testimonials_bp
 
 # Import breadcrumb helper
 from utils.breadcrumbs import register_breadcrumbs
@@ -131,6 +132,7 @@ def create_app():
     app.register_blueprint(mini_modules_bp, url_prefix='/mini_modules')
     app.register_blueprint(analytics_bp, url_prefix='/analytics')
     app.register_blueprint(donations_bp, url_prefix='/donations')
+    app.register_blueprint(testimonials_bp, url_prefix='/testimonials')  # Added testimonials blueprint registration
     
     with app.app_context():
         logger.info("Registered endpoints: %s", [rule.endpoint for rule in app.url_map.iter_rules()])
