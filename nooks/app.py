@@ -4,6 +4,7 @@ from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_caching import Cache
 from flask_session import Session
+from flask_session.sessions import MongoDBSessionInterface
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
@@ -41,6 +42,21 @@ from utils.breadcrumbs import register_breadcrumbs
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+# Custom MongoDBSessionInterface to fix deprecated 'update' method
+class CustomMongoDBSessionInterface(MongoDBSessionInterface):
+    def save_session(self, app, session, response):
+        if not self.should_set_cookie(app, session):
+            return
+        store_id = session.sid
+        if session.modified or not self.permanent:
+            expires = self.get_expiration_time(app, session)
+            val = self.serializer.dumps(dict(session))
+            self.store.update_one(
+                {'id': store_id},
+                {'$set': {'val': val, 'expiration': expires}},
+                upsert=True
+            )
+
 def create_app():
     app = Flask(__name__)
     
@@ -64,7 +80,12 @@ def create_app():
     mongo = PyMongo(app)
     app.mongo = mongo
     
-    # Initialize Flask-Session
+    # Initialize Flask-Session with custom interface
+    app.session_interface = CustomMongoDBSessionInterface(
+        app,
+        db=app.config['SESSION_MONGODB'],
+        collection=app.config['SESSION_MONGODB_COLLECT']
+    )
     Session(app)
     
     # Initialize Flask-Login
@@ -84,8 +105,20 @@ def create_app():
     # Set TTL index for sessions (7 days)
     with app.app_context():
         try:
-            app.mongo.db.sessions.create_index('expiration', expireAfterSeconds=7*24*60*60)
-            logger.info("Created TTL index for sessions collection")
+            # Check existing indexes
+            indexes = app.mongo.db.sessions.index_information()
+            if 'expiration_1' in indexes:
+                existing_index = indexes['expiration_1']
+                if existing_index.get('expireAfterSeconds', 0) != 7*24*60*60:
+                    logger.info("Dropping conflicting TTL index for sessions")
+                    app.mongo.db.sessions.drop_index('expiration_1')
+                    app.mongo.db.sessions.create_index('expiration', expireAfterSeconds=7*24*60*60)
+                    logger.info("Created new TTL index for sessions collection")
+                else:
+                    logger.info("TTL index for sessions already exists with correct options")
+            else:
+                app.mongo.db.sessions.create_index('expiration', expireAfterSeconds=7*24*60*60)
+                logger.info("Created TTL index for sessions collection")
         except Exception as e:
             logger.error(f"Failed to create TTL index for sessions: {str(e)}", exc_info=True)
     
