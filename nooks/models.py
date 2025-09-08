@@ -17,7 +17,7 @@ class User(UserMixin):
         self.username = user_data['username']
         self.email = user_data['email']
         self.is_admin = user_data.get('is_admin', False)
-        self.active = user_data.get('is_active', True)
+        self.active = user_data.get('is_active', True)  
         self.authenticated = True
 
     @property
@@ -50,7 +50,7 @@ class DatabaseManager:
             
             # Initialize default data and migrations
             DatabaseManager._create_default_admin()
-            DatabaseManager._migrate_user_avatars()
+            DatabaseManager._migrate_user_avatars()  # New migration for avatar preferences
             DatabaseManager._initialize_default_data()
             
             logger.info("Database initialization completed successfully")
@@ -70,7 +70,7 @@ class DatabaseManager:
             'quotes', 'transactions', 'user_purchases',
             'clubs', 'club_posts', 'club_chat_messages',
             'flashcards', 'quiz_questions', 'quiz_answers', 'user_progress',
-            'donations', 'testimonials'
+            'donations', 'testimonials'  # Added new collections
         ]
         existing_collections = current_app.mongo.db.list_collection_names()
         
@@ -261,6 +261,7 @@ class DatabaseManager:
 
             for user in users:
                 user_id = user['_id']
+                # Update user with default avatar preferences
                 result = current_app.mongo.db.users.update_one(
                     {'_id': user_id},
                     {
@@ -349,96 +350,6 @@ class DatabaseManager:
             
         except Exception as e:
             logger.error(f"Error initializing default data: {str(e)}")
-
-class CacheUtils:
-    """Utility class for cached database queries"""
-    
-    @staticmethod
-    @current_app.cache.memoize(timeout=300)  # Cache for 5 minutes
-    def get_donation_stats():
-        """Get total donations and count of completed donations"""
-        try:
-            pipeline = [
-                {'$match': {'status': 'completed'}},
-                {'$group': {
-                    '_id': None,
-                    'total_donations': {'$sum': '$amount'},
-                    'donation_count': {'$sum': 1}
-                }}
-            ]
-            result = list(current_app.mongo.db.donations.aggregate(pipeline))
-            logger.info("Fetched donation stats from database")
-            return result[0] if result else {'total_donations': 0, 'donation_count': 0}
-        except Exception as e:
-            logger.error(f"Error fetching donation stats: {str(e)}")
-            return {'total_donations': 0, 'donation_count': 0}
-
-    @staticmethod
-    @current_app.cache.memoize(timeout=300)  # Cache for 5 minutes
-    def get_tier_data():
-        """Get donation totals by tier"""
-        try:
-            pipeline = [
-                {'$match': {'status': 'completed'}},
-                {'$group': {
-                    '_id': '$tier',
-                    'total': {'$sum': '$amount'}
-                }}
-            ]
-            tier_totals = list(current_app.mongo.db.donations.aggregate(pipeline))
-            tier_data = {
-                'bronze': {'total': 0},
-                'silver': {'total': 0},
-                'gold': {'total': 0}
-            }
-            for entry in tier_totals:
-                if entry['_id'] in tier_data:
-                    tier_data[entry['_id']]['total'] = entry['total']
-            logger.info("Fetched tier data from database")
-            return tier_data
-        except Exception as e:
-            logger.error(f"Error fetching tier data: {str(e)}")
-            return {'bronze': {'total': 0}, 'silver': {'total': 0}, 'gold': {'total': 0}}
-
-    @staticmethod
-    @current_app.cache.memoize(timeout=300)  # Cache for 5 minutes
-    def get_verified_quotes():
-        """Get count of verified quotes"""
-        try:
-            count = current_app.mongo.db.quotes.count_documents({'status': 'verified'})
-            logger.info("Fetched verified quotes count from database")
-            return count
-        except Exception as e:
-            logger.error(f"Error fetching verified quotes: {str(e)}")
-            return 0
-
-    @staticmethod
-    @current_app.cache.memoize(timeout=300)  # Cache for 5 minutes
-    def get_active_users():
-        """Get count of active users in the last 30 days"""
-        try:
-            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-            active_users = current_app.mongo.db.activity_log.distinct(
-                'user_id',
-                {'timestamp': {'$gte': thirty_days_ago}}
-            )
-            logger.info("Fetched active users count from database")
-            return len(active_users)
-        except Exception as e:
-            logger.error(f"Error fetching active users: {str(e)}")
-            return 0
-
-    @staticmethod
-    @current_app.cache.memoize(timeout=300)  # Cache for 5 minutes
-    def get_testimonials(limit=3):
-        """Get approved testimonials with a limit"""
-        try:
-            testimonials = TestimonialModel.get_approved_testimonials(limit=limit)
-            logger.info("Fetched testimonials from database")
-            return testimonials
-        except Exception as e:
-            logger.error(f"Error fetching testimonials: {str(e)}")
-            return []
 
 class ClubModel:
     @staticmethod
@@ -603,10 +514,6 @@ class DonationModel:
             result = current_app.mongo.db.donations.insert_one(donation_data)
             logger.info(f"Created donation for user {user_id}: {transaction_id}")
             
-            # Invalidate donation caches
-            current_app.cache.delete_memoized(CacheUtils.get_donation_stats)
-            current_app.cache.delete_memoized(CacheUtils.get_tier_data)
-            
             ActivityLogger.log_activity(
                 user_id=user_id,
                 action='donation_created',
@@ -637,10 +544,6 @@ class DonationModel:
             )
             if result.modified_count > 0:
                 logger.info(f"Updated donation status for transaction {transaction_id} to {status}")
-                
-                # Invalidate donation caches
-                current_app.cache.delete_memoized(CacheUtils.get_donation_stats)
-                current_app.cache.delete_memoized(CacheUtils.get_tier_data)
                 
                 donation = current_app.mongo.db.donations.find_one({'transaction_id': transaction_id})
                 if donation and status == 'completed':
@@ -737,9 +640,6 @@ class TestimonialModel:
             result = current_app.mongo.db.testimonials.insert_one(testimonial_data)
             logger.info(f"Created testimonial for user {user_id}")
             
-            # Invalidate testimonials cache
-            current_app.cache.delete_memoized(CacheUtils.get_testimonials)
-            
             ActivityLogger.log_activity(
                 user_id=user_id,
                 action='testimonial_submitted',
@@ -769,10 +669,6 @@ class TestimonialModel:
             )
             if result.modified_count > 0:
                 logger.info(f"Updated testimonial {testimonial_id} to status {status}")
-                
-                # Invalidate testimonials cache if approved
-                if status == 'approved':
-                    current_app.cache.delete_memoized(CacheUtils.get_testimonials)
                 
                 testimonial = current_app.mongo.db.testimonials.find_one({'_id': ObjectId(testimonial_id)})
                 if testimonial:
@@ -1205,9 +1101,6 @@ class ActivityLogger:
             
             current_app.mongo.db.activity_log.insert_one(activity_data)
             
-            # Invalidate active users cache
-            current_app.cache.delete_memoized(CacheUtils.get_active_users)
-            
         except Exception as e:
             logger.error(f"Error logging activity: {str(e)}")
 
@@ -1362,6 +1255,144 @@ class AdminUtils:
             logger.error(f"Error getting system statistics: {str(e)}")
             return {}
 
+# Database validation schemas
+USER_SCHEMA = {
+    'username': {'type': 'string', 'required': True, 'unique': True},
+    'email': {'type': 'string', 'required': True, 'unique': True},
+    'password_hash': {'type': 'string', 'required': True},
+    'is_admin': {'type': 'boolean', 'default': False},
+    'is_active': {'type': 'boolean', 'default': True},
+    'accepted_terms': {'type': 'boolean', 'required': True, 'default': False},
+    'created_at': {'type': 'datetime', 'required': True},
+    'updated_at': {'type': 'datetime', 'required': True},
+    'last_login': {'type': 'datetime'},
+    'total_points': {'type': 'integer', 'default': 0},
+    'level': {'type': 'integer', 'default': 1},
+    'profile': {
+        'type': 'dict',
+        'schema': {
+            'display_name': {'type': 'string'},
+            'bio': {'type': 'string'},
+            'avatar_url': {'type': 'string', 'nullable': True},
+            'timezone': {'type': 'string'},
+            'theme': {'type': 'string'}
+        }
+    },
+    'preferences': {
+        'type': 'dict',
+        'schema': {
+            'notifications_enabled': {'type': 'boolean'},
+            'email_notifications': {'type': 'boolean'},
+            'privacy_level': {'type': 'string'},
+            'default_book_status': {'type': 'string'},
+            'reading_goal_type': {'type': 'string'},
+            'reading_goal_target': {'type': 'integer'},
+            'avatar': {
+                'type': 'dict',
+                'schema': {
+                    'style': {'type': 'string'},
+                    'options': {
+                        'type': 'dict',
+                        'schema': {
+                            'hair': {'type': 'list', 'schema': {'type': 'string'}},
+                            'backgroundColor': {'type': 'list', 'schema': {'type': 'string'}},
+                            'flip': {'type': 'boolean'}
+                        }
+                    }
+                }
+            }
+        }
+    },
+    'statistics': {
+        'type': 'dict',
+        'schema': {
+            'books_read': {'type': 'integer'},
+            'pages_read': {'type': 'integer'},
+            'reading_streak': {'type': 'integer'},
+            'tasks_completed': {'type': 'integer'},
+            'productivity_streak': {'type': 'integer'},
+            'total_focus_time': {'type': 'integer'}
+        }
+    }
+}
+
+BOOK_SCHEMA = {
+    'user_id': {'type': 'objectid', 'required': True},
+    'title': {'type': 'string', 'required': True},
+    'authors': {'type': 'list'},
+    'isbn': {'type': 'string'},
+    'genre': {'type': 'string'},
+    'status': {'type': 'string', 'allowed': ['to_read', 'reading', 'finished']},
+    'total_pages': {'type': 'integer'},
+    'current_page': {'type': 'integer'},
+    'added_at': {'type': 'datetime', 'required': True},
+    'pdf_path': {'type': 'string'},
+    'is_encrypted': {'type': 'boolean', 'default': False}
+}
+
+TASK_SCHEMA = {
+    'user_id': {'type': 'objectid', 'required': True},
+    'title': {'type': 'string', 'required': True},
+    'description': {'type': 'string'},
+    'category': {'type': 'string'},
+    'duration': {'type': 'integer', 'required': True},
+    'completed_at': {'type': 'datetime', 'required': True}
+}
+
+QUOTE_SCHEMA = {
+    'user_id': {'type': 'objectid', 'required': True},
+    'book_id': {'type': 'objectid', 'required': True},
+    'quote_text': {'type': 'string', 'required': True},
+    'page_number': {'type': 'integer', 'required': True},
+    'status': {'type': 'string', 'allowed': ['pending', 'verified', 'rejected'], 'default': 'pending'},
+    'submitted_at': {'type': 'datetime', 'required': True},
+    'verified_at': {'type': 'datetime'},
+    'verified_by': {'type': 'objectid'},
+    'rejection_reason': {'type': 'string'},
+    'reward_amount': {'type': 'integer', 'default': 10}
+}
+
+TRANSACTION_SCHEMA = {
+    'user_id': {'type': 'objectid', 'required': True},
+    'amount': {'type': 'integer', 'required': True},
+    'reward_type': {'type': 'string', 'required': True},
+    'quote_id': {'type': 'objectid'},
+    'description': {'type': 'string'},
+    'timestamp': {'type': 'datetime', 'required': True},
+    'status': {'type': 'string', 'allowed': ['pending', 'completed', 'failed'], 'default': 'completed'}
+}
+
+REWARD_SCHEMA = {
+    'user_id': {'type': 'objectid', 'required': True},
+    'points': {'type': 'integer', 'required': True},
+    'source': {'type': 'string', 'required': True},
+    'description': {'type': 'string', 'required': True},
+    'category': {'type': 'string'},
+    'date': {'type': 'datetime', 'required': True}
+}
+
+DONATION_SCHEMA = {
+    'user_id': {'type': 'objectid', 'required': True},
+    'amount': {'type': 'float', 'required': True},
+    'tier': {'type': 'string', 'allowed': ['bronze', 'silver', 'gold'], 'required': True},
+    'transaction_id': {'type': 'string', 'required': True, 'unique': True},
+    'status': {'type': 'string', 'allowed': ['pending', 'completed', 'failed'], 'default': 'pending'},
+    'created_at': {'type': 'datetime', 'required': True},
+    'completed_at': {'type': 'datetime'},
+    'failed_at': {'type': 'datetime'}
+}
+
+TESTIMONIAL_SCHEMA = {
+    'user_id': {'type': 'objectid', 'required': True},
+    'content': {'type': 'string', 'required': True},
+    'status': {'type': 'string', 'allowed': ['pending', 'approved', 'rejected'], 'default': 'pending'},
+    'created_at': {'type': 'datetime', 'required': True},
+    'updated_at': {'type': 'datetime', 'required': True},
+    'approved_at': {'type': 'datetime'},
+    'rejected_at': {'type': 'datetime'},
+    'rejection_reason': {'type': 'string'}
+}
+
 class QuoteModel:
     """Quote model for managing book quotes and verification"""
     
@@ -1511,6 +1542,7 @@ class QuoteModel:
                         'page_number': quote['page_number']
                     }
                 )
+                
             else:
                 update_data['status'] = 'rejected'
                 update_data['rejection_reason'] = rejection_reason or "Quote could not be verified"
@@ -1532,10 +1564,6 @@ class QuoteModel:
                 {'_id': ObjectId(quote_id)},
                 {'$set': update_data}
             )
-            
-            if result.modified_count > 0 and approved:
-                # Invalidate verified quotes cache
-                current_app.cache.delete_memoized(CacheUtils.get_verified_quotes)
             
             return result.modified_count > 0, None
             
@@ -1785,141 +1813,3 @@ class GoogleBooksAPI:
         except Exception as e:
             logger.error(f"Error getting book details: {str(e)}")
             return None
-
-# Database validation schemas
-USER_SCHEMA = {
-    'username': {'type': 'string', 'required': True, 'unique': True},
-    'email': {'type': 'string', 'required': True, 'unique': True},
-    'password_hash': {'type': 'string', 'required': True},
-    'is_admin': {'type': 'boolean', 'default': False},
-    'is_active': {'type': 'boolean', 'default': True},
-    'accepted_terms': {'type': 'boolean', 'required': True, 'default': False},
-    'created_at': {'type': 'datetime', 'required': True},
-    'updated_at': {'type': 'datetime', 'required': True},
-    'last_login': {'type': 'datetime'},
-    'total_points': {'type': 'integer', 'default': 0},
-    'level': {'type': 'integer', 'default': 1},
-    'profile': {
-        'type': 'dict',
-        'schema': {
-            'display_name': {'type': 'string'},
-            'bio': {'type': 'string'},
-            'avatar_url': {'type': 'string', 'nullable': True},
-            'timezone': {'type': 'string'},
-            'theme': {'type': 'string'}
-        }
-    },
-    'preferences': {
-        'type': 'dict',
-        'schema': {
-            'notifications_enabled': {'type': 'boolean'},
-            'email_notifications': {'type': 'boolean'},
-            'privacy_level': {'type': 'string'},
-            'default_book_status': {'type': 'string'},
-            'reading_goal_type': {'type': 'string'},
-            'reading_goal_target': {'type': 'integer'},
-            'avatar': {
-                'type': 'dict',
-                'schema': {
-                    'style': {'type': 'string'},
-                    'options': {
-                        'type': 'dict',
-                        'schema': {
-                            'hair': {'type': 'list', 'schema': {'type': 'string'}},
-                            'backgroundColor': {'type': 'list', 'schema': {'type': 'string'}},
-                            'flip': {'type': 'boolean'}
-                        }
-                    }
-                }
-            }
-        }
-    },
-    'statistics': {
-        'type': 'dict',
-        'schema': {
-            'books_read': {'type': 'integer'},
-            'pages_read': {'type': 'integer'},
-            'reading_streak': {'type': 'integer'},
-            'tasks_completed': {'type': 'integer'},
-            'productivity_streak': {'type': 'integer'},
-            'total_focus_time': {'type': 'integer'}
-        }
-    }
-}
-
-BOOK_SCHEMA = {
-    'user_id': {'type': 'objectid', 'required': True},
-    'title': {'type': 'string', 'required': True},
-    'authors': {'type': 'list'},
-    'isbn': {'type': 'string'},
-    'genre': {'type': 'string'},
-    'status': {'type': 'string', 'allowed': ['to_read', 'reading', 'finished']},
-    'total_pages': {'type': 'integer'},
-    'current_page': {'type': 'integer'},
-    'added_at': {'type': 'datetime', 'required': True},
-    'pdf_path': {'type': 'string'},
-    'is_encrypted': {'type': 'boolean', 'default': False}
-}
-
-TASK_SCHEMA = {
-    'user_id': {'type': 'objectid', 'required': True},
-    'title': {'type': 'string', 'required': True},
-    'description': {'type': 'string'},
-    'category': {'type': 'string'},
-    'duration': {'type': 'integer', 'required': True},
-    'completed_at': {'type': 'datetime', 'required': True}
-}
-
-QUOTE_SCHEMA = {
-    'user_id': {'type': 'objectid', 'required': True},
-    'book_id': {'type': 'objectid', 'required': True},
-    'quote_text': {'type': 'string', 'required': True},
-    'page_number': {'type': 'integer', 'required': True},
-    'status': {'type': 'string', 'allowed': ['pending', 'verified', 'rejected'], 'default': 'pending'},
-    'submitted_at': {'type': 'datetime', 'required': True},
-    'verified_at': {'type': 'datetime'},
-    'verified_by': {'type': 'objectid'},
-    'rejection_reason': {'type': 'string'},
-    'reward_amount': {'type': 'integer', 'default': 10}
-}
-
-TRANSACTION_SCHEMA = {
-    'user_id': {'type': 'objectid', 'required': True},
-    'amount': {'type': 'integer', 'required': True},
-    'reward_type': {'type': 'string', 'required': True},
-    'quote_id': {'type': 'objectid'},
-    'description': {'type': 'string'},
-    'timestamp': {'type': 'datetime', 'required': True},
-    'status': {'type': 'string', 'allowed': ['pending', 'completed', 'failed'], 'default': 'completed'}
-}
-
-REWARD_SCHEMA = {
-    'user_id': {'type': 'objectid', 'required': True},
-    'points': {'type': 'integer', 'required': True},
-    'source': {'type': 'string', 'required': True},
-    'description': {'type': 'string', 'required': True},
-    'category': {'type': 'string'},
-    'date': {'type': 'datetime', 'required': True}
-}
-
-DONATION_SCHEMA = {
-    'user_id': {'type': 'objectid', 'required': True},
-    'amount': {'type': 'float', 'required': True},
-    'tier': {'type': 'string', 'allowed': ['bronze', 'silver', 'gold'], 'required': True},
-    'transaction_id': {'type': 'string', 'required': True, 'unique': True},
-    'status': {'type': 'string', 'allowed': ['pending', 'completed', 'failed'], 'default': 'pending'},
-    'created_at': {'type': 'datetime', 'required': True},
-    'completed_at': {'type': 'datetime'},
-    'failed_at': {'type': 'datetime'}
-}
-
-TESTIMONIAL_SCHEMA = {
-    'user_id': {'type': 'objectid', 'required': True},
-    'content': {'type': 'string', 'required': True},
-    'status': {'type': 'string', 'allowed': ['pending', 'approved', 'rejected'], 'default': 'pending'},
-    'created_at': {'type': 'datetime', 'required': True},
-    'updated_at': {'type': 'datetime', 'required': True},
-    'approved_at': {'type': 'datetime'},
-    'rejected_at': {'type': 'datetime'},
-    'rejection_reason': {'type': 'string'}
-}
