@@ -63,6 +63,10 @@ def create_app():
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
     
+    # Initialize Flask-Caching
+    cache = Cache()
+    cache.init_app(app)
+    
     # Initialize Flask-Caching for analytics blueprint
     configure_cache(app)  # Call configure_cache from analytics blueprint
     
@@ -113,6 +117,74 @@ def create_app():
     def datetimeformat(value):
         return value.strftime('%Y-%m-%d') if value else ''
     
+    # Cached functions for performance optimization
+    @cache.memoize(timeout=300)  # Cache for 5 minutes
+    def get_donation_stats():
+        try:
+            pipeline = [
+                {'$match': {'status': 'completed'}},
+                {'$group': {
+                    '_id': None,
+                    'total_donations': {'$sum': '$amount'},
+                    'donation_count': {'$sum': 1}
+                }}
+            ]
+            result = list(app.mongo.db.donations.aggregate(pipeline))
+            logger.info("Fetched donation stats from database")
+            return result[0] if result else {'total_donations': 0, 'donation_count': 0}
+        except Exception as e:
+            logger.error(f"Error fetching donation stats: {str(e)}")
+            return {'total_donations': 0, 'donation_count': 0}
+
+    @cache.memoize(timeout=300)  # Cache for 5 minutes
+    def get_tier_data():
+        try:
+            pipeline = [
+                {'$match': {'status': 'completed'}},
+                {'$group': {
+                    '_id': '$tier',
+                    'total': {'$sum': '$amount'}
+                }}
+            ]
+            tier_totals = list(app.mongo.db.donations.aggregate(pipeline))
+            tier_data = {
+                'bronze': {'total': 0},
+                'silver': {'total': 0},
+                'gold': {'total': 0}
+            }
+            for entry in tier_totals:
+                if entry['_id'] in tier_data:
+                    tier_data[entry['_id']]['total'] = entry['total']
+            logger.info("Fetched tier data from database")
+            return tier_data
+        except Exception as e:
+            logger.error(f"Error fetching tier data: {str(e)}")
+            return {'bronze': {'total': 0}, 'silver': {'total': 0}, 'gold': {'total': 0}}
+
+    @cache.memoize(timeout=300)  # Cache for 5 minutes
+    def get_verified_quotes():
+        try:
+            count = app.mongo.db.quotes.count_documents({'status': 'verified'})
+            logger.info("Fetched verified quotes count from database")
+            return count
+        except Exception as e:
+            logger.error(f"Error fetching verified quotes: {str(e)}")
+            return 0
+
+    @cache.memoize(timeout=300)  # Cache for 5 minutes
+    def get_active_users():
+        try:
+            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+            active_users = app.mongo.db.activity_log.distinct(
+                'user_id',
+                {'timestamp': {'$gte': thirty_days_ago}}
+            )
+            logger.info("Fetched active users count from database")
+            return len(active_users)
+        except Exception as e:
+            logger.error(f"Error fetching active users: {str(e)}")
+            return 0
+
     # Initialize database with application context
     with app.app_context():
         DatabaseManager.initialize_database()
@@ -145,49 +217,21 @@ def create_app():
         
         logger.info(f"Authenticated user {current_user.get_id()} accessing home page")
         try:
-            # Total donations and donation count
-            pipeline = [
-                {'$match': {'status': 'completed'}},
-                {'$group': {
-                    '_id': None,
-                    'total_donations': {'$sum': '$amount'},
-                    'donation_count': {'$sum': 1}
-                }}
-            ]
-            result = list(app.mongo.db.donations.aggregate(pipeline))
-            total_donations = result[0]['total_donations'] if result else 0
-            donation_count = result[0]['donation_count'] if result else 0
+            # Fetch cached donation stats
+            donation_stats = get_donation_stats()
+            total_donations = donation_stats['total_donations']
+            donation_count = donation_stats['donation_count']
 
-            # Tier data for chart
-            pipeline = [
-                {'$match': {'status': 'completed'}},
-                {'$group': {
-                    '_id': '$tier',
-                    'total': {'$sum': '$amount'}
-                }}
-            ]
-            tier_totals = list(app.mongo.db.donations.aggregate(pipeline))
-            tier_data = {
-                'bronze': {'total': 0},
-                'silver': {'total': 0},
-                'gold': {'total': 0}
-            }
-            for entry in tier_totals:
-                if entry['_id'] in tier_data:
-                    tier_data[entry['_id']]['total'] = entry['total']
+            # Fetch cached tier data
+            tier_data = get_tier_data()
 
-            # Verified quotes
-            verified_quotes = app.mongo.db.quotes.count_documents({'status': 'verified'})
+            # Fetch cached verified quotes
+            verified_quotes = get_verified_quotes()
 
-            # Active users (last 30 days)
-            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-            active_users = app.mongo.db.activity_log.distinct(
-                'user_id',
-                {'timestamp': {'$gte': thirty_days_ago}}
-            )
-            active_users = len(active_users)
+            # Fetch cached active users
+            active_users = get_active_users()
 
-            # Testimonials
+            # Fetch testimonials (not cached to ensure freshness)
             testimonials = TestimonialModel.get_approved_testimonials(limit=3)
 
             return render_template(
