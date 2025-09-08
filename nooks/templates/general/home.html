@@ -185,8 +185,8 @@
                                             <div class="card h-100 shadow-sm border-0">
                                                 <div class="card-body text-center">
                                                     <h5 class="card-title">Total Donations</h5>
-                                                    <p class="card-text display-4">₦{{ total_donations | int }}</p>
-                                                    <p class="text-muted">{{ donation_count }} contributions</p>
+                                                    <p class="card-text display-4">₦{{ total_donations | default(0) | int }}</p>
+                                                    <p class="text-muted">{{ donation_count | default(0) }} contributions</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -194,7 +194,7 @@
                                             <div class="card h-100 shadow-sm border-0">
                                                 <div class="card-body text-center">
                                                     <h5 class="card-title">Verified Quotes</h5>
-                                                    <p class="card-text display-4">{{ verified_quotes }}</p>
+                                                    <p class="card-text display-4">{{ verified_quotes | default(0) }}</p>
                                                     <p class="text-muted">Inspirational insights shared</p>
                                                 </div>
                                             </div>
@@ -203,7 +203,7 @@
                                             <div class="card h-100 shadow-sm border-0">
                                                 <div class="card-body text-center">
                                                     <h5 class="card-title">Active Users</h5>
-                                                    <p class="card-text display-4">{{ active_users }}</p>
+                                                    <p class="card-text display-4">{{ active_users | default(0) }}</p>
                                                     <p class="text-muted">Last 30 days</p>
                                                 </div>
                                             </div>
@@ -230,15 +230,15 @@
                             <div class="col-12">
                                 <h3 class="mb-3">What Our Community Says</h3>
                                 <div class="row g-3">
-                                    {% for testimonial in testimonials %}
+                                    {% for testimonial in testimonials | default([]) %}
                                     <div class="col-md-4">
                                         <div class="card h-100 shadow-sm border-0">
                                             <div class="card-body">
-                                                <p class="card-text">"{{ testimonial.content | truncate(150) }}"</p>
+                                                <p class="card-text">"{{ testimonial.content | truncate(150) | default('No content available') }}"</p>
                                                 <p class="card-text text-muted">
                                                     <small>
                                                         <i class="bi bi-person-circle me-1"></i>
-                                                        {{ testimonial.user_id | get_username }} on {{ testimonial.approved_at | datetimeformat }}
+                                                        {{ testimonial.user_id | get_username | default('Anonymous') }} on {{ testimonial.approved_at | datetimeformat | default('Unknown date') }}
                                                     </small>
                                                 </p>
                                             </div>
