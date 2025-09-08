@@ -58,7 +58,7 @@ def create_app():
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24).hex())
     app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
-    logger.info(f"MONGO_URI: {app.config['MONGO_URI']}")
+    logger.info("MONGO_URI configured successfully")
     if not app.config['MONGO_URI']:
         raise ValueError("MONGO_URI environment variable is not set")
     app.config['SESSION_TYPE'] = 'mongodb'
@@ -332,3 +332,4 @@ app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+
