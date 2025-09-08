@@ -56,13 +56,16 @@ def index():
 def submit_quote():
     """Submit a new quote for verification"""
     if request.method == 'GET':
-        # Get user's books for the form
         try:
             user_id = ObjectId(current_user.id)
+            # Fetch books using BookModel or direct MongoDB query
             books = list(current_app.mongo.db.books.find({
                 'user_id': user_id,
                 'status': {'$in': ['reading', 'finished']}
             }).sort('title', 1))
+            
+            # Log the number of books found for debugging
+            logger.debug(f"Fetched {len(books)} books for user {user_id}")
             
             return render_template('quotes/submit.html', books=books, csrf_token=generate_csrf())
             
@@ -137,17 +140,20 @@ def search_books():
         sanitized_books = []
         for book in books:
             sanitized_book = {
-                'id': book.get('id', ''),
+                'id': book.get('google_id', ''),  # Use 'google_id' to match add_book
                 'title': book.get('title', '').replace('<', '&lt;').replace('>', '&gt;'),
                 'authors': [author.replace('<', '&lt;').replace('>', '&gt;') for author in book.get('authors', [])],
                 'description': book.get('description', '').replace('<', '&lt;').replace('>', '&gt;'),
-                'cover_url': book.get('cover_image', ''),
+                'cover_url': book.get('cover_url', ''),
                 'page_count': book.get('page_count', 0),
                 'genre': book.get('genre', '').replace('<', '&lt;').replace('>', '&gt;'),
                 'isbn': book.get('isbn', ''),
                 'published_date': book.get('published_date', '')
             }
             sanitized_books.append(sanitized_book)
+        
+        # Log the number of books found for debugging
+        logger.debug(f"Found {len(sanitized_books)} books for query: {query}")
         return jsonify({'books': sanitized_books, 'csrf_token': generate_csrf()})
         
     except Exception as e:
