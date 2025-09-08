@@ -3,7 +3,8 @@ from flask_pymongo import PyMongo
 from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_caching import Cache
-from flask_session import Session  # Add Flask-Session
+from flask_session import Session
+from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
@@ -44,13 +45,17 @@ def create_app():
     app = Flask(__name__)
     
     # Configuration
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24).hex())  # Secure random key if not set
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24).hex())
     app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
-    app.config['SESSION_TYPE'] = 'ficore_accounting'  # Use MongoDB for sessions
-    app.config['SESSION_MONGODB'] = None  # Set after PyMongo initialization
-    app.config['SESSION_MONGODB_COLLECT'] = 'sessions'  # Collection name for sessions
+    logger.info(f"MONGO_URI: {app.config['MONGO_URI']}")
+    if not app.config['MONGO_URI']:
+        raise ValueError("MONGO_URI environment variable is not set")
+    app.config['SESSION_TYPE'] = 'mongodb'
+    app.config['SESSION_MONGODB'] = MongoClient(app.config['MONGO_URI'])
+    app.config['SESSION_MONGODB_DB'] = 'ficore_accounting'
+    app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE'] = False if app.debug else True  # HTTPS in production, HTTP in debug
+    app.config['SESSION_COOKIE_SECURE'] = False if app.debug else True
     app.config['WTF_CSRF_TIME_LIMIT'] = 7200
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
     app.config['CACHE_TYPE'] = 'simple'
@@ -58,7 +63,6 @@ def create_app():
     # Initialize MongoDB
     mongo = PyMongo(app)
     app.mongo = mongo
-    app.config['SESSION_MONGODB'] = mongo.db  # Set MongoDB database for sessions
     
     # Initialize Flask-Session
     Session(app)
@@ -79,7 +83,21 @@ def create_app():
     
     # Set TTL index for sessions (7 days)
     with app.app_context():
-        app.mongo.db.sessions.create_index('created', expireAfterSeconds=7*24*60*60)
+        try:
+            app.mongo.db.sessions.create_index('expiration', expireAfterSeconds=7*24*60*60)
+            logger.info("Created TTL index for sessions collection")
+        except Exception as e:
+            logger.error(f"Failed to create TTL index for sessions: {str(e)}", exc_info=True)
+    
+    # Debug MongoDB connection
+    @app.route('/debug_mongo')
+    def debug_mongo():
+        try:
+            app.mongo.db.command('ping')
+            return jsonify({'status': 'MongoDB connection successful'})
+        except Exception as e:
+            logger.error(f"MongoDB connection failed: {str(e)}", exc_info=True)
+            return jsonify({'error': str(e)}), 500
     
     # User loader callback for Flask-Login
     @login_manager.user_loader
@@ -297,4 +315,3 @@ app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
-
