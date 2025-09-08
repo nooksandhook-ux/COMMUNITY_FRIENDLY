@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for
+from models import TestimonialModel
 from flask_login import current_user, login_required
 import logging
 
@@ -54,5 +55,6 @@ def fair_use():
     """Fair use policy page"""
     logger.info("Rendering fair use policy page")
     return render_template('general/fair_use.html')
+
 
 
