@@ -28,7 +28,7 @@
                         <a href="{{ url_for('nook.index') }}" class="btn btn-success btn-lg">
                             <span><i class="bi bi-book-half me-2"></i>Start Reading</span>
                         </a>
-                        <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success">
+                        <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success" id="nook-add-book">
                             <span><i class="bi bi-plus-circle me-2"></i>Add a Book</span>
                         </a>
                     </div>
@@ -150,7 +150,7 @@
                 </a>
             </div>
             <div class="col-md-4">
-                <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success quick-actions w-100">
+                <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success quick-actions w-100" id="quick-add-book">
                     <span><i class="bi bi-plus-circle me-2"></i>Add New Book</span>
                 </a>
             </div>
@@ -268,48 +268,95 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
 
-<!-- Chart.js Script for Donation Breakdown -->
+{% block extra_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('tierChart')?.getContext('2d');
-        if (ctx) {
-            const tierData = {
-                labels: ['Bronze', 'Silver', 'Gold'],
-                datasets: [{
-                    label: 'Donation Amounts (NGN)',
-                    data: [
-                        {{ tier_data.bronze.total | default(0) }},
-                        {{ tier_data.silver.total | default(0) }},
-                        {{ tier_data.gold.total | default(0) }}
-                    ],
-                    backgroundColor: ['#cd7f32', '#c0c0c0', '#ffd700'],
-                    borderColor: ['#8b4513', '#808080', '#b8860b'],
-                    borderWidth: 1
-                }]
-            };
-            new Chart(ctx, {
-                type: 'bar',
-                data: tierData,
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Amount (NGN)'
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
+// Debounce function to limit click frequency
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Handle clicks on "Add a Book" links with debouncing
+function handleAddBookClick(event, linkId) {
+    event.preventDefault();
+    const button = document.getElementById(linkId);
+    console.log(`Clicked Add a Book: ${linkId}`);
+    button.classList.add('disabled');
+    button.style.pointerEvents = 'none';
+    window.location.href = button.href;
+    setTimeout(() => {
+        button.classList.remove('disabled');
+        button.style.pointerEvents = 'auto';
+    }, 2000); // Re-enable after 2 seconds
+}
+
+document.getElementById('nook-add-book')?.addEventListener('click', debounce((event) => {
+    handleAddBookClick(event, 'nook-add-book');
+}, 1000));
+
+document.getElementById('quick-add-book')?.addEventListener('click', debounce((event) => {
+    handleAddBookClick(event, 'quick-add-book');
+}, 1000));
+
+// Chart.js for Donation Breakdown
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('tierChart')?.getContext('2d');
+    if (ctx) {
+        const tierData = {
+            labels: ['Bronze', 'Silver', 'Gold'],
+            datasets: [{
+                label: 'Donation Amounts (NGN)',
+                data: [
+                    {{ tier_data.bronze.total | default(0) }},
+                    {{ tier_data.silver.total | default(0) }},
+                    {{ tier_data.gold.total | default(0) }}
+                ],
+                backgroundColor: ['#cd7f32', '#c0c0c0', '#ffd700'],
+                borderColor: ['#8b4513', '#808080', '#b8860b'],
+                borderWidth: 1
+            }]
+        };
+        new Chart(ctx, {
+            type: 'bar',
+            data: tierData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Amount (NGN)'
                         }
                     }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
                 }
-            });
-        }
+            }
+        });
+    }
+});
+
+// Log frontend errors
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error(`Frontend error: ${message} at ${source}:${lineno}:${colno}`);
+    fetch('/log_error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, source, lineno, colno, error: error?.stack })
     });
+};
 </script>
 {% endblock %}
