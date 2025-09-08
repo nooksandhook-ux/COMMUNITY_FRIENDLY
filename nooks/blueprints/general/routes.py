@@ -94,6 +94,14 @@ def landing():
     logger.info("Rendering landing page")
     return render_template('general/landingpage.html')
 
+@general_bp.route('/get_csrf_token', methods=['GET'])
+def get_csrf_token():
+    try:
+        return jsonify({'csrf_token': generate_csrf()})
+    except Exception as e:
+        logger.error(f"Error generating CSRF token: {str(e)}")
+        return jsonify({'error': 'Failed to generate CSRF token'}), 500
+        
 @general_bp.route('/about')
 def about():
     """About page"""
@@ -123,3 +131,4 @@ def fair_use():
     """Fair use policy page"""
     logger.info("Rendering fair use policy page")
     return render_template('general/fair_use.html')
+
