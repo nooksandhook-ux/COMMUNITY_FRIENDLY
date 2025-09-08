@@ -63,7 +63,7 @@ def submit_quote():
                 'status': {'$in': ['reading', 'finished']}
             }).sort('title', 1))
             
-            return render_template('quotes/submit.html', books=books)
+            return render_template('quotes/submit.html', books=books, csrf_token=generate_csrf())
             
         except Exception as e:
             logger.error(f"Error loading submit quote page: {str(e)}")
@@ -94,6 +94,15 @@ def submit_quote():
             flash('Page number must be positive.', 'error')
             return redirect(url_for('quotes.submit_quote'))
         
+        # Verify book belongs to user
+        book = current_app.mongo.db.books.find_one({
+            '_id': ObjectId(book_id),
+            'user_id': ObjectId(user_id)
+        })
+        if not book:
+            flash('Selected book not found in your library.', 'error')
+            return redirect(url_for('quotes.submit_quote'))
+        
         # Submit quote
         quote_id, error = QuoteModel.submit_quote(
             user_id=user_id,
@@ -121,14 +130,28 @@ def search_books():
     try:
         query = request.args.get('q', '').strip()
         if not query:
-            return jsonify({'books': []})
+            return jsonify({'books': [], 'csrf_token': generate_csrf()})
         
         books = GoogleBooksAPI.search_books(query, max_results=10)
-        return jsonify({'books': books})
+        sanitized_books = []
+        for book in books:
+            sanitized_book = {
+                'id': book.get('id', ''),
+                'title': book.get('title', '').replace('<', '&lt;').replace('>', '&gt;'),
+                'authors': [author.replace('<', '&lt;').replace('>', '&gt;') for author in book.get('authors', [])],
+                'description': book.get('description', '').replace('<', '&lt;').replace('>', '&gt;'),
+                'cover_image': book.get('cover_image', ''),
+                'page_count': book.get('page_count', 0),
+                'genre': book.get('genre', '').replace('<', '&lt;').replace('>', '&gt;'),
+                'isbn': book.get('isbn', ''),
+                'published_date': book.get('published_date', '')
+            }
+            sanitized_books.append(sanitized_book)
+        return jsonify({'books': sanitized_books, 'csrf_token': generate_csrf()})
         
     except Exception as e:
         logger.error(f"Error searching books: {str(e)}")
-        return jsonify({'error': 'Failed to search books'}), 500
+        return jsonify({'error': 'Failed to search books', 'csrf_token': generate_csrf()}), 500
 
 @quotes_bp.route('/add-book', methods=['POST'])
 @login_required
@@ -145,6 +168,19 @@ def add_book():
         book_details = GoogleBooksAPI.get_book_details(google_id)
         if not book_details:
             return jsonify({'error': 'Book not found'}), 404
+        
+        # Check for duplicate book
+        existing_book = current_app.mongo.db.books.find_one({
+            'user_id': ObjectId(user_id),
+            'title': book_details['title'],
+            'authors': book_details['authors']
+        })
+        if existing_book:
+            return jsonify({
+                'success': True,
+                'book_id': str(existing_book['_id']),
+                'message': 'Book already in your library!'
+            })
         
         # Create book in user's library
         book_id = BookModel.create_book(
