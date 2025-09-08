@@ -495,24 +495,25 @@ nav[aria-label="breadcrumb"] {
 }
 
 .accordion-header {
-    background-color: #198754;
+    background-color: transparent;
     padding: 15px;
     border-radius: 5px;
 }
 
 #moreHeading {
     font-size: 1.5rem;
-    color: white;
+    color: #222;
 }
 
 .accordion-header .accordion-button {
     font-weight: bold;
-    color: white;
-    background-color: #1fa866; 
-    box-shadow: none; 
+    color: #222;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: none;
 }
 
-.accordion-header .accordion-button.collapsed {
+.accordion-header .accordion-button:not(.collapsed) {
     background-color: #198754;
     color: white;
 }
