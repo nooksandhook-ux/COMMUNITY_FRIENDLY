@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file, session
 from flask_login import login_required, current_user
 from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import generate_csrf  
 from bson import ObjectId
 from datetime import datetime, timedelta
 import os
@@ -829,5 +830,6 @@ def calculate_reading_streak(user_id):
     except Exception as e:
         logger.error(f"Error calculating reading streak for user {user_id}: {str(e)}", exc_info=True)
         return 0
+
 
 
