@@ -25,10 +25,10 @@
                         {% endfor %}
                     </div>
                     
-                    <div class="mb-4 password-toggle-wrapper">
+                    <div class="mb-4 password-toggle-wrapper position-relative">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" id="password" name="password" required>
-                        <i class="bi bi-eye-slash toggle-password" toggle="#password"></i>
+                        <i class="bi bi-eye-slash toggle-password position-absolute" style="top: 38px; right: 10px; cursor: pointer;" toggle="#password"></i>
                         {% for error in form.password.errors %}
                             <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
