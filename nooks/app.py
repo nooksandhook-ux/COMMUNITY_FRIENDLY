@@ -45,8 +45,8 @@ def create_app():
     
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24).hex())  # Secure random key if not set
-    app.config['MONGO_URI'] = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/nook_hook_app')
-    app.config['SESSION_TYPE'] = 'mongodb'  # Use MongoDB for sessions
+    app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
+    app.config['SESSION_TYPE'] = 'ficore_accounting'  # Use MongoDB for sessions
     app.config['SESSION_MONGODB'] = None  # Set after PyMongo initialization
     app.config['SESSION_MONGODB_COLLECT'] = 'sessions'  # Collection name for sessions
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -297,3 +297,4 @@ app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+
