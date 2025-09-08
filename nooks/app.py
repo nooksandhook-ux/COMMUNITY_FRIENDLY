@@ -77,20 +77,31 @@ def create_app():
     app.mongo = PyMongo(app)  # Keep PyMongo for other uses
     app.config['SESSION_MONGODB'] = client  # Set to MongoClient for sessions
     
-    # Initialize Flask-Session
-    Session(app)
-    
-    # Check for existing TTL index for sessions and skip creation if it exists
+    # Initialize Flask-Session and fix index conflict
     with app.app_context():
         try:
+            # Access the sessions collection
+            db = client[app.config['SESSION_MONGODB_DB']]
+            collection = db[app.config['SESSION_MONGODB_COLLECT']]
+            
             # Check existing indexes
-            indexes = app.mongo.db.sessions.index_information()
+            indexes = collection.index_information()
             if 'expiration_1' in indexes:
-                logger.info("TTL index 'expiration_1' already exists, skipping creation")
+                if indexes['expiration_1'].get('expireAfterSeconds') != 0:
+                    logger.info("Dropping conflicting TTL index 'expiration_1'")
+                    collection.drop_index('expiration_1')
+                    logger.info("Creating new TTL index 'expiration_1' with expireAfterSeconds=0")
+                    collection.create_index('expiration', expireAfterSeconds=0, name='expiration_1')
+                else:
+                    logger.info("TTL index 'expiration_1' already exists with correct options")
             else:
-                logger.info("No TTL index found for sessions, but skipping creation per request")
+                logger.info("No TTL index found for sessions, creating new index")
+                collection.create_index('expiration', expireAfterSeconds=0, name='expiration_1')
         except Exception as e:
-            logger.error(f"Failed to check TTL index for sessions: {str(e)}", exc_info=True)
+            logger.error(f"Failed to manage TTL index for sessions: {str(e)}", exc_info=True)
+            raise
+    
+    Session(app)
     
     # Initialize Flask-Login
     login_manager = LoginManager()
@@ -332,4 +343,3 @@ app = create_app()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
-
