@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
+from flask_wtf.csrf import generate_csrf
 from bson import ObjectId
 from datetime import datetime
 import logging
@@ -140,7 +141,7 @@ def search_books():
                 'title': book.get('title', '').replace('<', '&lt;').replace('>', '&gt;'),
                 'authors': [author.replace('<', '&lt;').replace('>', '&gt;') for author in book.get('authors', [])],
                 'description': book.get('description', '').replace('<', '&lt;').replace('>', '&gt;'),
-                'cover_image': book.get('cover_image', ''),
+                'cover_url': book.get('cover_image', ''),
                 'page_count': book.get('page_count', 0),
                 'genre': book.get('genre', '').replace('<', '&lt;').replace('>', '&gt;'),
                 'isbn': book.get('isbn', ''),
@@ -179,7 +180,8 @@ def add_book():
             return jsonify({
                 'success': True,
                 'book_id': str(existing_book['_id']),
-                'message': 'Book already in your library!'
+                'message': 'Book already in your library!',
+                'title': existing_book['title']
             })
         
         # Create book in user's library
@@ -198,7 +200,8 @@ def add_book():
             return jsonify({
                 'success': True,
                 'book_id': str(book_id),
-                'message': 'Book added to your library!'
+                'message': 'Book added to your library!',
+                'title': book_details['title']
             })
         else:
             return jsonify({'error': 'Failed to add book'}), 500
@@ -236,7 +239,6 @@ def transactions():
         flash('An error occurred while loading your transactions.', 'error')
         return redirect(url_for('quotes.index'))
 
-# Admin routes for quote verification
 @quotes_bp.route('/admin/pending')
 @admin_required
 def admin_pending():
@@ -267,7 +269,7 @@ def admin_verify_quote(quote_id):
     """Admin endpoint to verify or reject a quote"""
     try:
         admin_id = str(current_user.id)
-        action = request.json.get('action')  # 'approve' or 'reject'
+        action = request.json.get('action')
         rejection_reason = request.json.get('rejection_reason', '')
         
         if action not in ['approve', 'reject']:
@@ -298,7 +300,7 @@ def admin_bulk_verify():
     try:
         admin_id = str(current_user.id)
         quote_ids = request.json.get('quote_ids', [])
-        action = request.json.get('action')  # 'approve' or 'reject'
+        action = request.json.get('action')
         rejection_reason = request.json.get('rejection_reason', '')
         
         if not quote_ids or action not in ['approve', 'reject']:
