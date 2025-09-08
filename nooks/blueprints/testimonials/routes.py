@@ -77,7 +77,7 @@ def admin_pending_testimonials():
             flash('You do not have permission to access this page.', 'error')
             return redirect(url_for('general.home'))
         
-        testimonials = TestimonialModel.get_approved_testimonials(limit=50)  # Using get_approved_testimonials as a placeholder; adjust if you have a specific method for pending
+        testimonials = TestimonialModel.get_approved_testimonials(limit=50)  
         return render_template('testimonials/admin_pending.html', testimonials=testimonials)
     
     except Exception as e:
