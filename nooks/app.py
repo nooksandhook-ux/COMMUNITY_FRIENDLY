@@ -1,8 +1,9 @@
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify, flash
 from flask_pymongo import PyMongo
 from flask_login import LoginManager, current_user
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_caching import Cache
+from flask_session import Session  # Add Flask-Session
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
@@ -43,17 +44,24 @@ def create_app():
     app = Flask(__name__)
     
     # Configuration
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24).hex())  # Secure random key if not set
     app.config['MONGO_URI'] = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/nook_hook_app')
+    app.config['SESSION_TYPE'] = 'mongodb'  # Use MongoDB for sessions
+    app.config['SESSION_MONGODB'] = None  # Set after PyMongo initialization
+    app.config['SESSION_MONGODB_COLLECT'] = 'sessions'  # Collection name for sessions
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE'] = True  # Enable for HTTPS in production
+    app.config['SESSION_COOKIE_SECURE'] = False if app.debug else True  # HTTPS in production, HTTP in debug
     app.config['WTF_CSRF_TIME_LIMIT'] = 7200
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
-    app.config['CACHE_TYPE'] = 'simple'  # Configure Flask-Caching
+    app.config['CACHE_TYPE'] = 'simple'
     
     # Initialize MongoDB
     mongo = PyMongo(app)
     app.mongo = mongo
+    app.config['SESSION_MONGODB'] = mongo.db  # Set MongoDB database for sessions
+    
+    # Initialize Flask-Session
+    Session(app)
     
     # Initialize Flask-Login
     login_manager = LoginManager()
@@ -64,10 +72,14 @@ def create_app():
     csrf = CSRFProtect(app)
     
     # Initialize Flask-Caching for analytics blueprint
-    configure_cache(app)  # Call configure_cache from analytics blueprint
+    configure_cache(app)
     
     # Register breadcrumb helper
     register_breadcrumbs(app)
+    
+    # Set TTL index for sessions (7 days)
+    with app.app_context():
+        app.mongo.db.sessions.create_index('created', expireAfterSeconds=7*24*60*60)
     
     # User loader callback for Flask-Login
     @login_manager.user_loader
@@ -87,7 +99,7 @@ def create_app():
     @app.before_request
     def log_session():
         user_id = current_user.get_id() if current_user.is_authenticated else 'anonymous'
-        logger.info(f"Request: {request.path}, Session user_id: {session.get('user_id')}, Current user: {current_user.is_authenticated}, User ID: {user_id}")
+        logger.info(f"Request: {request.path}, Session ID: {session.sid if hasattr(session, 'sid') else 'None'}, Session user_id: {session.get('user_id')}, Current user: {current_user.is_authenticated}, User ID: {user_id}")
     
     # Debug route to inspect session and user data
     @app.route('/debug_session')
@@ -97,11 +109,19 @@ def create_app():
                 'session_user_id': session.get('user_id'),
                 'current_user_id': current_user.get_id() if current_user.is_authenticated else None,
                 'is_authenticated': current_user.is_authenticated,
-                'session_data': dict(session)
+                'session_data': dict(session),
+                'session_id': session.sid if hasattr(session, 'sid') else 'None'
             })
         except Exception as e:
             logger.error(f"Error in debug_session: {str(e)}", exc_info=True)
             return jsonify({'error': 'An error occurred'}), 500
+    
+    # CSRF error handler
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        logger.warning(f"CSRF error: {str(e)}")
+        flash('Your session has expired. Please refresh the page and try again.', 'danger')
+        return redirect(request.url), 400
     
     # Custom Jinja2 filters
     @app.template_filter('get_username')
