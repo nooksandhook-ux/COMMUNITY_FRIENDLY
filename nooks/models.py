@@ -78,100 +78,199 @@ class DatabaseManager:
             if collection not in existing_collections:
                 current_app.mongo.db.create_collection(collection)
                 logger.info(f"Created collection: {collection}")
-    
     @staticmethod
-    def _create_indexes():
-        """Create database indexes for optimal performance"""
-        try:
-            # Users collection indexes
+def _create_indexes():
+    """Create database indexes for optimal performance"""
+    try:
+        # Users collection indexes
+        indexes = current_app.mongo.db.users.index_information()
+        if 'username_1' in indexes:
+            logger.info("Unique index on users.username already exists, skipping creation")
+        else:
             try:
-                current_app.mongo.db.users.drop_index("username_1")
-                logger.info("Dropped existing username_1 index")
+                null_username_docs = current_app.mongo.db.users.find({
+                    '$or': [
+                        {'username': None},
+                        {'username': {'$exists': False}}
+                    ]
+                })
+                for doc in null_username_docs:
+                    user_id = str(doc['_id'])
+                    current_app.mongo.db.users.delete_one({'_id': doc['_id']})
+                    logger.info(f"Deleted user document with null username, ID: {user_id}")
+                current_app.mongo.db.users.create_index("username", unique=True)
+                logger.info("Created unique index on users.username")
             except Exception as e:
-                logger.warning(f"No existing username_1 index to drop or error dropping: {str(e)}")
+                logger.error(f"Error creating username index: {str(e)}")
 
-            null_username_docs = current_app.mongo.db.users.find({
-                '$or': [
-                    {'username': None},
-                    {'username': {'$exists': False}}
-                ]
-            })
-            for doc in null_username_docs:
-                user_id = str(doc['_id'])
-                current_app.mongo.db.users.delete_one({'_id': doc['_id']})
-                logger.info(f"Deleted user document with null username, ID: {user_id}")
+        if 'email_1' in indexes:
+            logger.info("Unique index on users.email already exists, skipping creation")
+        else:
+            try:
+                current_app.mongo.db.users.create_index("email", unique=True)
+                logger.info("Created unique index on users.email")
+            except Exception as e:
+                logger.error(f"Error creating email index: {str(e)}")
 
-            current_app.mongo.db.users.create_index("username", unique=True)
-            logger.info("Created unique index on users.username")
-
-            current_app.mongo.db.users.create_index("email", unique=True)
+        if 'created_at_1' not in indexes:
             current_app.mongo.db.users.create_index("created_at")
+            logger.info("Created index on users.created_at")
+        if 'is_admin_1' not in indexes:
             current_app.mongo.db.users.create_index("is_admin")
-            
-            # Books collection indexes
+            logger.info("Created index on users.is_admin")
+
+        # Books collection indexes
+        indexes = current_app.mongo.db.books.index_information()
+        if 'user_id_1_status_1' not in indexes:
             current_app.mongo.db.books.create_index([("user_id", 1), ("status", 1)])
+            logger.info("Created index on books.user_id_status")
+        if 'user_id_1_added_at_-1' not in indexes:
             current_app.mongo.db.books.create_index([("user_id", 1), ("added_at", -1)])
+            logger.info("Created index on books.user_id_added_at")
+        if 'isbn_1' not in indexes:
             current_app.mongo.db.books.create_index("isbn", sparse=True)
+            logger.info("Created sparse index on books.isbn")
+        if 'pdf_path_1' not in indexes:
             current_app.mongo.db.books.create_index("pdf_path", sparse=True)
-            
-            # Reading sessions indexes
+            logger.info("Created sparse index on books.pdf_path")
+
+        # Reading sessions indexes
+        indexes = current_app.mongo.db.reading_sessions.index_information()
+        if 'user_id_1_date_-1' not in indexes:
             current_app.mongo.db.reading_sessions.create_index([("user_id", 1), ("date", -1)])
+            logger.info("Created index on reading_sessions.user_id_date")
+        if 'user_id_1_book_id_1' not in indexes:
             current_app.mongo.db.reading_sessions.create_index([("user_id", 1), ("book_id", 1)])
-            
-            # Completed tasks indexes
+            logger.info("Created index on reading_sessions.user_id_book_id")
+
+        # Completed tasks indexes
+        indexes = current_app.mongo.db.completed_tasks.index_information()
+        if 'user_id_1_completed_at_-1' not in indexes:
             current_app.mongo.db.completed_tasks.create_index([("user_id", 1), ("completed_at", -1)])
+            logger.info("Created index on completed_tasks.user_id_completed_at")
+        if 'user_id_1_category_1' not in indexes:
             current_app.mongo.db.completed_tasks.create_index([("user_id", 1), ("category", 1)])
-            
-            # Rewards collection indexes
+            logger.info("Created index on completed_tasks.user_id_category")
+
+        # Rewards collection indexes
+        indexes = current_app.mongo.db.rewards.index_information()
+        if 'user_id_1_date_-1' not in indexes:
             current_app.mongo.db.rewards.create_index([("user_id", 1), ("date", -1)])
+            logger.info("Created index on rewards.user_id_date")
+        if 'user_id_1_source_1' not in indexes:
             current_app.mongo.db.rewards.create_index([("user_id", 1), ("source", 1)])
+            logger.info("Created index on rewards.user_id_source")
+        if 'user_id_1_category_1' not in indexes:
             current_app.mongo.db.rewards.create_index([("user_id", 1), ("category", 1)])
-            
-            # User badges indexes
-            current_app.mongo.db.user_badges.create_index([("user_id", 1), ("badge_id", 1)], unique=True)
+            logger.info("Created index on rewards.user_id_category")
+
+        # User badges indexes
+        indexes = current_app.mongo.db.user_badges.index_information()
+        if 'user_id_1_badge_id_1' in indexes:
+            logger.info("Unique index on user_badges.user_id_badge_id already exists, skipping creation")
+        else:
+            try:
+                current_app.mongo.db.user_badges.create_index([("user_id", 1), ("badge_id", 1)], unique=True)
+                logger.info("Created unique index on user_badges.user_id_badge_id")
+            except Exception as e:
+                logger.error(f"Error creating user_badges.user_id_badge_id index: {str(e)}")
+
+        if 'user_id_1_earned_at_-1' not in indexes:
             current_app.mongo.db.user_badges.create_index([("user_id", 1), ("earned_at", -1)])
-            
-            # User goals indexes
+            logger.info("Created index on user_badges.user_id_earned_at")
+
+        # User goals indexes
+        indexes = current_app.mongo.db.user_goals.index_information()
+        if 'user_id_1_is_active_1' not in indexes:
             current_app.mongo.db.user_goals.create_index([("user_id", 1), ("is_active", 1)])
+            logger.info("Created index on user_goals.user_id_is_active")
+        if 'user_id_1_created_at_-1' not in indexes:
             current_app.mongo.db.user_goals.create_index([("user_id", 1), ("created_at", -1)])
-            
-            # Activity log indexes
+            logger.info("Created index on user_goals.user_id_created_at")
+
+        # Activity log indexes
+        indexes = current_app.mongo.db.activity_log.index_information()
+        if 'timestamp_1' in indexes:
+            existing_index = indexes['timestamp_1']
+            if existing_index.get('expireAfterSeconds', 0) == 2592000:
+                logger.info("TTL index on activity_log.timestamp with expireAfterSeconds=2592000 already exists, skipping creation")
+            else:
+                logger.warning(f"Existing TTL index on activity_log.timestamp has different expireAfterSeconds: {existing_index.get('expireAfterSeconds')}. Skipping creation to avoid conflict.")
+        else:
+            logger.info("No TTL index on activity_log.timestamp, but skipping creation per request")
+
+        if 'user_id_1_timestamp_-1' not in indexes:
             current_app.mongo.db.activity_log.create_index([("user_id", 1), ("timestamp", -1)])
-            current_app.mongo.db.activity_log.create_index("timestamp", expireAfterSeconds=2592000)
+            logger.info("Created index on activity_log.user_id_timestamp")
+        if 'action_1' not in indexes:
             current_app.mongo.db.activity_log.create_index("action")
-            
-            # Quotes collection indexes
+            logger.info("Created index on activity_log.action")
+
+        # Quotes collection indexes
+        indexes = current_app.mongo.db.quotes.index_information()
+        if 'user_id_1_status_1' not in indexes:
             current_app.mongo.db.quotes.create_index([("user_id", 1), ("status", 1)])
+            logger.info("Created index on quotes.user_id_status")
+        if 'user_id_1_submitted_at_-1' not in indexes:
             current_app.mongo.db.quotes.create_index([("user_id", 1), ("submitted_at", -1)])
+            logger.info("Created index on quotes.user_id_submitted_at")
+        if 'book_id_1_user_id_1' not in indexes:
             current_app.mongo.db.quotes.create_index([("book_id", 1), ("user_id", 1)])
+            logger.info("Created index on quotes.book_id_user_id")
+        if 'status_1' not in indexes:
             current_app.mongo.db.quotes.create_index("status")
+            logger.info("Created index on quotes.status")
+        if 'submitted_at_1' not in indexes:
             current_app.mongo.db.quotes.create_index("submitted_at")
-            
-            # Transactions collection indexes
+            logger.info("Created index on quotes.submitted_at")
+
+        # Transactions collection indexes
+        indexes = current_app.mongo.db.transactions.index_information()
+        if 'user_id_1_timestamp_-1' not in indexes:
             current_app.mongo.db.transactions.create_index([("user_id", 1), ("timestamp", -1)])
+            logger.info("Created index on transactions.user_id_timestamp")
+        if 'user_id_1_status_1' not in indexes:
             current_app.mongo.db.transactions.create_index([("user_id", 1), ("status", 1)])
+            logger.info("Created index on transactions.user_id_status")
+        if 'quote_id_1' not in indexes:
             current_app.mongo.db.transactions.create_index("quote_id", sparse=True)
+            logger.info("Created sparse index on transactions.quote_id")
+        if 'reward_type_1' not in indexes:
             current_app.mongo.db.transactions.create_index("reward_type")
-            
-            # User purchases collection indexes
-            current_app.mongo.db.user_purchases.create_index([("user_id", 1), ("purchased_at", -1)])
-            current_app.mongo.db.user_purchases.create_index([("user_id", 1), ("item_id", 1)])
-            current_app.mongo.db.user_purchases.create_index([("user_id", 1), ("type", 1)])
-            
-            # Donations collection indexes
+            logger.info("Created index on transactions.reward_type")
+
+        # Donations collection indexes
+        indexes = current_app.mongo.db.donations.index_information()
+        if 'transaction_id_1' in indexes:
+            logger.info("Unique index on donations.transaction_id already exists, skipping creation")
+        else:
+            try:
+                current_app.mongo.db.donations.create_index("transaction_id", unique=True)
+                logger.info("Created unique index on donations.transaction_id")
+            except Exception as e:
+                logger.error(f"Error creating donations.transaction_id index: {str(e)}")
+
+        if 'user_id_1_status_1' not in indexes:
             current_app.mongo.db.donations.create_index([("user_id", 1), ("status", 1)])
-            current_app.mongo.db.donations.create_index("transaction_id", unique=True)
+            logger.info("Created index on donations.user_id_status")
+        if 'created_at_1' not in indexes:
             current_app.mongo.db.donations.create_index("created_at")
-            
-            # Testimonials collection indexes
+            logger.info("Created index on donations.created_at")
+
+        # Testimonials collection indexes
+        indexes = current_app.mongo.db.testimonials.index_information()
+        if 'user_id_1_status_1' not in indexes:
             current_app.mongo.db.testimonials.create_index([("user_id", 1), ("status", 1)])
+            logger.info("Created index on testimonials.user_id_status")
+        if 'created_at_1' not in indexes:
             current_app.mongo.db.testimonials.create_index("created_at")
-            
-            logger.info("Database indexes created successfully")
-            
-        except Exception as e:
-            logger.error(f"Error creating indexes: {str(e)}")
-            raise
+            logger.info("Created index on testimonials.created_at")
+
+        logger.info("Database indexes created successfully")
+
+    except Exception as e:
+        logger.error(f"Error creating indexes: {str(e)}")
+        raise
     
     @staticmethod
     def _create_default_admin():
@@ -1813,3 +1912,4 @@ class GoogleBooksAPI:
         except Exception as e:
             logger.error(f"Error getting book details: {str(e)}")
             return None
+
