@@ -1,88 +1,44 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
+{% extends "base.html" %}
 
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
+{% block content %}
+<div class="container">
+    <h2 class="text-center fw-bold text-primary mb-4">My Testimonials</h2>
 
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mb-4">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Testimonials</title>
-</head>
-<body>
-    {% extends "base.html" %}
-    {% block content %}
-    <div class="container mt-5">
-        <h1>My Testimonials</h1>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        {% if testimonials %}
-            <div class="row">
-                {% for testimonial in testimonials %}
-                    <div class="col-md-6 mb-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <p class="card-text">"{{ testimonial.content }}"</p>
-                                <p class="card-text">
-                                    <strong>Status:</strong> {{ testimonial.status | capitalize }}<br>
-                                    <small class="text-muted">Submitted on {{ testimonial.created_at | datetimeformat }}</small>
+    {% if testimonials %}
+        <div class="row g-3">
+            {% for testimonial in testimonials %}
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <p class="card-text">"{{ testimonial.content }}"</p>
+                            <p class="card-text text-muted">
+                                <small>
+                                    Status: {{ testimonial.status | capitalize }}<br>
+                                    Submitted on {{ testimonial.created_at | datetimeformat }}
                                     {% if testimonial.status == 'rejected' and testimonial.rejection_reason %}
-                                        <br><small class="text-danger">Reason: {{ testimonial.rejection_reason }}</small>
+                                        <br>Reason: {{ testimonial.rejection_reason }}
                                     {% endif %}
-                                </p>
-                            </div>
+                                </small>
+                            </p>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p>You have not submitted any testimonials.</p>
-        {% endif %}
-        <a href="{{ url_for('testimonials.submit_testimonial') }}" class="btn btn-primary mt-3">Submit New Testimonial</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted text-center">You have not submitted any testimonials.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('testimonials.submit_testimonial') }}" class="btn btn-primary">Submit New Testimonial</a>
     </div>
-    {% endblock %}
-</body>
-</html>
+</div>
+{% endblock %}
