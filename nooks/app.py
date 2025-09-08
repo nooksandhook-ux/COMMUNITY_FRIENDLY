@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, request, jsonify, flash
 from flask_pymongo import PyMongo
 from flask_login import LoginManager, current_user
-from flask_wtf.csrf import CSRFProtect, CSRFError, generate_csrf
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_caching import Cache
 from flask_session import Session
 from pymongo import MongoClient
@@ -52,24 +52,6 @@ from utils.breadcrumbs import register_breadcrumbs
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-class ActivityLogger:
-    def __init__(self, mongo):
-        self.mongo = mongo
-        self.logger = logging.getLogger('activity')
-
-    def log_activity(self, user_id, action, description, metadata=None):
-        try:
-            self.mongo.db.activity_log.insert_one({
-                'user_id': str(user_id),
-                'action': action,
-                'description': description,
-                'metadata': metadata or {},
-                'timestamp': datetime.utcnow()
-            })
-            self.logger.info(f"User {user_id} performed {action}: {description}")
-        except Exception as e:
-            self.logger.error(f"Error logging activity for user {user_id}: {str(e)}", exc_info=True)
-
 def create_app():
     app = Flask(__name__)
     
@@ -80,41 +62,41 @@ def create_app():
     if not app.config['MONGO_URI']:
         raise ValueError("MONGO_URI environment variable is not set")
     app.config['SESSION_TYPE'] = 'mongodb'
-    app.config['SESSION_MONGODB'] = None
+    app.config['SESSION_MONGODB'] = None  # Will set to MongoClient
     app.config['SESSION_MONGODB_DB'] = 'ficore_accounting'
     app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['SESSION_COOKIE_SECURE'] = False if app.debug else True
-    app.config['WTF_CSRF_TIME_LIMIT'] = 86400  # 24 hours
+    app.config['WTF_CSRF_TIME_LIMIT'] = 7200
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
     app.config['CACHE_TYPE'] = 'simple'
     
     # Initialize MongoDB Client
     client = MongoClient(app.config['MONGO_URI'])
-    app.extensions['mongo'] = client
-    app.mongo = PyMongo(app)
-    app.config['SESSION_MONGODB'] = client
-    
-    # Initialize ActivityLogger
-    app.activity_logger = ActivityLogger(app.mongo)
+    app.extensions['mongo'] = client  # Store client in app.extensions
+    app.mongo = PyMongo(app)  # Keep PyMongo for other uses
+    app.config['SESSION_MONGODB'] = client  # Set to MongoClient for sessions
     
     # Initialize Flask-Session and fix index conflict
     with app.app_context():
         try:
+            # Access the sessions collection
             db = client[app.config['SESSION_MONGODB_DB']]
             collection = db[app.config['SESSION_MONGODB_COLLECT']]
+            
+            # Check existing indexes
             indexes = collection.index_information()
             if 'expiration_1' in indexes:
-                if indexes['expiration_1'].get('expireAfterSeconds') != 604800:
+                if indexes['expiration_1'].get('expireAfterSeconds') != 0:
                     logger.info("Dropping conflicting TTL index 'expiration_1'")
                     collection.drop_index('expiration_1')
-                    logger.info("Creating new TTL index 'expiration_1' with expireAfterSeconds=604800")
-                    collection.create_index('expiration', expireAfterSeconds=604800, name='expiration_1')
+                    logger.info("Creating new TTL index 'expiration_1' with expireAfterSeconds=0")
+                    collection.create_index('expiration', expireAfterSeconds=0, name='expiration_1')
                 else:
                     logger.info("TTL index 'expiration_1' already exists with correct options")
             else:
                 logger.info("No TTL index found for sessions, creating new index")
-                collection.create_index('expiration', expireAfterSeconds=604800, name='expiration_1')
+                collection.create_index('expiration', expireAfterSeconds=0, name='expiration_1')
         except Exception as e:
             logger.error(f"Failed to manage TTL index for sessions: {str(e)}", exc_info=True)
             raise
@@ -129,13 +111,13 @@ def create_app():
     # Initialize CSRF protection
     csrf = CSRFProtect(app)
     
-    # Initialize Flask-Caching
+    # Initialize Flask-Caching for analytics blueprint
     configure_cache(app)
     
     # Register breadcrumb helper
     register_breadcrumbs(app)
     
-    # Debug routes
+    # Debug MongoDB connection
     @app.route('/debug_mongo')
     def debug_mongo():
         try:
@@ -145,6 +127,27 @@ def create_app():
             logger.error(f"MongoDB connection failed: {str(e)}", exc_info=True)
             return jsonify({'error': str(e)}), 500
     
+    # User loader callback for Flask-Login
+    @login_manager.user_loader
+    def load_user(user_id):
+        try:
+            user_data = app.mongo.db.users.find_one({'_id': ObjectId(user_id)})
+            if user_data:
+                logger.info(f"Loaded user {user_id} successfully")
+                return User(user_data)
+            logger.warning(f"User {user_id} not found in database")
+            return None
+        except Exception as e:
+            logger.error(f"Error loading user {user_id}: {str(e)}", exc_info=True)
+            return None
+    
+    # Log session and authentication details for debugging
+    @app.before_request
+    def log_session():
+        user_id = current_user.get_id() if current_user.is_authenticated else 'anonymous'
+        logger.info(f"Request: {request.path}, Session ID: {session.sid if hasattr(session, 'sid') else 'None'}, Session user_id: {session.get('user_id')}, Current user: {current_user.is_authenticated}, User ID: {user_id}")
+    
+    # Debug route to inspect session and user data
     @app.route('/debug_session')
     def debug_session():
         try:
@@ -158,17 +161,6 @@ def create_app():
         except Exception as e:
             logger.error(f"Error in debug_session: {str(e)}", exc_info=True)
             return jsonify({'error': 'An error occurred'}), 500
-    
-    # CSRF token endpoint
-    @app.route('/get_csrf_token', methods=['GET'])
-    def get_csrf_token():
-        try:
-            token = generate_csrf()
-            logger.info(f"Generated CSRF token for session {session.sid if hasattr(session, 'sid') else 'None'}")
-            return jsonify({'csrf_token': token})
-        except Exception as e:
-            logger.error(f"Error generating CSRF token: {str(e)}")
-            return jsonify({'error': 'Failed to generate CSRF token'}), 500
     
     # CSRF error handler
     @app.errorhandler(CSRFError)
@@ -287,6 +279,7 @@ def create_app():
                 testimonials=[]
             )
     
+    # Dashboard route
     @app.route('/dashboard')
     def dashboard():
         user_id = current_user.get_id() if current_user.is_authenticated else 'anonymous'
@@ -349,4 +342,4 @@ def calculate_task_streak(user_id, mongo):
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 1000)))
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
