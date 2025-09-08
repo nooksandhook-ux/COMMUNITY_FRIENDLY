@@ -30,7 +30,7 @@
                     <div class="input-group">
                         <input type="text" class="form-control" id="search-query" 
                                placeholder="Search by title, author, or ISBN...">
-                        <button class="btn btn-outline-secondary" type="button" onclick="searchBooks(document.getElementById('search-query').value)">
+                        <button class="btn btn-outline-secondary" type="button" id="search-button">
                             <i class="bi bi-search"></i> Search
                         </button>
                     </div>
@@ -182,15 +182,36 @@
 
 {% block extra_scripts %}
 <script>
-// Prevent double submissions
+// Debounce function to limit event frequency
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Prevent double form submissions
+let isSubmitting = false;
 document.getElementById('add-book-form').addEventListener('submit', function(e) {
-    const submitButton = document.getElementById('submit-button');
-    if (submitButton.disabled) {
+    if (isSubmitting || document.getElementById('submit-button').disabled) {
         e.preventDefault();
         return;
     }
+    isSubmitting = true;
+    const submitButton = document.getElementById('submit-button');
     submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Submitting...';
     console.log('Submitting CSRF Token:', document.querySelector('input[name="csrf_token"]').value);
+    setTimeout(() => {
+        isSubmitting = false;
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Book';
+    }, 5000); // Reset after 5 seconds
 });
 
 // Client-side validation for PDF uploads
@@ -221,41 +242,60 @@ document.getElementById('pdf_file').addEventListener('change', function(e) {
 
 // Auto-search as user types
 let searchTimeout;
-document.getElementById('search-query').addEventListener('input', function(e) {
-    clearTimeout(searchTimeout);
+document.getElementById('search-query').addEventListener('input', debounce(function(e) {
     const query = e.target.value.trim();
-    
+    const resultsDiv = document.getElementById('book-search-results');
     if (query.length >= 3) {
         searchTimeout = setTimeout(() => {
             searchBooks(query);
         }, 500);
     } else {
-        document.getElementById('book-search-results').innerHTML = '';
+        resultsDiv.innerHTML = '';
     }
-});
+}, 500));
+
+// Search button click handler
+document.getElementById('search-button').addEventListener('click', debounce(function() {
+    const query = document.getElementById('search-query').value.trim();
+    if (query.length >= 3) {
+        searchBooks(query);
+    }
+}, 1000));
 
 // Search books and render results securely
 function searchBooks(query) {
+    console.log('Searching books with query:', query);
+    const resultsDiv = document.getElementById('book-search-results');
+    const searchButton = document.getElementById('search-button');
+    searchButton.disabled = true;
+    searchButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Searching...';
+    resultsDiv.innerHTML = '<p class="text-muted">Loading search results...</p>';
+
     fetch(`/nook/search_books?q=${encodeURIComponent(query)}`, {
         headers: {
             'X-CSRF-Token': document.querySelector('input[name="csrf_token"]').value
         }
     })
         .then(response => {
+            searchButton.disabled = false;
+            searchButton.innerHTML = '<i class="bi bi-search"></i> Search';
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            const resultsDiv = document.getElementById('book-search-results');
-            resultsDiv.innerHTML = ''; // Clear previous results
+            resultsDiv.innerHTML = ''; // Clear loading message
             if (data.error) {
-                resultsDiv.innerHTML = '<p class="text-danger">Error loading search results: ' + data.error + '</p>';
+                resultsDiv.innerHTML = `<p class="text-danger">Error: ${data.error}. Please try again or contact support.</p>`;
+                console.error('Server error:', data.error);
+                return;
+            }
+            if (!data.books || data.books.length === 0) {
+                resultsDiv.innerHTML = '<p class="text-muted">No books found. Try a different search term.</p>';
                 return;
             }
             data.books.forEach(book => {
-                // Create elements to avoid direct HTML injection
                 const colDiv = document.createElement('div');
                 colDiv.className = 'col-md-4 mb-3';
                 
@@ -293,24 +333,34 @@ function searchBooks(query) {
                 cardBody.appendChild(authors);
                 cardBody.appendChild(button);
                 cardDiv.appendChild(cardBody);
-                colDiv.appendCard(cardDiv);
+                colDiv.appendChild(cardDiv);
                 resultsDiv.appendChild(colDiv);
             });
         })
         .catch(error => {
+            searchButton.disabled = false;
+            searchButton.innerHTML = '<i class="bi bi-search"></i> Search';
             console.error('Error searching books:', error);
-            document.getElementById('book-search-results').innerHTML = '<p class="text-danger">Error loading search results.</p>';
+            resultsDiv.innerHTML = '<p class="text-danger">Unable to load search results due to a server error. Please try again later or contact support.</p>';
         });
 }
 
 // Fill form with selected book data
 function fillForm(id, title, authors, description, cover_image, page_count, genre, isbn, published_date, csrf_token) {
+    console.log('Filling form with book ID:', id);
     const submitButton = document.getElementById('submit-button');
     submitButton.disabled = true;
     const csrfTokenInput = document.querySelector('input[name="csrf_token"]');
+    const resultsDiv = document.getElementById('book-search-results');
     if (!csrfTokenInput) {
         console.error('CSRF token missing from form');
-        alert('Form error: Please refresh the page and try again.');
+        resultsDiv.innerHTML = '<p class="text-danger">Form error: CSRF token missing. Please refresh the page and try again.</p>';
+        submitButton.disabled = false;
+        return;
+    }
+    if (!csrf_token) {
+        console.error('No CSRF token received from search response');
+        resultsDiv.innerHTML = '<p class="text-danger">Server error: No CSRF token provided. Please refresh the page and try again.</p>';
         submitButton.disabled = false;
         return;
     }
@@ -326,5 +376,15 @@ function fillForm(id, title, authors, description, cover_image, page_count, genr
     document.getElementById('published_date').value = published_date;
     submitButton.disabled = false;
 }
+
+// Log frontend errors to server
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error(`Frontend error: ${message} at ${source}:${lineno}:${colno}`);
+    fetch('/log_error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, source, lineno, colno, error: error?.stack })
+    });
+};
 </script>
 {% endblock %}
