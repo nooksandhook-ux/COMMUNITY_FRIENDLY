@@ -495,7 +495,7 @@ nav[aria-label="breadcrumb"] {
 }
 
 .accordion-header {
-    background-color: var(--primary-color);
+    background-color: #198754;
     padding: 15px;
     border-radius: 5px;
 }
@@ -508,10 +508,11 @@ nav[aria-label="breadcrumb"] {
 .accordion-header .accordion-button {
     font-weight: bold;
     color: white;
-    background-color: transparent;
+    background-color: #1fa866; 
+    box-shadow: none; 
 }
 
 .accordion-header .accordion-button.collapsed {
-    background-color: #0b5ed7;
+    background-color: #198754;
     color: white;
 }
