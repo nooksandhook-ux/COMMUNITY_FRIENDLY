@@ -4,6 +4,7 @@ from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_caching import Cache
 from flask_session import Session
+from flask_session.mongodb.mongodb import MongoDBSessionInterface
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -52,13 +53,20 @@ from utils.breadcrumbs import register_breadcrumbs
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+# Custom MongoDBSessionInterface to skip index creation
+class CustomMongoDBSessionInterface(MongoDBSessionInterface):
+    def __init__(self, app=None, client=None, db=None, collection=None):
+        super().__init__(app=app, client=client, db=db, collection=collection)
+        # Skip index creation to avoid IndexOptionsConflict
+        logger.info("Using existing sessions index, skipping index creation")
+
 def create_app():
     app = Flask(__name__)
     
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24).hex())
     app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
-    logger.info(f"MONGO_URI is set")
+    logger.info("MONGO_URI is set")
     if not app.config['MONGO_URI']:
         raise ValueError("MONGO_URI environment variable is not set")
     app.config['SESSION_TYPE'] = 'mongodb'
@@ -77,7 +85,13 @@ def create_app():
     app.mongo = PyMongo(app)  # Keep PyMongo for other uses
     app.config['SESSION_MONGODB'] = client  # Set to MongoClient for sessions
     
-    # Initialize Flask-Session
+    # Initialize Flask-Session with custom interface
+    app.session_interface = CustomMongoDBSessionInterface(
+        app=app,
+        client=app.config['SESSION_MONGODB'],
+        db=app.config['SESSION_MONGODB_DB'],
+        collection=app.config['SESSION_MONGODB_COLLECT']
+    )
     Session(app)
     
     # Initialize Flask-Login
