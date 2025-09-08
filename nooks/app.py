@@ -66,6 +66,7 @@ def create_app():
     # Initialize Flask-Caching
     cache = Cache()
     cache.init_app(app)
+    app.cache = cache  # Make cache accessible via app.cache
     
     # Initialize Flask-Caching for analytics blueprint
     configure_cache(app)  # Call configure_cache from analytics blueprint
@@ -185,6 +186,16 @@ def create_app():
             logger.error(f"Error fetching active users: {str(e)}")
             return 0
 
+    @cache.memoize(timeout=300)  # Cache for 5 minutes
+    def get_testimonials(limit=3):
+        try:
+            testimonials = TestimonialModel.get_approved_testimonials(limit=limit)
+            logger.info("Fetched testimonials from database")
+            return testimonials
+        except Exception as e:
+            logger.error(f"Error fetching testimonials: {str(e)}")
+            return []
+
     # Initialize database with application context
     with app.app_context():
         DatabaseManager.initialize_database()
@@ -231,8 +242,8 @@ def create_app():
             # Fetch cached active users
             active_users = get_active_users()
 
-            # Fetch testimonials (not cached to ensure freshness)
-            testimonials = TestimonialModel.get_approved_testimonials(limit=3)
+            # Fetch cached testimonials
+            testimonials = get_testimonials(limit=3)
 
             return render_template(
                 'general/home.html',
@@ -263,6 +274,13 @@ def create_app():
         user_id = current_user.get_id() if current_user.is_authenticated else 'anonymous'
         logger.info(f"User {user_id} accessing dashboard")
         return redirect(url_for('dashboard.index'))
+    
+    # Register cached functions on app
+    app.get_donation_stats = get_donation_stats
+    app.get_tier_data = get_tier_data
+    app.get_verified_quotes = get_verified_quotes
+    app.get_active_users = get_active_users
+    app.get_testimonials = get_testimonials
     
     return app
 
