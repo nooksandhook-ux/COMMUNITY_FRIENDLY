@@ -41,6 +41,28 @@
 {% block extra_scripts %}
 {% if is_member %}
 <script>
+function setupAdminMenuListeners() {
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.admin-menu-btn');
+    if (btn) {
+      e.stopPropagation();
+      const menu = btn.nextElementSibling;
+      if (menu && menu.classList.contains('admin-menu')) {
+        document.querySelectorAll('.admin-menu.show').forEach(openMenu => {
+          if (openMenu !== menu) {
+            openMenu.classList.remove('show');
+          }
+        });
+        menu.classList.toggle('show');
+      }
+    } else {
+      document.querySelectorAll('.admin-menu.show').forEach(menu => {
+        menu.classList.remove('show');
+      });
+    }
+  });
+}
+
 function loadPosts() {
   fetch('{{ url_for("nooks_club.api_get_club_posts", club_id=club_id) }}')
     .then(response => response.json())
@@ -167,9 +189,14 @@ document.getElementById('add-admin-form').addEventListener('submit', (e) => {
     })
     .catch(error => console.error('Error fetching user ID:', error));
 });
-document.addEventListener('DOMContentLoaded', loadAdmins);
 {% endif %}
-document.addEventListener('DOMContentLoaded', loadPosts);
+document.addEventListener('DOMContentLoaded', () => {
+  loadPosts();
+  {% if is_admin %}
+  loadAdmins();
+  {% endif %}
+  setupAdminMenuListeners();
+});
 </script>
 {% endif %}
 {% endblock %}
