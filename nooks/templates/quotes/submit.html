@@ -24,13 +24,14 @@
                     </div>
 
                     <form method="POST" id="quoteForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <!-- Book Selection -->
                         <div class="mb-4">
                             <label for="book_id" class="form-label">Select Book *</label>
                             <div class="row">
                                 <div class="col-md-8">
                                     <select class="form-select" id="book_id" name="book_id" required>
-                                        <option value="">Choose a book from your library...</option>
+                                        <option value="" disabled selected>Choose a book from your library...</option>
                                         {% for book in books %}
                                         <option value="{{ book._id }}">
                                             {{ book.title }}
@@ -112,12 +113,12 @@
 </div>
 
 <!-- Add Book Modal -->
-<div class="modal fade" id="addBookModal" tabindex="-1">
+<div class="modal fade" id="addBookModal" tabindex="-1" aria-labelledby="addBookModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add New Book</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="addBookModalLabel">Add New Book</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
@@ -130,13 +131,16 @@
                         </button>
                     </div>
                 </div>
-                
                 <div id="searchResults" class="mt-3"></div>
                 <div id="searchLoading" class="text-center mt-3" style="display: none;">
                     <div class="spinner-border" role="status">
                         <span class="visually-hidden">Searching...</span>
                     </div>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{{ url_for('nook.add_book') }}" class="btn btn-primary">Add Book Manually</a>
             </div>
         </div>
     </div>
@@ -168,7 +172,10 @@ document.getElementById('bookSearch').addEventListener('keypress', function(e) {
 
 function searchBooks() {
     const query = document.getElementById('bookSearch').value.trim();
-    if (!query) return;
+    if (!query) {
+        document.getElementById('searchResults').innerHTML = '<div class="alert alert-info">Please enter a search term.</div>';
+        return;
+    }
     
     const searchResults = document.getElementById('searchResults');
     const searchLoading = document.getElementById('searchLoading');
@@ -176,45 +183,55 @@ function searchBooks() {
     searchLoading.style.display = 'block';
     searchResults.innerHTML = '';
     
-    fetch(`{{ url_for('quotes.search_books') }}?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(data => {
-            searchLoading.style.display = 'none';
-            
-            if (data.books && data.books.length > 0) {
-                let html = '<div class="row">';
-                data.books.forEach(book => {
-                    html += `
-                        <div class="col-md-6 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <div class="d-flex">
-                                        ${book.cover_url ? `<img src="${book.cover_url}" alt="Cover" class="me-3" style="width: 60px; height: 90px; object-fit: cover;">` : ''}
-                                        <div class="flex-grow-1">
-                                            <h6 class="card-title">${book.title}</h6>
-                                            ${book.authors.length > 0 ? `<p class="card-text small text-muted">by ${book.authors.join(', ')}</p>` : ''}
-                                            <p class="card-text small">${book.page_count} pages</p>
-                                            <button class="btn btn-sm btn-primary" onclick="addBookToLibrary('${book.google_id}', '${book.title.replace(/'/g, "\\'")}')">
-                                                <i class="fas fa-plus"></i> Add to Library
-                                            </button>
-                                        </div>
+    fetch(`{{ url_for('quotes.search_books') }}?q=${encodeURIComponent(query)}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-Token': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        searchLoading.style.display = 'none';
+        
+        if (data.error) {
+            searchResults.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+            return;
+        }
+        
+        if (data.books && data.books.length > 0) {
+            let html = '<div class="row">';
+            data.books.forEach(book => {
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex">
+                                    ${book.cover_url ? `<img src="${book.cover_url}" alt="Cover" class="me-3" style="width: 60px; height: 90px; object-fit: cover;">` : ''}
+                                    <div class="flex-grow-1">
+                                        <h6 class="card-title">${book.title}</h6>
+                                        ${book.authors.length > 0 ? `<p class="card-text small text-muted">by ${book.authors.join(', ')}</p>` : ''}
+                                        <p class="card-text small">${book.page_count} pages</p>
+                                        <button class="btn btn-sm btn-primary" onclick="addBookToLibrary('${book.id}', '${book.title.replace(/'/g, "\\'")}')">
+                                            <i class="fas fa-plus"></i> Add to Library
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    `;
-                });
-                html += '</div>';
-                searchResults.innerHTML = html;
-            } else {
-                searchResults.innerHTML = '<div class="alert alert-info">No books found. Try a different search term.</div>';
-            }
-        })
-        .catch(error => {
-            searchLoading.style.display = 'none';
-            searchResults.innerHTML = '<div class="alert alert-danger">Error searching for books. Please try again.</div>';
-            console.error('Search error:', error);
-        });
+                    </div>
+                `;
+            });
+            html += '</div>';
+            searchResults.innerHTML = html;
+        } else {
+            searchResults.innerHTML = '<div class="alert alert-info">No books found. Try a different search term or add manually.</div>';
+        }
+    })
+    .catch(error => {
+        searchLoading.style.display = 'none';
+        searchResults.innerHTML = '<div class="alert alert-danger">Error searching for books. Please try again.</div>';
+        console.error('Search error:', error);
+    });
 }
 
 function addBookToLibrary(googleId, title) {
@@ -222,6 +239,7 @@ function addBookToLibrary(googleId, title) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-CSRF-Token': '{{ csrf_token }}'
         },
         body: JSON.stringify({
             google_id: googleId
@@ -234,9 +252,9 @@ function addBookToLibrary(googleId, title) {
             const bookSelect = document.getElementById('book_id');
             const option = document.createElement('option');
             option.value = data.book_id;
-            option.textContent = title + ' (To Read)';
+            option.textContent = `${data.title} (To Read)`;
             option.selected = true;
-            bookSelect.appendChild(option);
+            bookSelect.insertBefore(option, bookSelect.lastElementChild);
             
             // Close modal and show success message
             const modal = bootstrap.Modal.getInstance(document.getElementById('addBookModal'));
