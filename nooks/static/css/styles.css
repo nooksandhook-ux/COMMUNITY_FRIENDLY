@@ -493,3 +493,25 @@ nav[aria-label="breadcrumb"] {
 .admin-menu button:hover {
   background: #f8f9fa;
 }
+
+.accordion-header {
+    background-color: var(--primary-color);
+    padding: 15px;
+    border-radius: 5px;
+}
+
+#moreHeading {
+    font-size: 1.5rem;
+    color: white;
+}
+
+.accordion-header .accordion-button {
+    font-weight: bold;
+    color: white;
+    background-color: transparent;
+}
+
+.accordion-header .accordion-button.collapsed {
+    background-color: #0b5ed7;
+    color: white;
+}
