@@ -115,140 +115,141 @@ def index():
 def add_book():
     form = AddBookForm()
     logger.info(f"Session ID: {session.sid if hasattr(session, 'sid') else 'None'}, User ID: {current_user.id}, Request Method: {request.method}")
+    
     if request.method == 'POST':
         logger.info(f"Received CSRF Token: {request.form.get('csrf_token')}")
         logger.info(f"Form Data: {request.form}")
-    if form.validate_on_submit():
-        try:
-            user_id = ObjectId(current_user.id)
-            # Form fields
-            google_books_id = form.google_books_id.data
-            title = form.title.data
-            authors = [a.strip() for a in form.authors.data.split(',')]
-            description = form.description.data
-            cover_image = form.cover_image.data
-            page_count = form.page_count.data or 0
-            status = form.status.data
-            genre = form.genre.data
-            isbn = form.isbn.data
-            published_date = form.published_date.data
+        if form.validate_on_submit():
+            try:
+                user_id = ObjectId(current_user.id)
+                # Form fields
+                google_books_id = form.google_books_id.data
+                title = form.title.data
+                authors = [a.strip() for a in form.authors.data.split(',')]
+                description = form.description.data
+                cover_image = form.cover_image.data
+                page_count = form.page_count.data or 0
+                status = form.status.data
+                genre = form.genre.data
+                isbn = form.isbn.data
+                published_date = form.published_date.data
 
-            # Check for duplicate book
-            existing_book = current_app.mongo.db.books.find_one({
-                'user_id': user_id,
-                'title': title.strip(),
-                'authors': authors
-            })
-            if existing_book:
-                flash("You already added this book.", "warning")
-                return redirect(request.url)
+                # Check for duplicate book
+                existing_book = current_app.mongo.db.books.find_one({
+                    'user_id': user_id,
+                    'title': title.strip(),
+                    'authors': authors
+                })
+                if existing_book:
+                    flash("You already added this book.", "warning")
+                    return redirect(url_for('nook.index'))
 
-            # Enforce upload limit: max 10 books with PDF per user per month
-            month_ago = datetime.utcnow() - timedelta(days=30)
-            upload_count = current_app.mongo.db.books.count_documents({
-                'user_id': user_id,
-                'pdf_path': {'$ne': None},
-                'added_at': {'$gte': month_ago}
-            })
-            if upload_count >= 10:
-                flash('Upload limit reached: Max 10 books with PDF per month.', 'danger')
-                return redirect(request.url)
+                # Enforce upload limit: max 10 books with PDF per user per month
+                month_ago = datetime.utcnow() - timedelta(days=30)
+                upload_count = current_app.mongo.db.books.count_documents({
+                    'user_id': user_id,
+                    'pdf_path': {'$ne': None},
+                    'added_at': {'$gte': month_ago}
+                })
+                if upload_count >= 10:
+                    flash('Upload limit reached: Max 10 books with PDF per month.', 'danger')
+                    return redirect(url_for('nook.index'))
 
-            pdf_path = None
-            pdf_file = form.pdf_file.data
-            if pdf_file:
-                pdf_file.seek(0, os.SEEK_END)
-                file_size = pdf_file.tell()
-                pdf_file.seek(0)
-                if file_size > 10 * 1024 * 1024:
-                    flash('File size exceeds 10MB limit.', 'danger')
-                    return redirect(request.url)
-                upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', str(user_id))
-                os.makedirs(upload_dir, exist_ok=True)
-                pdf_filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{secure_filename(pdf_file.filename)}"
-                pdf_path_full = os.path.join(upload_dir, pdf_filename)
-                # Encrypt PDF before saving
-                encrypted_pdf = fernet.encrypt(pdf_file.read())
-                with open(pdf_path_full, 'wb') as f:
-                    f.write(encrypted_pdf)
-                pdf_path = f"uploads/{user_id}/{pdf_filename}"
+                pdf_path = None
+                pdf_file = form.pdf_file.data
+                if pdf_file:
+                    pdf_file.seek(0, os.SEEK_END)
+                    file_size = pdf_file.tell()
+                    pdf_file.seek(0)
+                    if file_size > 10 * 1024 * 1024:
+                        flash('File size exceeds 10MB limit.', 'danger')
+                        return redirect(url_for('nook.index'))
+                    upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', str(user_id))
+                    os.makedirs(upload_dir, exist_ok=True)
+                    pdf_filename = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{secure_filename(pdf_file.filename)}"
+                    pdf_path_full = os.path.join(upload_dir, pdf_filename)
+                    # Encrypt PDF before saving
+                    encrypted_pdf = fernet.encrypt(pdf_file.read())
+                    with open(pdf_path_full, 'wb') as f:
+                        f.write(encrypted_pdf)
+                    pdf_path = f"uploads/{user_id}/{pdf_filename}"
 
-                # Log upload
-                current_app.activity_logger.log_activity(
+                    # Log upload
+                    current_app.activity_logger.log_activity(
+                        user_id=user_id,
+                        action='pdf_upload',
+                        description=f'Uploaded PDF for book: {title}',
+                        metadata={'book_title': title, 'filename': pdf_filename}
+                    )
+
+                if google_books_id:
+                    book_data = {
+                        'user_id': user_id,
+                        'google_books_id': google_books_id,
+                        'title': title,
+                        'authors': authors,
+                        'description': description,
+                        'cover_image': cover_image,
+                        'page_count': page_count,
+                        'current_page': 0,
+                        'status': status,
+                        'added_at': datetime.utcnow(),
+                        'key_takeaways': [],
+                        'quotes': [],
+                        'rating': 0,
+                        'notes': '',
+                        'genre': genre,
+                        'isbn': isbn,
+                        'published_date': published_date,
+                        'reading_sessions': [],
+                        'pdf_path': pdf_path
+                    }
+                else:
+                    book_data = {
+                        'user_id': user_id,
+                        'title': title,
+                        'authors': authors,
+                        'description': description,
+                        'page_count': page_count,
+                        'current_page': 0,
+                        'status': status,
+                        'added_at': datetime.utcnow(),
+                        'key_takeaways': [],
+                        'quotes': [],
+                        'rating': 0,
+                        'notes': '',
+                        'genre': genre,
+                        'isbn': isbn,
+                        'published_date': published_date,
+                        'reading_sessions': [],
+                        'pdf_path': pdf_path
+                    }
+
+                result = current_app.mongo.db.books.insert_one(book_data)
+                RewardService.award_points(
                     user_id=user_id,
-                    action='pdf_upload',
-                    description=f'Uploaded PDF for book: {title}',
-                    metadata={'book_title': title, 'filename': pdf_filename}
+                    points=5,
+                    source='nook',
+                    description=f'Added book: {book_data["title"]}',
+                    category='book_management',
+                    reference_id=str(result.inserted_id)
                 )
-
-            if google_books_id:
-                book_data = {
-                    'user_id': user_id,
-                    'google_books_id': google_books_id,
-                    'title': title,
-                    'authors': authors,
-                    'description': description,
-                    'cover_image': cover_image,
-                    'page_count': page_count,
-                    'current_page': 0,
-                    'status': status,
-                    'added_at': datetime.utcnow(),
-                    'key_takeaways': [],
-                    'quotes': [],
-                    'rating': 0,
-                    'notes': '',
-                    'genre': genre,
-                    'isbn': isbn,
-                    'published_date': published_date,
-                    'reading_sessions': [],
-                    'pdf_path': pdf_path
-                }
-            else:
-                book_data = {
-                    'user_id': user_id,
-                    'title': title,
-                    'authors': authors,
-                    'description': description,
-                    'page_count': page_count,
-                    'current_page': 0,
-                    'status': status,
-                    'added_at': datetime.utcnow(),
-                    'key_takeaways': [],
-                    'quotes': [],
-                    'rating': 0,
-                    'notes': '',
-                    'genre': genre,
-                    'isbn': isbn,
-                    'published_date': published_date,
-                    'reading_sessions': [],
-                    'pdf_path': pdf_path
-                }
-
-            result = current_app.mongo.db.books.insert_one(book_data)
-            RewardService.award_points(
-                user_id=user_id,
-                points=5,
-                source='nook',
-                description=f'Added book: {book_data["title"]}',
-                category='book_management',
-                reference_id=str(result.inserted_id)
-            )
-            flash('Book added successfully!', 'success')
-            return redirect(url_for('nook.index'))
-        except Exception as e:
-            logger.error(f"Error adding book: {str(e)}", exc_info=True)
-            flash(f"An error occurred: {str(e)}", "danger")
-            return redirect(request.url)
-    else:
-        logger.error(f"Form validation failed: {form.errors}")
-        if 'csrf_token' in form.errors:
-            logger.error(f"CSRF validation failed: {form.csrf_token.errors}")
-            flash("CSRF token error: Please refresh the page and try again.", "danger")
+                flash('Book added successfully!', 'success')
+                return redirect(url_for('nook.index'))
+            except Exception as e:
+                logger.error(f"Error adding book: {str(e)}", exc_info=True)
+                flash(f"An error occurred: {str(e)}", "danger")
+                return redirect(url_for('nook.index'))
         else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    flash(f"Error in {field}: {error}", "danger")
-        return redirect(request.url)
+            logger.error(f"Form validation failed: {form.errors}")
+            if 'csrf_token' in form.errors:
+                logger.error(f"CSRF validation failed: {form.csrf_token.errors}")
+                flash("CSRF token error: Please refresh the page and try again.", "danger")
+            else:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        flash(f"Error in {field}: {error}", "danger")
+            return render_template('nook/add_book.html', form=form)
     
     return render_template('nook/add_book.html', form=form)
 
@@ -828,4 +829,5 @@ def calculate_reading_streak(user_id):
     except Exception as e:
         logger.error(f"Error calculating reading streak for user {user_id}: {str(e)}", exc_info=True)
         return 0
+
 
