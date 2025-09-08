@@ -29,7 +29,9 @@
       </div>
     </div>
   </div>
-  <div id="club-list" class="card-list"></div>
+  <div id="club-list" class="card-list">
+    <p>Loading clubs...</p>
+  </div>
 </div>
 {% else %}
 <div class="container text-center">
@@ -41,46 +43,81 @@
 {% endif %}
 {% block extra_scripts %}
 {% if current_user.is_authenticated %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.1/purify.min.js"></script>
 <script>
 function loadClubs(type) {
+  console.log('loadClubs called with type:', type);
+  const clubList = document.getElementById('club-list');
+  clubList.innerHTML = '<p>Loading clubs...</p>';
+
   let url = type === 'all' ? '{{ url_for("nooks_club.api_get_clubs") }}' : 
             type === 'my' ? '{{ url_for("nooks_club.api_my_clubs") }}' : 
             '{{ url_for("nooks_club.api_created_clubs") }}';
-  fetch(url)
-    .then(response => response.json())
+  console.log('Fetching URL:', url);
+
+  fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': '{{ csrf_token }}'
+    },
+    credentials: 'include'
+  })
+    .then(response => {
+      console.log('Response status:', response.status);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
-      const clubList = document.getElementById('club-list');
+      console.log('API response:', data);
       clubList.innerHTML = '';
-      if (data.clubs) {
+      if (data.clubs && Array.isArray(data.clubs)) {
+        if (data.clubs.length === 0) {
+          clubList.innerHTML = '<p>No clubs available.</p>';
+          return;
+        }
         data.clubs.forEach(club => {
+          console.log('Processing club:', club);
           const isMember = club.members.includes('{{ current_user.id }}');
           const isAdmin = club.is_admin;
           const card = document.createElement('div');
           card.className = 'card mb-3';
           card.innerHTML = `
             <div class="card-body">
-              <h5 class="card-title">${club.name}</h5>
-              <p class="card-text">${club.description || 'No description'}</p>
-              <p class="card-text"><small class="text-muted">Topic: ${club.topic || 'None'}</small></p>
-              <p class="card-text"><small class="text-muted">Created by: ${club.creator_username}</small></p>
+              <h5 class="card-title">${DOMPurify.sanitize(club.name)}</h5>
+              <p class="card-text">${DOMPurify.sanitize(club.description || 'No description')}</p>
+              <p class="card-text"><small class="text-muted">Topic: ${DOMPurify.sanitize(club.topic || 'None')}</small></p>
+              <p class="card-text"><small class="text-muted">Created by: ${DOMPurify.sanitize(club.creator_username)}</small></p>
               <a href="{{ url_for('nooks_club.view_club', club_id='') }}${club._id}" class="btn btn-info">View</a>
-              ${isMember ? '' : `<form action="{{ url_for('nooks_club.join_club', club_id='') }}${club._id}" method="post" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <button type="submit" class="btn btn-success">Join</button>
-              </form>`}
+              ${isMember ? '' : `
+                <form action="{{ url_for('nooks_club.join_club', club_id='') }}${club._id}" method="post" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button type="submit" class="btn btn-success">Join</button>
+                </form>
+              `}
               ${isAdmin ? `<a href="{{ url_for('nooks_club.view_club', club_id='') }}${club._id}#manage" class="btn btn-warning">Manage</a>` : ''}
             </div>
           `;
           clubList.appendChild(card);
         });
+      } else {
+        console.error('Invalid response format:', data);
+        clubList.innerHTML = '<p class="text-danger">Error: Invalid data format from server.</p>';
       }
     })
     .catch(error => {
       console.error('Error fetching clubs:', error);
-      document.getElementById('club-list').innerHTML = '<p class="text-danger">Error loading clubs.</p>';
+      clubList.innerHTML = '<p class="text-danger">Error loading clubs. Please try again later.</p>';
     });
 }
-document.addEventListener('DOMContentLoaded', () => loadClubs('all'));
+
+// Load clubs automatically on page load
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOMContentLoaded event fired');
+  loadClubs('all');
+});
 </script>
 {% endif %}
 {% endblock %}
