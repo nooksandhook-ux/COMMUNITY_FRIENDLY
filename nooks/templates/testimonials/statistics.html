@@ -1,80 +1,34 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
+{% extends "base.html" %}
 
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
+{% block content %}
+<div class="container">
+    <h2 class="text-center fw-bold text-primary mb-4">Testimonial Statistics</h2>
 
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Testimonial Statistics</title>
-</head>
-<body>
-    {% extends "base.html" %}
-    {% block content %}
-    <div class="container mt-5">
-        <h1>Testimonial Statistics</h1>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        {% if stats %}
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Testimonial Status Breakdown</h5>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item"><strong>Pending:</strong> {{ stats.pending }} testimonials</li>
-                        <li class="list-group-item"><strong>Approved:</strong> {{ stats.approved }} testimonials</li>
-                        <li class="list-group-item"><strong>Rejected:</strong> {{ stats.rejected }} testimonials</li>
-                    </ul>
-                </div>
-            </div>
-        {% else %}
-            <p>No statistics available.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mb-4">{{ message }}</div>
+            {% endfor %}
         {% endif %}
-        <a href="{{ url_for('testimonials.admin_pending_testimonials') }}" class="btn btn-primary mt-3">Review Pending Testimonials</a>
+    {% endwith %}
+
+    {% if stats %}
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="card-title">Testimonial Status Breakdown</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Pending: {{ stats.pending }} testimonials</li>
+                    <li class="list-group-item">Approved: {{ stats.approved }} testimonials</li>
+                    <li class="list-group-item">Rejected: {{ stats.rejected }} testimonials</li>
+                </ul>
+            </div>
+        </div>
+    {% else %}
+        <p class="text-muted text-center">No statistics available.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('testimonials.admin_pending') }}" class="btn btn-primary">Review Pending Testimonials</a>
     </div>
-    {% endblock %}
-</body>
-</html>
+</div>
+{% endblock %}
