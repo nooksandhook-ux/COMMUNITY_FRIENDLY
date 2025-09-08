@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, current_app
 from flask_login import current_user, login_required
-from models import TestimonialModel
+from models import TestimonialModel, CacheUtils
 from datetime import datetime, timedelta
 import logging
 
@@ -17,22 +17,23 @@ def home():
     try:
         logger.info(f"Rendering home page for user_id: {current_user.get_id()}")
 
-        # Fetch cached donation stats
-        donation_stats = current_app.get_donation_stats()
-        total_donations = donation_stats['total_donations']
-        donation_count = donation_stats['donation_count']
+        with current_app.app_context():
+            # Fetch cached donation stats
+            donation_stats = CacheUtils.get_donation_stats()
+            total_donations = donation_stats['total_donations']
+            donation_count = donation_stats['donation_count']
 
-        # Fetch cached tier data
-        tier_data = current_app.get_tier_data()
+            # Fetch cached tier data
+            tier_data = CacheUtils.get_tier_data()
 
-        # Fetch cached verified quotes
-        verified_quotes = current_app.get_verified_quotes()
+            # Fetch cached verified quotes
+            verified_quotes = CacheUtils.get_verified_quotes()
 
-        # Fetch cached active users
-        active_users = current_app.get_active_users()
+            # Fetch cached active users
+            active_users = CacheUtils.get_active_users()
 
-        # Fetch testimonials (not cached to ensure freshness)
-        testimonials = TestimonialModel.get_approved_testimonials(limit=3)
+            # Fetch cached testimonials
+            testimonials = CacheUtils.get_testimonials(limit=3)
 
         return render_template(
             'general/home.html',
