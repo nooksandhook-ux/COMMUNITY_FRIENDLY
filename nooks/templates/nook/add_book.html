@@ -9,7 +9,7 @@
             {% if messages %}
                 <div class="alert-container mb-4">
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show" role="alert">
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show" role="alert">
                             {{ message }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
@@ -44,7 +44,6 @@
                 
                 <!-- Manual Entry Form -->
                 <form method="POST" id="add-book-form" enctype="multipart/form-data">
-                    <!-- CSRF token included for security -->
                     {{ form.hidden_tag() }}
                     <div class="mb-3">
                         {{ form.pdf_file.label(class="form-label") }}
@@ -195,7 +194,7 @@ function debounce(func, wait) {
     };
 }
 
-// Prevent double form submissions
+// Prevent double form submissions and handle CSRF errors
 let isSubmitting = false;
 document.getElementById('add-book-form').addEventListener('submit', function(e) {
     if (isSubmitting || document.getElementById('submit-button').disabled) {
@@ -207,27 +206,35 @@ document.getElementById('add-book-form').addEventListener('submit', function(e) 
     submitButton.disabled = true;
     submitButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Submitting...';
     console.log('Submitting CSRF Token:', document.querySelector('input[name="csrf_token"]').value);
-    // Fetch new CSRF token on submission failure
+
+    // Refresh CSRF token
     fetch('/get_csrf_token', {
         method: 'GET',
         credentials: 'same-origin'
     })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Failed to fetch CSRF token: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.csrf_token) {
                 document.querySelector('input[name="csrf_token"]').value = data.csrf_token;
                 console.log('Refreshed CSRF token:', data.csrf_token);
+                // Proceed with form submission
+                document.getElementById('add-book-form').submit();
+            } else {
+                throw new Error('No CSRF token received');
             }
         })
         .catch(error => {
             console.error('Error refreshing CSRF token:', error);
-        })
-        .finally(() => {
-            setTimeout(() => {
-                isSubmitting = false;
-                submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Book';
-            }, 5000); // Reset after 5 seconds
+            document.getElementById('book-search-results').innerHTML = `<p class="text-danger">Session error: ${error.message}. Please refresh the page and try again.</p>`;
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Book';
+            isSubmitting = false;
+            e.preventDefault();
         });
 });
 
@@ -299,14 +306,16 @@ function searchBooks(query) {
             searchButton.innerHTML = '<i class="bi bi-search"></i> Search';
             if (!response.ok) {
                 if (response.status === 400 && response.statusText.includes('CSRF')) {
-                    throw new Error('CSRF token expired. Please refresh the page.');
+                    return response.json().then(data => {
+                        throw new Error('CSRF token expired. Please refresh the page.');
+                    });
                 }
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            resultsDiv.innerHTML = ''; // Clear loading message
+            resultsDiv.innerHTML = '';
             if (data.error) {
                 resultsDiv.innerHTML = `<p class="text-danger">Error: ${data.error}. Please try again or contact support.</p>`;
                 console.error('Server error:', data.error);
@@ -368,16 +377,22 @@ function searchBooks(query) {
                     method: 'GET',
                     credentials: 'same-origin'
                 })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch CSRF token: ${response.status}`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.csrf_token) {
                             document.querySelector('input[name="csrf_token"]').value = data.csrf_token;
                             console.log('Refreshed CSRF token after search failure:', data.csrf_token);
-                            resultsDiv.innerHTML += '<p class="text-info">CSRF token refreshed. Please try your action again.</p>';
+                            resultsDiv.innerHTML += '<p class="text-info">Session refreshed. Please try your search again.</p>';
                         }
                     })
                     .catch(err => {
                         console.error('Error refreshing CSRF token:', err);
+                        resultsDiv.innerHTML += `<p class="text-danger">Failed to refresh session: ${err.message}. Please refresh the page.</p>`;
                     });
             }
         });
@@ -402,7 +417,7 @@ function fillForm(id, title, authors, description, cover_image, page_count, genr
         submitButton.disabled = false;
         return;
     }
-    csrfTokenInput.value = csrf_token; // Update with new token
+    csrfTokenInput.value = csrf_token;
     document.getElementById('google_books_id').value = id;
     document.getElementById('title').value = title;
     document.getElementById('authors').value = authors;
@@ -414,16 +429,5 @@ function fillForm(id, title, authors, description, cover_image, page_count, genr
     document.getElementById('published_date').value = published_date;
     submitButton.disabled = false;
 }
-
-// Log frontend errors to server
-window.onerror = function(message, source, lineno, colno, error) {
-    console.error(`Frontend error: ${message} at ${source}:${lineno}:${colno}`);
-    fetch('/log_error', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, source, lineno, colno, error: error?.stack }),
-        credentials: 'same-origin'
-    });
-};
 </script>
 {% endblock %}
