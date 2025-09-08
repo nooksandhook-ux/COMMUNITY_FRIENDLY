@@ -5,6 +5,18 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alert-container mb-4">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'danger' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
         <div class="card">
             <div class="card-header">
                 <h4 class="mb-0">
@@ -166,6 +178,17 @@
 
 {% block extra_scripts %}
 <script>
+// Prevent double submissions
+document.getElementById('add-book-form').addEventListener('submit', function(e) {
+    const submitButton = this.querySelector('button[type="submit"]');
+    if (submitButton.disabled) {
+        e.preventDefault();
+        return;
+    }
+    submitButton.disabled = true;
+    console.log('Submitting CSRF Token:', document.querySelector('input[name="csrf_token"]').value);
+});
+
 // Client-side validation for PDF uploads
 document.getElementById('pdf_file').addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -213,7 +236,7 @@ function searchBooks(query) {
         .then(data => {
             const resultsDiv = document.getElementById('book-search-results');
             resultsDiv.innerHTML = ''; // Clear previous results
-            data.forEach(book => {
+            data.books.forEach(book => {
                 // Create elements to avoid direct HTML injection
                 const colDiv = document.createElement('div');
                 colDiv.className = 'col-md-4 mb-3';
@@ -244,7 +267,8 @@ function searchBooks(query) {
                     book.page_count || 0,
                     book.genre || '',
                     book.isbn || '',
-                    book.published_date || ''
+                    book.published_date || '',
+                    data.csrf_token
                 );
                 
                 cardBody.appendChild(title);
@@ -262,9 +286,9 @@ function searchBooks(query) {
 }
 
 // Fill form with selected book data
-function fillForm(id, title, authors, description, cover_image, page_count, genre, isbn, published_date) {
+function fillForm(id, title, authors, description, cover_image, page_count, genre, isbn, published_date, csrf_token) {
     const submitButton = document.querySelector('button[type="submit"]');
-    submitButton.disabled = true; // Prevent submission during field updates
+    submitButton.disabled = true;
     const csrfTokenInput = document.querySelector('input[name="csrf_token"]');
     if (!csrfTokenInput) {
         console.error('CSRF token missing from form');
@@ -272,8 +296,7 @@ function fillForm(id, title, authors, description, cover_image, page_count, genr
         submitButton.disabled = false;
         return;
     }
-    // Preserve CSRF token value
-    const csrfTokenValue = csrfTokenInput.value;
+    csrfTokenInput.value = csrf_token; // Update with new token
     document.getElementById('google_books_id').value = id;
     document.getElementById('title').value = title;
     document.getElementById('authors').value = authors;
@@ -283,9 +306,7 @@ function fillForm(id, title, authors, description, cover_image, page_count, genr
     document.getElementById('genre').value = genre;
     document.getElementById('isbn').value = isbn;
     document.getElementById('published_date').value = published_date;
-    // Ensure CSRF token is unchanged
-    csrfTokenInput.value = csrfTokenValue;
-    submitButton.disabled = false; // Re-enable submit button
+    submitButton.disabled = false;
 }
 </script>
 {% endblock %}
