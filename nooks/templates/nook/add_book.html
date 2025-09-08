@@ -43,7 +43,7 @@
                 <hr>
                 
                 <!-- Manual Entry Form -->
-                <form method="POST" id="add-book-form" enctype="multipart/form-data" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
+                <form method="POST" id="add-book-form" enctype="multipart/form-data">
                     <!-- CSRF token included for security -->
                     {{ form.hidden_tag() }}
                     <div class="mb-3">
@@ -59,7 +59,7 @@
                         <div class="form-text">Optional: Upload your own book as a PDF file (max 10MB). Files must be encrypted.</div>
                     </div>
                     <div class="mb-3 form-check">
-                        {{ form.terms_agreement(class="form-check-input", id="terms_agreement") }}
+                        {{ form.terms_agreement(class="form-check-input", id="terms_agreement", disabled=true) }}
                         {{ form.terms_agreement.label(class="form-check-label") }}
                         {% if form.terms_agreement.errors %}
                             <ul class="text-danger">
@@ -72,7 +72,7 @@
                     <div class="row">
                         <div class="col-md-8 mb-3">
                             {{ form.title.label(class="form-label") }}
-                            {{ form.title(class="form-control", required=True) }}
+                            {{ form.title(class="form-control", id="title", required=True) }}
                             {% if form.title.errors %}
                                 <ul class="text-danger">
                                     {% for error in form.title.errors %}
@@ -83,7 +83,7 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             {{ form.status.label(class="form-label") }}
-                            {{ form.status(class="form-select") }}
+                            {{ form.status(class="form-select", id="status") }}
                             {% if form.status.errors %}
                                 <ul class="text-danger">
                                     {% for error in form.status.errors %}
@@ -96,7 +96,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.authors.label(class="form-label") }}
-                            {{ form.authors(class="form-control", placeholder="Separate multiple authors with commas", required=True) }}
+                            {{ form.authors(class="form-control", id="authors", placeholder="Separate multiple authors with commas", required=True) }}
                             {% if form.authors.errors %}
                                 <ul class="text-danger">
                                     {% for error in form.authors.errors %}
@@ -107,7 +107,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             {{ form.page_count.label(class="form-label") }}
-                            {{ form.page_count(class="form-control", min="1") }}
+                            {{ form.page_count(class="form-control", id="page_count", min="1") }}
                             {% if form.page_count.errors %}
                                 <ul class="text-danger">
                                     {% for error in form.page_count.errors %}
@@ -119,7 +119,7 @@
                     </div>
                     <div class="mb-3">
                         {{ form.description.label(class="form-label") }}
-                        {{ form.description(class="form-control", rows="3") }}
+                        {{ form.description(class="form-control", id="description", rows="3") }}
                         {% if form.description.errors %}
                             <ul class="text-danger">
                                 {% for error in form.description.errors %}
@@ -131,7 +131,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             {{ form.genre.label(class="form-label") }}
-                            {{ form.genre(class="form-control") }}
+                            {{ form.genre(class="form-control", id="genre") }}
                             {% if form.genre.errors %}
                                 <ul class="text-danger">
                                     {% for error in form.genre.errors %}
@@ -142,7 +142,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             {{ form.isbn.label(class="form-label") }}
-                            {{ form.isbn(class="form-control") }}
+                            {{ form.isbn(class="form-control", id="isbn") }}
                             {% if form.isbn.errors %}
                                 <ul class="text-danger">
                                     {% for error in form.isbn.errors %}
@@ -154,7 +154,7 @@
                     </div>
                     <div class="mb-3">
                         {{ form.published_date.label(class="form-label") }}
-                        {{ form.published_date(class="form-control") }}
+                        {{ form.published_date(class="form-control", id="published_date") }}
                         {% if form.published_date.errors %}
                             <ul class="text-danger">
                                 {% for error in form.published_date.errors %}
@@ -163,9 +163,13 @@
                             </ul>
                         {% endif %}
                     </div>
+                    <!-- Hidden fields -->
+                    {{ form.google_books_id(id="google_books_id") }}
+                    {{ form.cover_image(id="cover_image") }}
+                    {{ form.is_encrypted(id="is_encrypted") }}
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a href="{{ url_for('nook.index') }}" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-success">
+                        <button type="submit" class="btn btn-success" id="submit-button">
                             <i class="bi bi-plus-circle me-2"></i>Add Book
                         </button>
                     </div>
@@ -180,7 +184,7 @@
 <script>
 // Prevent double submissions
 document.getElementById('add-book-form').addEventListener('submit', function(e) {
-    const submitButton = this.querySelector('button[type="submit"]');
+    const submitButton = document.getElementById('submit-button');
     if (submitButton.disabled) {
         e.preventDefault();
         return;
@@ -194,19 +198,20 @@ document.getElementById('pdf_file').addEventListener('change', function(e) {
     const file = e.target.files[0];
     const termsCheckbox = document.getElementById('terms_agreement');
     if (file) {
-        if (!file.name.toLowerCase().endsWith('.pdf')) {
+        if (!file.name.toLowerCase().endsWith('.pdf') || file.type !== 'application/pdf') {
             alert('Only PDF files are allowed.');
             e.target.value = '';
             termsCheckbox.checked = false;
+            termsCheckbox.disabled = true;
             return;
         }
         if (file.size > 10 * 1024 * 1024) {
             alert('File size exceeds 10MB limit.');
             e.target.value = '';
             termsCheckbox.checked = false;
+            termsCheckbox.disabled = true;
             return;
         }
-        // Enable terms checkbox only if a valid file is selected
         termsCheckbox.disabled = false;
     } else {
         termsCheckbox.checked = false;
@@ -224,18 +229,31 @@ document.getElementById('search-query').addEventListener('input', function(e) {
         searchTimeout = setTimeout(() => {
             searchBooks(query);
         }, 500);
-    } else if (query.length === 0) {
+    } else {
         document.getElementById('book-search-results').innerHTML = '';
     }
 });
 
 // Search books and render results securely
 function searchBooks(query) {
-    fetch(`/nook/search_books?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
+    fetch(`/nook/search_books?q=${encodeURIComponent(query)}`, {
+        headers: {
+            'X-CSRF-Token': document.querySelector('input[name="csrf_token"]').value
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             const resultsDiv = document.getElementById('book-search-results');
             resultsDiv.innerHTML = ''; // Clear previous results
+            if (data.error) {
+                resultsDiv.innerHTML = '<p class="text-danger">Error loading search results: ' + data.error + '</p>';
+                return;
+            }
             data.books.forEach(book => {
                 // Create elements to avoid direct HTML injection
                 const colDiv = document.createElement('div');
@@ -275,7 +293,7 @@ function searchBooks(query) {
                 cardBody.appendChild(authors);
                 cardBody.appendChild(button);
                 cardDiv.appendChild(cardBody);
-                colDiv.appendChild(cardDiv);
+                colDiv.appendCard(cardDiv);
                 resultsDiv.appendChild(colDiv);
             });
         })
@@ -287,7 +305,7 @@ function searchBooks(query) {
 
 // Fill form with selected book data
 function fillForm(id, title, authors, description, cover_image, page_count, genre, isbn, published_date, csrf_token) {
-    const submitButton = document.querySelector('button[type="submit"]');
+    const submitButton = document.getElementById('submit-button');
     submitButton.disabled = true;
     const csrfTokenInput = document.querySelector('input[name="csrf_token"]');
     if (!csrfTokenInput) {
@@ -302,7 +320,7 @@ function fillForm(id, title, authors, description, cover_image, page_count, genr
     document.getElementById('authors').value = authors;
     document.getElementById('description').value = description;
     document.getElementById('cover_image').value = cover_image;
-    document.getElementById('page_count').value = page_count;
+    document.getElementById('page_count').value = page_count || '';
     document.getElementById('genre').value = genre;
     document.getElementById('isbn').value = isbn;
     document.getElementById('published_date').value = published_date;
