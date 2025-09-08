@@ -207,11 +207,28 @@ document.getElementById('add-book-form').addEventListener('submit', function(e) 
     submitButton.disabled = true;
     submitButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Submitting...';
     console.log('Submitting CSRF Token:', document.querySelector('input[name="csrf_token"]').value);
-    setTimeout(() => {
-        isSubmitting = false;
-        submitButton.disabled = false;
-        submitButton.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Book';
-    }, 5000); // Reset after 5 seconds
+    // Fetch new CSRF token on submission failure
+    fetch('/get_csrf_token', {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.csrf_token) {
+                document.querySelector('input[name="csrf_token"]').value = data.csrf_token;
+                console.log('Refreshed CSRF token:', data.csrf_token);
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing CSRF token:', error);
+        })
+        .finally(() => {
+            setTimeout(() => {
+                isSubmitting = false;
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add Book';
+            }, 5000); // Reset after 5 seconds
+        });
 });
 
 // Client-side validation for PDF uploads
@@ -274,12 +291,16 @@ function searchBooks(query) {
     fetch(`/nook/search_books?q=${encodeURIComponent(query)}`, {
         headers: {
             'X-CSRF-Token': document.querySelector('input[name="csrf_token"]').value
-        }
+        },
+        credentials: 'same-origin'
     })
         .then(response => {
             searchButton.disabled = false;
             searchButton.innerHTML = '<i class="bi bi-search"></i> Search';
             if (!response.ok) {
+                if (response.status === 400 && response.statusText.includes('CSRF')) {
+                    throw new Error('CSRF token expired. Please refresh the page.');
+                }
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             return response.json();
@@ -341,7 +362,24 @@ function searchBooks(query) {
             searchButton.disabled = false;
             searchButton.innerHTML = '<i class="bi bi-search"></i> Search';
             console.error('Error searching books:', error);
-            resultsDiv.innerHTML = '<p class="text-danger">Unable to load search results due to a server error. Please try again later or contact support.</p>';
+            resultsDiv.innerHTML = `<p class="text-danger">${error.message || 'Unable to load search results due to a server error. Please try again later or contact support.'}</p>`;
+            if (error.message.includes('CSRF token expired')) {
+                fetch('/get_csrf_token', {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.csrf_token) {
+                            document.querySelector('input[name="csrf_token"]').value = data.csrf_token;
+                            console.log('Refreshed CSRF token after search failure:', data.csrf_token);
+                            resultsDiv.innerHTML += '<p class="text-info">CSRF token refreshed. Please try your action again.</p>';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error refreshing CSRF token:', err);
+                    });
+            }
         });
 }
 
@@ -383,7 +421,8 @@ window.onerror = function(message, source, lineno, colno, error) {
     fetch('/log_error', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, source, lineno, colno, error: error?.stack })
+        body: JSON.stringify({ message, source, lineno, colno, error: error?.stack }),
+        credentials: 'same-origin'
     });
 };
 </script>
