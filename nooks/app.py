@@ -13,7 +13,7 @@ import json
 import logging
 
 # Import models and database utilities
-from models import DatabaseManager, User
+from models import DatabaseManager, User, TestimonialModel
 
 # Import blueprints
 from blueprints.auth.routes import auth_bp
@@ -132,7 +132,7 @@ def create_app():
     app.register_blueprint(mini_modules_bp, url_prefix='/mini_modules')
     app.register_blueprint(analytics_bp, url_prefix='/analytics')
     app.register_blueprint(donations_bp, url_prefix='/donations')
-    app.register_blueprint(testimonials_bp, url_prefix='/testimonials')  # Added testimonials blueprint registration
+    app.register_blueprint(testimonials_bp, url_prefix='/testimonials')
     
     with app.app_context():
         logger.info("Registered endpoints: %s", [rule.endpoint for rule in app.url_map.iter_rules()])
@@ -142,8 +142,76 @@ def create_app():
         if not current_user.is_authenticated:
             logger.info("Unauthenticated user, redirecting to landing page")
             return redirect(url_for('general.landing'))
+        
         logger.info(f"Authenticated user {current_user.get_id()} accessing home page")
-        return render_template('general/home.html')
+        try:
+            # Total donations and donation count
+            pipeline = [
+                {'$match': {'status': 'completed'}},
+                {'$group': {
+                    '_id': None,
+                    'total_donations': {'$sum': '$amount'},
+                    'donation_count': {'$sum': 1}
+                }}
+            ]
+            result = list(app.mongo.db.donations.aggregate(pipeline))
+            total_donations = result[0]['total_donations'] if result else 0
+            donation_count = result[0]['donation_count'] if result else 0
+
+            # Tier data for chart
+            pipeline = [
+                {'$match': {'status': 'completed'}},
+                {'$group': {
+                    '_id': '$tier',
+                    'total': {'$sum': '$amount'}
+                }}
+            ]
+            tier_totals = list(app.mongo.db.donations.aggregate(pipeline))
+            tier_data = {
+                'bronze': {'total': 0},
+                'silver': {'total': 0},
+                'gold': {'total': 0}
+            }
+            for entry in tier_totals:
+                if entry['_id'] in tier_data:
+                    tier_data[entry['_id']]['total'] = entry['total']
+
+            # Verified quotes
+            verified_quotes = app.mongo.db.quotes.count_documents({'status': 'verified'})
+
+            # Active users (last 30 days)
+            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+            active_users = app.mongo.db.activity_log.distinct(
+                'user_id',
+                {'timestamp': {'$gte': thirty_days_ago}}
+            )
+            active_users = len(active_users)
+
+            # Testimonials
+            testimonials = TestimonialModel.get_approved_testimonials(limit=3)
+
+            return render_template(
+                'general/home.html',
+                total_donations=total_donations,
+                donation_count=donation_count,
+                verified_quotes=verified_quotes,
+                active_users=active_users,
+                tier_data=tier_data,
+                testimonials=testimonials
+            )
+
+        except Exception as e:
+            logger.error(f"Error fetching data for index page for user {current_user.get_id()}: {str(e)}", exc_info=True)
+            return render_template(
+                'general/home.html',
+                error="Unable to load dashboard data. Please try again later.",
+                total_donations=0,
+                donation_count=0,
+                verified_quotes=0,
+                active_users=0,
+                tier_data={'bronze': {'total': 0}, 'silver': {'total': 0}, 'gold': {'total': 0}},
+                testimonials=[]
+            )
     
     # Dashboard route
     @app.route('/dashboard')
