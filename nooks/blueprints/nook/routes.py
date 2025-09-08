@@ -523,6 +523,23 @@ def book_detail(book_id):
             'book_id': ObjectId(book_id)
         }).sort('date', -1))
         
+        # Instantiate forms
+        update_form = UpdateProgressForm()
+        rate_form = RateBookForm()
+        takeaway_form = AddTakeawayForm()
+        quote_form = AddQuoteForm()
+
+        # Pre-populate forms with existing data
+        update_form.current_page.data = book.get('current_page', 0)
+        rate_form.rating.data = book.get('rating', 0)
+        rate_form.review.data = book.get('review', '')
+
+        # Set CSRF tokens for all forms
+        update_form.csrf_token.data = generate_csrf()
+        rate_form.csrf_token.data = generate_csrf()
+        takeaway_form.csrf_token.data = generate_csrf()
+        quote_form.csrf_token.data = generate_csrf()
+        
         ActivityLogger.log_activity(
             user_id=user_id,
             action='view_book_detail',
@@ -530,7 +547,15 @@ def book_detail(book_id):
             metadata={'book_id': book_id}
         )
         
-        return render_template('nook/book_detail.html', book=book, reading_sessions=reading_sessions)
+        return render_template(
+            'nook/book_detail.html',
+            book=book,
+            reading_sessions=reading_sessions,
+            update_form=update_form,
+            rate_form=rate_form,
+            takeaway_form=takeaway_form,
+            quote_form=quote_form
+        )
     except Exception as e:
         logger.error(f"Error loading book detail {book_id}: {str(e)}", exc_info=True)
         flash(f"An error occurred: {str(e)}", "danger")
@@ -952,3 +977,4 @@ def calculate_reading_streak(user_id):
     except Exception as e:
         logger.error(f"Error calculating reading streak for user {user_id}: {str(e)}", exc_info=True)
         return 0
+
