@@ -58,7 +58,7 @@ def create_app():
     # Configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24).hex())
     app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
-    logger.info(f"MONGO_URI: {app.config['MONGO_URI']}")
+    logger.info(f"MONGO_URI is set")
     if not app.config['MONGO_URI']:
         raise ValueError("MONGO_URI environment variable is not set")
     app.config['SESSION_TYPE'] = 'mongodb'
@@ -93,26 +93,6 @@ def create_app():
     
     # Register breadcrumb helper
     register_breadcrumbs(app)
-    
-    # Set TTL index for sessions (7 days)
-    with app.app_context():
-        try:
-            # Check existing indexes
-            indexes = app.mongo.db.sessions.index_information()
-            if 'expiration_1' in indexes:
-                existing_index = indexes['expiration_1']
-                if existing_index.get('expireAfterSeconds', 0) != 7*24*60*60:
-                    logger.info("Dropping conflicting TTL index for sessions")
-                    app.mongo.db.sessions.drop_index('expiration_1')
-                    app.mongo.db.sessions.create_index('expiration', expireAfterSeconds=7*24*60*60)
-                    logger.info("Created new TTL index for sessions collection")
-                else:
-                    logger.info("TTL index for sessions already exists with correct options")
-            else:
-                app.mongo.db.sessions.create_index('expiration', expireAfterSeconds=7*24*60*60)
-                logger.info("Created TTL index for sessions collection")
-        except Exception as e:
-            logger.error(f"Failed to create TTL index for sessions: {str(e)}", exc_info=True)
     
     # Debug MongoDB connection
     @app.route('/debug_mongo')
