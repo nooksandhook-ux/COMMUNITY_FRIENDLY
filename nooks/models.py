@@ -350,7 +350,10 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Error initializing default data: {str(e)}")
 
-    # Cached functions for performance optimization
+class CacheUtils:
+    """Utility class for cached database queries"""
+    
+    @staticmethod
     @current_app.cache.memoize(timeout=300)  # Cache for 5 minutes
     def get_donation_stats():
         """Get total donations and count of completed donations"""
@@ -370,6 +373,7 @@ class DatabaseManager:
             logger.error(f"Error fetching donation stats: {str(e)}")
             return {'total_donations': 0, 'donation_count': 0}
 
+    @staticmethod
     @current_app.cache.memoize(timeout=300)  # Cache for 5 minutes
     def get_tier_data():
         """Get donation totals by tier"""
@@ -396,6 +400,7 @@ class DatabaseManager:
             logger.error(f"Error fetching tier data: {str(e)}")
             return {'bronze': {'total': 0}, 'silver': {'total': 0}, 'gold': {'total': 0}}
 
+    @staticmethod
     @current_app.cache.memoize(timeout=300)  # Cache for 5 minutes
     def get_verified_quotes():
         """Get count of verified quotes"""
@@ -407,6 +412,7 @@ class DatabaseManager:
             logger.error(f"Error fetching verified quotes: {str(e)}")
             return 0
 
+    @staticmethod
     @current_app.cache.memoize(timeout=300)  # Cache for 5 minutes
     def get_active_users():
         """Get count of active users in the last 30 days"""
@@ -422,6 +428,7 @@ class DatabaseManager:
             logger.error(f"Error fetching active users: {str(e)}")
             return 0
 
+    @staticmethod
     @current_app.cache.memoize(timeout=300)  # Cache for 5 minutes
     def get_testimonials(limit=3):
         """Get approved testimonials with a limit"""
@@ -597,8 +604,8 @@ class DonationModel:
             logger.info(f"Created donation for user {user_id}: {transaction_id}")
             
             # Invalidate donation caches
-            current_app.cache.delete_memoized(current_app.get_donation_stats)
-            current_app.cache.delete_memoized(current_app.get_tier_data)
+            current_app.cache.delete_memoized(CacheUtils.get_donation_stats)
+            current_app.cache.delete_memoized(CacheUtils.get_tier_data)
             
             ActivityLogger.log_activity(
                 user_id=user_id,
@@ -632,8 +639,8 @@ class DonationModel:
                 logger.info(f"Updated donation status for transaction {transaction_id} to {status}")
                 
                 # Invalidate donation caches
-                current_app.cache.delete_memoized(current_app.get_donation_stats)
-                current_app.cache.delete_memoized(current_app.get_tier_data)
+                current_app.cache.delete_memoized(CacheUtils.get_donation_stats)
+                current_app.cache.delete_memoized(CacheUtils.get_tier_data)
                 
                 donation = current_app.mongo.db.donations.find_one({'transaction_id': transaction_id})
                 if donation and status == 'completed':
@@ -731,7 +738,7 @@ class TestimonialModel:
             logger.info(f"Created testimonial for user {user_id}")
             
             # Invalidate testimonials cache
-            current_app.cache.delete_memoized(current_app.get_testimonials)
+            current_app.cache.delete_memoized(CacheUtils.get_testimonials)
             
             ActivityLogger.log_activity(
                 user_id=user_id,
@@ -765,7 +772,7 @@ class TestimonialModel:
                 
                 # Invalidate testimonials cache if approved
                 if status == 'approved':
-                    current_app.cache.delete_memoized(current_app.get_testimonials)
+                    current_app.cache.delete_memoized(CacheUtils.get_testimonials)
                 
                 testimonial = current_app.mongo.db.testimonials.find_one({'_id': ObjectId(testimonial_id)})
                 if testimonial:
@@ -1199,7 +1206,7 @@ class ActivityLogger:
             current_app.mongo.db.activity_log.insert_one(activity_data)
             
             # Invalidate active users cache
-            current_app.cache.delete_memoized(current_app.get_active_users)
+            current_app.cache.delete_memoized(CacheUtils.get_active_users)
             
         except Exception as e:
             logger.error(f"Error logging activity: {str(e)}")
@@ -1528,7 +1535,7 @@ class QuoteModel:
             
             if result.modified_count > 0 and approved:
                 # Invalidate verified quotes cache
-                current_app.cache.delete_memoized(current_app.get_verified_quotes)
+                current_app.cache.delete_memoized(CacheUtils.get_verified_quotes)
             
             return result.modified_count > 0, None
             
