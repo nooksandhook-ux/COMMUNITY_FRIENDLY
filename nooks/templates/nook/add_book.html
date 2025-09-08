@@ -31,7 +31,7 @@
                 <hr>
                 
                 <!-- Manual Entry Form -->
-                <form method="POST" id="add-book-form" enctype="multipart/form-data">
+                <form method="POST" id="add-book-form" enctype="multipart/form-data" onsubmit="this.querySelector('button[type=submit]').disabled=true;">
                     <!-- CSRF token included for security -->
                     {{ form.hidden_tag() }}
                     <div class="mb-3">
@@ -171,7 +171,7 @@ document.getElementById('pdf_file').addEventListener('change', function(e) {
     const file = e.target.files[0];
     const termsCheckbox = document.getElementById('terms_agreement');
     if (file) {
-        if (!file.name.toLowerCase().endswith('.pdf')) {
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
             alert('Only PDF files are allowed.');
             e.target.value = '';
             termsCheckbox.checked = false;
@@ -263,6 +263,17 @@ function searchBooks(query) {
 
 // Fill form with selected book data
 function fillForm(id, title, authors, description, cover_image, page_count, genre, isbn, published_date) {
+    const submitButton = document.querySelector('button[type="submit"]');
+    submitButton.disabled = true; // Prevent submission during field updates
+    const csrfTokenInput = document.querySelector('input[name="csrf_token"]');
+    if (!csrfTokenInput) {
+        console.error('CSRF token missing from form');
+        alert('Form error: Please refresh the page and try again.');
+        submitButton.disabled = false;
+        return;
+    }
+    // Preserve CSRF token value
+    const csrfTokenValue = csrfTokenInput.value;
     document.getElementById('google_books_id').value = id;
     document.getElementById('title').value = title;
     document.getElementById('authors').value = authors;
@@ -272,6 +283,9 @@ function fillForm(id, title, authors, description, cover_image, page_count, genr
     document.getElementById('genre').value = genre;
     document.getElementById('isbn').value = isbn;
     document.getElementById('published_date').value = published_date;
+    // Ensure CSRF token is unchanged
+    csrfTokenInput.value = csrfTokenValue;
+    submitButton.disabled = false; // Re-enable submit button
 }
 </script>
 {% endblock %}
