@@ -49,19 +49,18 @@ from blueprints.testimonials.routes import testimonials_bp
 from utils.breadcrumbs import register_breadcrumbs
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# Activity Logger
 class ActivityLogger:
     def __init__(self, mongo):
         self.mongo = mongo
         self.logger = logging.getLogger('activity')
 
-    def log_activity(self, user_id, action, description=None, metadata=None):
+    def log_activity(self, user_id, action, description, metadata=None):
         try:
             self.mongo.db.activity_log.insert_one({
-                'user_id': user_id,
+                'user_id': str(user_id),
                 'action': action,
                 'description': description,
                 'metadata': metadata or {},
@@ -188,7 +187,7 @@ def create_app():
     def datetimeformat(value):
         return value.strftime('%Y-%m-%d') if value else ''
     
-    # Initialize database
+    # Initialize database with application context
     with app.app_context():
         DatabaseManager.initialize_database()
     
@@ -220,12 +219,6 @@ def create_app():
         
         logger.info(f"Authenticated user {current_user.get_id()} accessing home page")
         try:
-            app.activity_logger.log_activity(
-                user_id=current_user.get_id(),
-                action='home_access',
-                description='Accessed home page',
-                metadata={}
-            )
             # Total donations and donation count
             pipeline = [
                 {'$match': {'status': 'completed'}},
@@ -298,12 +291,6 @@ def create_app():
     def dashboard():
         user_id = current_user.get_id() if current_user.is_authenticated else 'anonymous'
         logger.info(f"User {user_id} accessing dashboard")
-        app.activity_logger.log_activity(
-            user_id=user_id,
-            action='dashboard_access',
-            description='Accessed dashboard',
-            metadata={}
-        )
         return redirect(url_for('dashboard.index'))
     
     return app
