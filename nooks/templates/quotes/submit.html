@@ -32,13 +32,17 @@
                                 <div class="col-md-8">
                                     <select class="form-select" id="book_id" name="book_id" required>
                                         <option value="" disabled selected>Choose a book from your library...</option>
-                                        {% for book in books %}
-                                        <option value="{{ book._id }}">
-                                            {{ book.title }}
-                                            {% if book.authors %} by {{ book.authors|join(', ') }}{% endif %}
-                                            ({{ book.status|title }})
-                                        </option>
-                                        {% endfor %}
+                                        {% if books %}
+                                            {% for book in books %}
+                                            <option value="{{ book._id }}">
+                                                {{ book.title }}
+                                                {% if book.authors %} by {{ book.authors|join(', ') }}{% endif %}
+                                                ({{ book.status|title }})
+                                            </option>
+                                            {% endfor %}
+                                        {% else %}
+                                            <option value="" disabled>No books found in your library</option>
+                                        {% endif %}
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -48,6 +52,11 @@
                                     </button>
                                 </div>
                             </div>
+                            {% if not books %}
+                                <div class="form-text text-muted">
+                                    Your library is empty. Add a book to submit quotes.
+                                </div>
+                            {% endif %}
                         </div>
 
                         <!-- Quote Text -->
@@ -172,24 +181,30 @@ document.getElementById('bookSearch').addEventListener('keypress', function(e) {
 
 function searchBooks() {
     const query = document.getElementById('bookSearch').value.trim();
-    if (!query) {
-        document.getElementById('searchResults').innerHTML = '<div class="alert alert-info">Please enter a search term.</div>';
-        return;
-    }
-    
     const searchResults = document.getElementById('searchResults');
     const searchLoading = document.getElementById('searchLoading');
+    
+    if (!query) {
+        searchResults.innerHTML = '<div class="alert alert-info">Please enter a search term.</div>';
+        return;
+    }
     
     searchLoading.style.display = 'block';
     searchResults.innerHTML = '';
     
     fetch(`{{ url_for('quotes.search_books') }}?q=${encodeURIComponent(query)}`, {
+        method: 'GET',
         headers: {
             'Accept': 'application/json',
             'X-CSRF-Token': '{{ csrf_token }}'
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         searchLoading.style.display = 'none';
         
@@ -206,11 +221,11 @@ function searchBooks() {
                         <div class="card h-100">
                             <div class="card-body">
                                 <div class="d-flex">
-                                    ${book.cover_url ? `<img src="${book.cover_url}" alt="Cover" class="me-3" style="width: 60px; height: 90px; object-fit: cover;">` : ''}
+                                    ${book.cover_url ? `<img src="${book.cover_url}" alt="${book.title} cover" class="me-3" style="width: 60px; height: 90px; object-fit: cover;">` : ''}
                                     <div class="flex-grow-1">
                                         <h6 class="card-title">${book.title}</h6>
-                                        ${book.authors.length > 0 ? `<p class="card-text small text-muted">by ${book.authors.join(', ')}</p>` : ''}
-                                        <p class="card-text small">${book.page_count} pages</p>
+                                        ${book.authors && book.authors.length > 0 ? `<p class="card-text small text-muted">by ${book.authors.join(', ')}</p>` : ''}
+                                        <p class="card-text small">${book.page_count || 'Unknown'} pages</p>
                                         <button class="btn btn-sm btn-primary" onclick="addBookToLibrary('${book.id}', '${book.title.replace(/'/g, "\\'")}')">
                                             <i class="fas fa-plus"></i> Add to Library
                                         </button>
@@ -224,12 +239,12 @@ function searchBooks() {
             html += '</div>';
             searchResults.innerHTML = html;
         } else {
-            searchResults.innerHTML = '<div class="alert alert-info">No books found. Try a different search term or add manually.</div>';
+            searchResults.innerHTML = '<div class="alert alert-info">No books found. Try a different search term or <a href="{{ url_for('nook.add_book') }}">add manually</a>.</div>';
         }
     })
     .catch(error => {
         searchLoading.style.display = 'none';
-        searchResults.innerHTML = '<div class="alert alert-danger">Error searching for books. Please try again.</div>';
+        searchResults.innerHTML = '<div class="alert alert-danger">Error searching for books. Please try again later.</div>';
         console.error('Search error:', error);
     });
 }
@@ -245,16 +260,25 @@ function addBookToLibrary(googleId, title) {
             google_id: googleId
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             // Add book to the select dropdown
             const bookSelect = document.getElementById('book_id');
+            const noBooksOption = bookSelect.querySelector('option[value=""]');
+            if (noBooksOption && noBooksOption.textContent.includes('No books found')) {
+                noBooksOption.remove();
+            }
             const option = document.createElement('option');
             option.value = data.book_id;
             option.textContent = `${data.title} (To Read)`;
             option.selected = true;
-            bookSelect.insertBefore(option, bookSelect.lastElementChild);
+            bookSelect.appendChild(option);
             
             // Close modal and show success message
             const modal = bootstrap.Modal.getInstance(document.getElementById('addBookModal'));
@@ -274,7 +298,7 @@ function addBookToLibrary(googleId, title) {
     })
     .catch(error => {
         console.error('Add book error:', error);
-        alert('Error adding book. Please try again.');
+        alert('Error adding book. Please try again later.');
     });
 }
 
