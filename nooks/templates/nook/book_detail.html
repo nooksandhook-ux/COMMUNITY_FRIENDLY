@@ -14,7 +14,7 @@
         </a>
     </div>
 
-    <!-- Book Details -->
+    <!---Book Details -->
     <div class="row">
         <!-- Book Cover and Info -->
         <div class="col-md-4">
@@ -88,85 +88,89 @@
             {% endif %}
 
             <!-- Update Progress Form -->
-            <div class="card mb-4 shadow-sm">
-                <div class="card-body">
-                    <h5>Update Progress</h5>
-                    <form action="{{ url_for('nook.update_progress', book_id=book._id) }}" method="POST" id="update-progress-form">
-                        {{ update_form.hidden_tag() }}
-                        <div class="mb-3">
-                            {{ update_form.current_page.label(class="form-label") }}
-                            {{ update_form.current_page(class="form-control", id="current_page", min="0", max=book.page_count, value=book.current_page, required=True) }}
-                            {% if update_form.current_page.errors %}
-                                <ul class="text-danger">
-                                    {% for error in update_form.current_page.errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            {{ update_form.duration_minutes.label(class="form-label") }}
-                            {{ update_form.duration_minutes(class="form-control", id="duration_minutes", min="0", value="0") }}
-                            {% if update_form.duration_minutes.errors %}
-                                <ul class="text-danger">
-                                    {% for error in update_form.duration_minutes.errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            {{ update_form.session_notes.label(class="form-label") }}
-                            {{ update_form.session_notes(class="form-control", id="session_notes", rows="3") }}
-                            {% if update_form.session_notes.errors %}
-                                <ul class="text-danger">
-                                    {% for error in update_form.session_notes.errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                        </div>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-circle me-2"></i>Update Progress
-                        </button>
-                    </form>
+            {% if update_form %}
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h5>Update Progress</h5>
+                        <form action="{{ url_for('nook.update_progress', book_id=book._id) }}" method="POST" id="update-progress-form">
+                            {{ update_form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ update_form.current_page.label(class="form-label") }}
+                                {{ update_form.current_page(class="form-control", id="current_page", min="0", max=book.page_count, value=book.current_page, required=True) }}
+                                {% if update_form.current_page.errors %}
+                                    <ul class="text-danger">
+                                        {% for error in update_form.current_page.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ update_form.duration_minutes.label(class="form-label") }}
+                                {{ update_form.duration_minutes(class="form-control", id="duration_minutes", min="0", value="0") }}
+                                {% if update_form.duration_minutes.errors %}
+                                    <ul class="text-danger">
+                                        {% for error in update_form.duration_minutes.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ update_form.session_notes.label(class="form-label") }}
+                                {{ update_form.session_notes(class="form-control", id="session_notes", rows="3") }}
+                                {% if update_form.session_notes.errors %}
+                                    <ul class="text-danger">
+                                        {% for error in update_form.session_notes.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Update Progress
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            </div>
+            {% endif %}
 
             <!-- Rate Book Form -->
-            <div class="card mb-4 shadow-sm">
-                <div class="card-body">
-                    <h5>Rate Book</h5>
-                    <form action="{{ url_for('nook.rate_book', book_id=book._id) }}" method="POST" id="rate-book-form">
-                        {{ rate_form.hidden_tag() }}
-                        <div class="mb-3">
-                            {{ rate_form.rating.label(class="form-label") }}
-                            {{ rate_form.rating(class="form-select", id="rating", required=True) }}
-                            {% if rate_form.rating.errors %}
-                                <ul class="text-danger">
-                                    {% for error in rate_form.rating.errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                        </div>
-                        <div class="mb-3">
-                            {{ rate_form.review.label(class="form-label") }}
-                            {{ rate_form.review(class="form-control", id="review", rows="3", value=book.review or '') }}
-                            {% if rate_form.review.errors %}
-                                <ul class="text-danger">
-                                    {% for error in rate_form.review.errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                        </div>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-star-fill me-2"></i>Submit Rating
-                        </button>
-                    </form>
+            {% if rate_form %}
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h5>Rate Book</h5>
+                        <form action="{{ url_for('nook.rate_book', book_id=book._id) }}" method="POST" id="rate-book-form">
+                            {{ rate_form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ rate_form.rating.label(class="form-label") }}
+                                {{ rate_form.rating(class="form-control", id="rating", required=True) }}
+                                {% if rate_form.rating.errors %}
+                                    <ul class="text-danger">
+                                        {% for error in rate_form.rating.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ rate_form.review.label(class="form-label") }}
+                                {{ rate_form.review(class="form-control", id="review", rows="3", value=book.review or '') }}
+                                {% if rate_form.review.errors %}
+                                    <ul class="text-danger">
+                                        {% for error in rate_form.review.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-star-fill me-2"></i>Submit Rating
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -199,34 +203,36 @@
                 <p class="text-muted">No key takeaways added yet.</p>
             {% endif %}
             <!-- Add Takeaway Form -->
-            <form action="{{ url_for('nook.add_takeaway', book_id=book._id) }}" method="POST" class="mt-3" id="add-takeaway-form">
-                {{ takeaway_form.hidden_tag() }}
-                <div class="mb-3">
-                    {{ takeaway_form.takeaway.label(class="form-label") }}
-                    {{ takeaway_form.takeaway(class="form-control", id="takeaway", rows="2", required=True) }}
-                    {% if takeaway_form.takeaway.errors %}
-                        <ul class="text-danger">
-                            {% for error in takeaway_form.takeaway.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                <div class="mb-3">
-                    {{ takeaway_form.page_reference.label(class="form-label") }}
-                    {{ takeaway_form.page_reference(class="form-control", id="page_reference") }}
-                    {% if takeaway_form.page_reference.errors %}
-                        <ul class="text-danger">
-                            {% for error in takeaway_form.page_reference.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-plus-circle me-2"></i>Add Takeaway
-                </button>
-            </form>
+            {% if takeaway_form %}
+                <form action="{{ url_for('nook.add_takeaway', book_id=book._id) }}" method="POST" class="mt-3" id="add-takeaway-form">
+                    {{ takeaway_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ takeaway_form.takeaway.label(class="form-label") }}
+                        {{ takeaway_form.takeaway(class="form-control", id="takeaway", rows="2", required=True) }}
+                        {% if takeaway_form.takeaway.errors %}
+                            <ul class="text-danger">
+                                {% for error in takeaway_form.takeaway.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ takeaway_form.page_reference.label(class="form-label") }}
+                        {{ takeaway_form.page_reference(class="form-control", id="page_reference") }}
+                        {% if takeaway_form.page_reference.errors %}
+                            <ul class="text-danger">
+                                {% for error in takeaway_form.page_reference.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Add Takeaway
+                    </button>
+                </form>
+            {% endif %}
         </div>
     </div>
 
@@ -255,45 +261,47 @@
                 <p class="text-muted">No quotes added yet.</p>
             {% endif %}
             <!-- Add Quote Form -->
-            <form action="{{ url_for('nook.add_quote', book_id=book._id) }}" method="POST" class="mt-3" id="add-quote-form">
-                {{ quote_form.hidden_tag() }}
-                <div class="mb-3">
-                    {{ quote_form.quote.label(class="form-label") }}
-                    {{ quote_form.quote(class="form-control", id="quote", rows="2", required=True) }}
-                    {% if quote_form.quote.errors %}
-                        <ul class="text-danger">
-                            {% for error in quote_form.quote.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                <div class="mb-3">
-                    {{ quote_form.page.label(class="form-label") }}
-                    {{ quote_form.page(class="form-control", id="page") }}
-                    {% if quote_form.page.errors %}
-                        <ul class="text-danger">
-                            {% for error in quote_form.page.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                <div class="mb-3">
-                    {{ quote_form.context.label(class="form-label") }}
-                    {{ quote_form.context(class="form-control", id="context", rows="2") }}
-                    {% if quote_form.context.errors %}
-                        <ul class="text-danger">
-                            {% for error in quote_form.context.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-quote me-2"></i>Add Quote
-                </button>
-            </form>
+            {% if quote_form %}
+                <form action="{{ url_for('nook.add_quote', book_id=book._id) }}" method="POST" class="mt-3" id="add-quote-form">
+                    {{ quote_form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ quote_form.quote.label(class="form-label") }}
+                        {{ quote_form.quote(class="form-control", id="quote", rows="2", required=True) }}
+                        {% if quote_form.quote.errors %}
+                            <ul class="text-danger">
+                                {% for error in quote_form.quote.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ quote_form.page.label(class="form-label") }}
+                        {{ quote_form.page(class="form-control", id="page") }}
+                        {% if quote_form.page.errors %}
+                            <ul class="text-danger">
+                                {% for error in quote_form.page.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ quote_form.context.label(class="form-label") }}
+                        {{ quote_form.context(class="form-control", id="context", rows="2") }}
+                        {% if quote_form.context.errors %}
+                            <ul class="text-danger">
+                                {% for error in quote_form.context.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-quote me-2"></i>Add Quote
+                    </button>
+                </form>
+            {% endif %}
         </div>
     </div>
 
@@ -378,52 +386,64 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Client-side validation for Update Progress form
-    document.getElementById('update-progress-form').addEventListener('submit', function(e) {
-        const currentPage = document.getElementById('current_page').value;
-        const maxPage = {{ book.page_count }};
-        const durationMinutes = document.getElementById('duration_minutes').value;
-        
-        if (currentPage < 0 || currentPage > maxPage) {
-            e.preventDefault();
-            alert('Current page must be between 0 and ' + maxPage + '.');
-            return;
-        }
-        if (durationMinutes < 0) {
-            e.preventDefault();
-            alert('Duration cannot be negative.');
-            return;
-        }
-    });
+    const updateForm = document.getElementById('update-progress-form');
+    if (updateForm) {
+        updateForm.addEventListener('submit', function(e) {
+            const currentPage = document.getElementById('current_page').value;
+            const maxPage = {{ book.page_count }};
+            const durationMinutes = document.getElementById('duration_minutes').value;
+            
+            if (currentPage < 0 || currentPage > maxPage) {
+                e.preventDefault();
+                alert('Current page must be between 0 and ' + maxPage + '.');
+                return;
+            }
+            if (durationMinutes < 0) {
+                e.preventDefault();
+                alert('Duration cannot be negative.');
+                return;
+            }
+        });
+    }
 
     // Client-side validation for Add Takeaway form
-    document.getElementById('add-takeaway-form').addEventListener('submit', function(e) {
-        const takeaway = document.getElementById('takeaway').value.trim();
-        if (!takeaway) {
-            e.preventDefault();
-            alert('Key takeaway is required.');
-            return;
-        }
-    });
+    const takeawayForm = document.getElementById('add-takeaway-form');
+    if (takeawayForm) {
+        takeawayForm.addEventListener('submit', function(e) {
+            const takeaway = document.getElementById('takeaway').value.trim();
+            if (!takeaway) {
+                e.preventDefault();
+                alert('Key takeaway is required.');
+                return;
+            }
+        });
+    }
 
     // Client-side validation for Add Quote form
-    document.getElementById('add-quote-form').addEventListener('submit', function(e) {
-        const quote = document.getElementById('quote').value.trim();
-        if (!quote) {
-            e.preventDefault();
-            alert('Quote is required.');
-            return;
-        }
-    });
+    const quoteForm = document.getElementById('add-quote-form');
+    if (quoteForm) {
+        quoteForm.addEventListener('submit', function(e) {
+            const quote = document.getElementById('quote').value.trim();
+            if (!quote) {
+                e.preventDefault();
+                alert('Quote is required.');
+                return;
+            }
+        });
+    }
 
     // Client-side validation for Rate Book form
-    document.getElementById('rate-book-form').addEventListener('submit', function(e) {
-        const rating = document.getElementById('rating').value;
-        if (!rating) {
-            e.preventDefault();
-            alert('Rating is required.');
-            return;
-        }
-    });
+    const rateForm = document.getElementById('rate-book-form');
+    if (rateForm) {
+        rateForm.addEventListener('submit', function(e) {
+            const rating = document.getElementById('rating').value;
+            if (!rating) {
+                e.preventDefault();
+                alert('Rating is required.');
+                return;
+            }
+        });
+    }
 });
 </script>
 {% endif %}
