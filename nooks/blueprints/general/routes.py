@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, current_app
 from flask_login import current_user, login_required
-from models import TestimonialModel, CacheUtils
+from models import TestimonialModel
 from datetime import datetime, timedelta
 import logging
 
@@ -17,23 +17,50 @@ def home():
     try:
         logger.info(f"Rendering home page for user_id: {current_user.get_id()}")
 
-        with current_app.app_context():
-            # Fetch cached donation stats
-            donation_stats = CacheUtils.get_donation_stats()
-            total_donations = donation_stats['total_donations']
-            donation_count = donation_stats['donation_count']
+        # Total donations and donation count
+        pipeline = [
+            {'$match': {'status': 'completed'}},
+            {'$group': {
+                '_id': None,
+                'total_donations': {'$sum': '$amount'},
+                'donation_count': {'$sum': 1}
+            }}
+        ]
+        result = list(current_app.mongo.db.donations.aggregate(pipeline))
+        total_donations = result[0]['total_donations'] if result else 0
+        donation_count = result[0]['donation_count'] if result else 0
 
-            # Fetch cached tier data
-            tier_data = CacheUtils.get_tier_data()
+        # Tier data for chart
+        pipeline = [
+            {'$match': {'status': 'completed'}},
+            {'$group': {
+                '_id': '$tier',
+                'total': {'$sum': '$amount'}
+            }}
+        ]
+        tier_totals = list(current_app.mongo.db.donations.aggregate(pipeline))
+        tier_data = {
+            'bronze': {'total': 0},
+            'silver': {'total': 0},
+            'gold': {'total': 0}
+        }
+        for entry in tier_totals:
+            if entry['_id'] in tier_data:
+                tier_data[entry['_id']]['total'] = entry['total']
 
-            # Fetch cached verified quotes
-            verified_quotes = CacheUtils.get_verified_quotes()
+        # Verified quotes (adjust collection name if different)
+        verified_quotes = current_app.mongo.db.quotes.count_documents({'verified': True})
 
-            # Fetch cached active users
-            active_users = CacheUtils.get_active_users()
+        # Active users (last 30 days)
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        active_users = current_app.mongo.db.activity_log.distinct(
+            'user_id',
+            {'created_at': {'$gte': thirty_days_ago}}
+        )
+        active_users = len(active_users)
 
-            # Fetch cached testimonials
-            testimonials = CacheUtils.get_testimonials(limit=3)
+        # Testimonials
+        testimonials = TestimonialModel.get_approved_testimonials(limit=3)
 
         return render_template(
             'general/home.html',
