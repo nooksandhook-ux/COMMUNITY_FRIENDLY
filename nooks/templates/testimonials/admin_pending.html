@@ -1,99 +1,55 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
+{% extends "base.html" %}
 
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
+{% block content %}
+<div class="container">
+    <h2 class="text-center fw-bold text-primary mb-4">Pending Testimonials</h2>
 
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mb-4">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pending Testimonials</title>
-</head>
-<body>
-    {% extends "base.html" %}
-    {% block content %}
-    <div class="container mt-5">
-        <h1>Pending Testimonials</h1>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        {% if testimonials %}
-            <div class="row">
-                {% for testimonial in testimonials %}
-                    <div class="col-md-6 mb-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <p class="card-text">"{{ testimonial.content }}"</p>
-                                <p class="card-text">
-                                    <strong>Submitted by:</strong> {{ testimonial.user_id | get_username }}<br>
-                                    <small class="text-muted">Submitted on {{ testimonial.created_at | datetimeformat }}</small>
-                                </p>
-                                <form method="POST" action="{{ url_for('testimonials.admin_update_testimonial', testimonial_id=testimonial._id) }}">
+    {% if testimonials %}
+        <div class="row g-3">
+            {% for testimonial in testimonials %}
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <p class="card-text">"{{ testimonial.content }}"</p>
+                            <p class="card-text text-muted">
+                                <small>
+                                    Submitted by: {{ testimonial.user_id | get_username }}<br>
+                                    Submitted on {{ testimonial.created_at | datetimeformat }}
+                                </small>
+                            </p>
+                            <div class="d-flex gap-2">
+                                <form method="POST" action="{{ url_for('testimonials.approve_testimonial', testimonial_id=testimonial._id) }}">
                                     {{ form.csrf_token if form else '' }}
-                                    <input type="hidden" name="action" value="approve">
-                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                    <button type="submit" class="btn btn-success">Approve</button>
                                 </form>
-                                <form method="POST" action="{{ url_for('testimonials.admin_update_testimonial', testimonial_id=testimonial._id) }}" class="mt-2">
+                                <form method="POST" action="{{ url_for('testimonials.reject_testimonial', testimonial_id=testimonial._id) }}">
                                     {{ form.csrf_token if form else '' }}
-                                    <input type="hidden" name="action" value="reject">
-                                    <div class="mb-2">
+                                    <div class="mb-3">
                                         <label for="rejection_reason_{{ testimonial._id }}" class="form-label">Rejection Reason</label>
-                                        <input type="text" class="form-control" id="rejection_reason_{{ testimonial._id }}" name="rejection_reason" placeholder="Enter rejection reason">
+                                        <textarea class="form-control" id="rejection_reason_{{ testimonial._id }}" name="rejection_reason" rows="3"></textarea>
                                     </div>
-                                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                    <button type="submit" class="btn btn-danger">Reject</button>
                                 </form>
                             </div>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p>No pending testimonials to review.</p>
-        {% endif %}
-        <a href="{{ url_for('testimonials.testimonial_statistics') }}" class="btn btn-primary mt-3">View Statistics</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted text-center">No pending testimonials to review.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('testimonials.statistics') }}" class="btn btn-primary">View Statistics</a>
     </div>
-    {% endblock %}
-</body>
-</html>
+</div>
+{% endblock %}
