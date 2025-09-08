@@ -14,6 +14,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, TextAreaField, SelectField, IntegerField, HiddenField, BooleanField, FloatField
 from wtforms.validators import DataRequired, Optional, NumberRange
+from models import ActivityLogger  # Import ActivityLogger from models.py
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -106,7 +107,7 @@ def index():
     }
     
     # Log activity
-    current_app.activity_logger.log_activity(
+    ActivityLogger.log_activity(
         user_id=user_id,
         action='view_library',
         description='Viewed personal library',
@@ -183,7 +184,7 @@ def add_book():
                     pdf_path = f"uploads/{user_id}/{pdf_filename}"
 
                     # Log upload
-                    current_app.activity_logger.log_activity(
+                    ActivityLogger.log_activity(
                         user_id=user_id,
                         action='pdf_upload',
                         description=f'Uploaded PDF for book: {title}',
@@ -213,7 +214,7 @@ def add_book():
                 }
 
                 result = current_app.mongo.db.books.insert_one(book_data)
-                current_app.activity_logger.log_activity(
+                ActivityLogger.log_activity(
                     user_id=user_id,
                     action='add_book',
                     description=f'Added book: {title}',
@@ -295,14 +296,14 @@ def edit_book(book_id):
                         f.write(encrypted_pdf)
                     update['pdf_path'] = f"uploads/{user_id}/{pdf_filename}"
                     # Log upload
-                    current_app.activity_logger.log_activity(
+                    ActivityLogger.log_activity(
                         user_id=user_id,
                         action='pdf_upload',
                         description=f'Uploaded new PDF for book: {form.title.data}',
                         metadata={'book_id': book_id, 'filename': pdf_filename}
                     )
                 current_app.mongo.db.books.update_one({'_id': ObjectId(book_id)}, {'$set': update})
-                current_app.activity_logger.log_activity(
+                ActivityLogger.log_activity(
                     user_id=user_id,
                     action='edit_book',
                     description=f'Edited book: {form.title.data}',
@@ -363,7 +364,7 @@ def delete_book(book_id):
             logger.info(f"Book {book_id} deleted by user {user_id}")
 
             # Log deletion
-            current_app.activity_logger.log_activity(
+            ActivityLogger.log_activity(
                 user_id=user_id,
                 action='book_deletion',
                 description=f'Deleted book: {book["title"]}',
@@ -429,7 +430,7 @@ def serve_pdf(book_id):
         decrypted_pdf = fernet.decrypt(encrypted_pdf)
         
         # Log access
-        current_app.activity_logger.log_activity(
+        ActivityLogger.log_activity(
             user_id=user_id,
             action='pdf_access',
             description=f'Accessed PDF for book: {book["title"]}',
@@ -452,7 +453,7 @@ def my_uploads():
     try:
         user_id = ObjectId(current_user.id)
         books = list(current_app.mongo.db.books.find({'user_id': user_id, 'pdf_path': {'$ne': None}}).sort('added_at', -1))
-        current_app.activity_logger.log_activity(
+        ActivityLogger.log_activity(
             user_id=user_id,
             action='view_uploads',
             description='Viewed uploaded books',
@@ -487,7 +488,7 @@ def search_books_route():
                     'published_date': book.get('published_date', '')
                 }
                 sanitized_books.append(sanitized_book)
-            current_app.activity_logger.log_activity(
+            ActivityLogger.log_activity(
                 user_id=ObjectId(current_user.id),
                 action='search_books',
                 description=f'Searched books with query: {query}',
@@ -522,7 +523,7 @@ def book_detail(book_id):
             'book_id': ObjectId(book_id)
         }).sort('date', -1))
         
-        current_app.activity_logger.log_activity(
+        ActivityLogger.log_activity(
             user_id=user_id,
             action='view_book_detail',
             description=f'Viewed details for book: {book["title"]}',
@@ -580,7 +581,7 @@ def update_progress(book_id):
                 }
                 current_app.mongo.db.reading_sessions.insert_one(session_data)
                 
-                current_app.activity_logger.log_activity(
+                ActivityLogger.log_activity(
                     user_id=user_id,
                     action='update_progress',
                     description=f'Updated reading progress for book: {book["title"]}',
@@ -606,11 +607,11 @@ def update_progress(book_id):
                         {'$set': {'status': 'finished', 'finished_at': datetime.utcnow()}}
                     )
                     
-                    current_app.activity_logger.log_activity(
+                    ActivityLogger.log_activity(
                         user_id=user_id,
                         action='book_completion',
                         description=f'Finished book: {book["title"]}',
-                        metadata={'book bod': book_id}
+                        metadata={'book_id': book_id}  # Fixed typo from 'book bod' to 'book_id'
                     )
                     
                     # Award goal-based reward for book completion
@@ -675,7 +676,7 @@ def add_takeaway(book_id):
                     {'$push': {'key_takeaways': takeaway_data}}
                 )
                 
-                current_app.activity_logger.log_activity(
+                ActivityLogger.log_activity(
                     user_id=user_id,
                     action='add_takeaway',
                     description=f'Added key takeaway for book: {book_id}',
@@ -732,7 +733,7 @@ def add_quote(book_id):
                     {'$push': {'quotes': quote_data}}
                 )
                 
-                current_app.activity_logger.log_activity(
+                ActivityLogger.log_activity(
                     user_id=user_id,
                     action='quote_submission',
                     description=f'Submitted quote for book: {book_id}',
@@ -785,7 +786,7 @@ def rate_book(book_id):
                     }}
                 )
                 
-                current_app.activity_logger.log_activity(
+                ActivityLogger.log_activity(
                     user_id=user_id,
                     action='rate_book',
                     description=f'Rated book: {book_id}',
@@ -850,7 +851,7 @@ def library():
         all_books = list(current_app.mongo.db.books.find({'user_id': user_id}))
         genres = list(set([book.get('genre', '') for book in all_books if book.get('genre')]))
         
-        current_app.activity_logger.log_activity(
+        ActivityLogger.log_activity(
             user_id=user_id,
             action='view_library',
             description='Viewed filtered library',
@@ -904,7 +905,7 @@ def analytics():
         if rated_books:
             analytics_data['avg_rating'] = sum([book['rating'] for book in rated_books]) / len(rated_books)
         
-        current_app.activity_logger.log_activity(
+        ActivityLogger.log_activity(
             user_id=user_id,
             action='view_analytics',
             description='Viewed reading analytics',
@@ -940,7 +941,7 @@ def calculate_reading_streak(user_id):
             streak += 1
             current_date -= timedelta(days=1)
         
-        current_app.activity_logger.log_activity(
+        ActivityLogger.log_activity(
             user_id=user_id,
             action='calculate_streak',
             description='Calculated reading streak',
