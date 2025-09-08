@@ -1,206 +1,254 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% block title %}Home - Nooks{% endblock %}
-</head>
-<body>
-    {% extends "base.html" %}
+{% extends "base.html" %}
 
-    {% block content %}
-    {% if current_user.is_authenticated %}
-    <div class="row">
-        <div class="col-12">
-            <div class="text-center mb-5">
-                <h1 class="display-4 fw-bold text-primary">Welcome to Nooks!</h1>
-                <p class="lead text-muted">Your personal productivity partner</p>
+{% block title %}Home - Nooks{% endblock %}
+
+{% block content %}
+{% if current_user.is_authenticated %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold text-primary">Welcome to Nooks!</h1>
+            <p class="lead text-muted">Your personal productivity partner</p>
+        </div>
+    </div>
+</div>
+
+<div class="cards-container">
+    <div class="row g-3">
+        <!-- Nook Card -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-0 nook-card">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-book display-1 text-success"></i>
+                    </div>
+                    <h3 class="card-title fw-bold text-success">Nook</h3>
+                    <p class="card-text text-muted mb-2 fw-bold">Fuel your mind, one page at a time.</p>
+                    <div class="card-buttons">
+                        <a href="{{ url_for('nook.index') }}" class="btn btn-success btn-lg">
+                            <span><i class="bi bi-book-half me-2"></i>Start Reading</span>
+                        </a>
+                        <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success">
+                            <span><i class="bi bi-plus-circle me-2"></i>Add a Book</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hook Card -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-0 hook-card">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-stopwatch display-1 text-info"></i>
+                    </div>
+                    <h3 class="card-title fw-bold text-info">Hook</h3>
+                    <p class="card-text text-muted mb-2 fw-bold">Focus better, finish faster.</p>
+                    <div class="card-buttons">
+                        <a href="{{ url_for('hook.timer') }}" class="btn btn-info btn-lg">
+                            <span><i class="bi bi-play-circle me-2"></i>Start Timer</span>
+                        </a>
+                        <a href="{{ url_for('hook.history') }}" class="btn btn-outline-info">
+                            <span><i class="bi bi-clock-history me-2"></i>View Your History</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nooks Club Card -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-0 nooks-club-card">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-people display-1 text-primary"></i>
+                    </div>
+                    <h3 class="card-title fw-bold text-primary">Nooks Club</h3>
+                    <p class="card-text text-muted mb-2 fw-bold">Read together. Grow together.</p>
+                    <div class="card-buttons">
+                        <a href="{{ url_for('nooks_club.index') }}" class="btn btn-primary btn-lg">
+                            <span><i class="bi bi-people-fill me-2"></i>Join Readers</span>
+                        </a>
+                        <a href="{{ url_for('nooks_club.create_club') }}" class="btn btn-outline-primary">
+                            <span><i class="bi bi-plus-circle me-2"></i>Create/View Clubs</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mini Modules Card -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm border-0 mini-modules-card">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-lightbulb display-1 text-warning"></i>
+                    </div>
+                    <h3 class="card-title fw-bold text-warning">Mini Modules</h3>
+                    <p class="card-text text-muted mb-2 fw-bold">Learn smarter.</p>
+                    <div class="card-buttons">
+                        <a href="{{ url_for('mini_modules.index') }}" class="btn btn-warning btn-lg text-white">
+                            <span><i class="bi bi-lightning-charge me-2"></i>Test Brains</span>
+                        </a>
+                        <a href="{{ url_for('mini_modules.quiz') }}" class="btn btn-outline-warning">
+                            <span><i class="bi bi-question-circle me-2"></i>Daily Quiz</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="cards-container">
+<!-- Taglines Section -->
+<div class="taglines-section">
+    <div class="row g-3">
+        <div class="col-md-6 col-lg-3">
+            <div class="tagline-item text-center">
+                <small class="text-muted">
+                    <i class="bi bi-book text-warning me-1"></i>
+                    Track progress, quotes, and takeaways
+                </small>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="tagline-item text-center">
+                <small class="text-muted">
+                    <i class="bi bi-trophy-fill text-warning me-1"></i>
+                    Earn points and build streaks
+                </small>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="tagline-item text-center">
+                <small class="text-muted">
+                    <i class="bi bi-chat-dots text-info me-1"></i>
+                    Group reading, chat, and shared goals
+                </small>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="tagline-item text-center">
+                <small class="text-muted">
+                    <i class="bi bi-award text-success me-1"></i>
+                    Earn badges and points for participation
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mt-4 quick-actions-section">
+    <div class="col-12">
+        <h3 class="mb-3">Quick Actions</h3>
         <div class="row g-3">
-            <!-- Nook Card -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 shadow-sm border-0 nook-card">
-                    <div class="card-body text-center p-5">
-                        <div class="mb-4">
-                            <i class="bi bi-book display-1 text-success"></i>
-                        </div>
-                        <h3 class="card-title fw-bold text-success">Nook</h3>
-                        <p class="card-text text-muted mb-2 fw-bold">Fuel your mind, one page at a time.</p>
-                        <div class="card-buttons">
-                            <a href="{{ url_for('nook.index') }}" class="btn btn-success btn-lg">
-                                <span><i class="bi bi-book-half me-2"></i>Start Reading</span>
-                            </a>
-                            <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success">
-                                <span><i class="bi bi-plus-circle me-2"></i>Add a Book</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+            <div class="col-md-4">
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary quick-actions w-100">
+                    <span><i class="bi bi-graph-up me-2"></i>View Dashboard</span>
+                </a>
             </div>
-
-            <!-- Hook Card -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 shadow-sm border-0 hook-card">
-                    <div class="card-body text-center p-5">
-                        <div class="mb-4">
-                            <i class="bi bi-stopwatch display-1 text-info"></i>
-                        </div>
-                        <h3 class="card-title fw-bold text-info">Hook</h3>
-                        <p class="card-text text-muted mb-2 fw-bold">Focus better, finish faster.</p>
-                        <div class="card-buttons">
-                            <a href="{{ url_for('hook.timer') }}" class="btn btn-info btn-lg">
-                                <span><i class="bi bi-play-circle me-2"></i>Start Timer</span>
-                            </a>
-                            <a href="{{ url_for('hook.history') }}" class="btn btn-outline-info">
-                                <span><i class="bi bi-clock-history me-2"></i>View Your History</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+            <div class="col-md-4">
+                <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success quick-actions w-100">
+                    <span><i class="bi bi-plus-circle me-2"></i>Add New Book</span>
+                </a>
             </div>
-
-            <!-- Nooks Club Card -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 shadow-sm border-0 nooks-club-card">
-                    <div class="card-body text-center p-5">
-                        <div class="mb-4">
-                            <i class="bi bi-people display-1 text-primary"></i>
-                        </div>
-                        <h3 class="card-title fw-bold text-primary">Nooks Club</h3>
-                        <p class="card-text text-muted mb-2 fw-bold">Read together. Grow together.</p>
-                        <div class="card-buttons">
-                            <a href="{{ url_for('nooks_club.index') }}" class="btn btn-primary btn-lg">
-                                <span><i class="bi bi-people-fill me-2"></i>Join Readers</span>
-                            </a>
-                            <a href="{{ url_for('nooks_club.create_club') }}" class="btn btn-outline-primary">
-                                <span><i class="bi bi-plus-circle me-2"></i>Create/View Clubs</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mini Modules Card -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 shadow-sm border-0 mini-modules-card">
-                    <div class="card-body text-center p-5">
-                        <div class="mb-4">
-                            <i class="bi bi-lightbulb display-1 text-warning"></i>
-                        </div>
-                        <h3 class="card-title fw-bold text-warning">Mini Modules</h3>
-                        <p class="card-text text-muted mb-2 fw-bold">Learn smarter.</p>
-                        <div class="card-buttons">
-                            <a href="{{ url_for('mini_modules.index') }}" class="btn btn-warning btn-lg text-white">
-                                <span><i class="bi bi-lightning-charge me-2"></i>Test Brains</span>
-                            </a>
-                            <a href="{{ url_for('mini_modules.quiz') }}" class="btn btn-outline-warning">
-                                <span><i class="bi bi-question-circle me-2"></i>Daily Quiz</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+            <div class="col-md-4">
+                <a href="{{ url_for('hook.timer') }}" class="btn btn-outline-info quick-actions w-100">
+                    <span><i class="bi bi-play-circle me-2"></i>Start Focus Session</span>
+                </a>
             </div>
         </div>
-    </div>
-
-    <!-- Taglines Section -->
-    <div class="taglines-section">
-        <div class="row g-3">
-            <div class="col-md-6 col-lg-3">
-                <div class="tagline-item text-center">
-                    <small class="text-muted">
-                        <i class="bi bi-book text-warning me-1"></i>
-                        Track progress, quotes, and takeaways
-                    </small>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="tagline-item text-center">
-                    <small class="text-muted">
-                        <i class="bi bi-trophy-fill text-warning me-1"></i>
-                        Earn points and build streaks
-                    </small>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="tagline-item text-center">
-                    <small class="text-muted">
-                        <i class="bi bi-chat-dots text-info me-1"></i>
-                        Group reading, chat, and shared goals
-                    </small>
-                </div>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <div class="tagline-item text-center">
-                    <small class="text-muted">
-                        <i class="bi bi-award text-success me-1"></i>
-                        Earn badges and points for participation
-                    </small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="row mt-4 quick-actions-section">
-        <div class="col-12">
-            <h3 class="mb-3">Quick Actions</h3>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary quick-actions w-100">
-                        <span><i class="bi bi-graph-up me-2"></i>View Dashboard</span>
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success quick-actions w-100">
-                        <span><i class="bi bi-plus-circle me-2"></i>Add New Book</span>
-                    </a>
-                </div>
-                <div class="col-md-4">
-                    <a href="{{ url_for('hook.timer') }}" class="btn btn-outline-info quick-actions w-100">
-                        <span><i class="bi bi-play-circle me-2"></i>Start Focus Session</span>
-                    </a>
-                </div>
-            </div>
-            <!-- More Accordion -->
-            <div class="accordion mt-4" id="moreAccordion">
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="moreHeading">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#moreCollapse" aria-expanded="false" aria-controls="moreCollapse">
-                            More
-                        </button>
-                    </h2>
-                    <div id="moreCollapse" class="accordion-collapse collapse" aria-labelledby="moreHeading" data-bs-parent="#moreAccordion">
-                        <div class="accordion-body">
-                            <!-- Testimonials Section -->
-                            <div class="row mt-4">
-                                <div class="col-12">
-                                    <h3 class="mb-3">What Our Community Says</h3>
+        <!-- More Accordion -->
+        <div class="accordion mt-4" id="moreAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="moreHeading">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#moreCollapse" aria-expanded="false" aria-controls="moreCollapse">
+                        More
+                    </button>
+                </h2>
+                <div id="moreCollapse" class="accordion-collapse collapse" aria-labelledby="moreHeading" data-bs-parent="#moreAccordion">
+                    <div class="accordion-body">
+                        <!-- Transparency Dashboard Section -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h3 class="mb-3">Transparency Dashboard</h3>
+                                <p class="text-center text-muted mb-4">
+                                    See how your support impacts Nooks' mission to promote literacy and productivity.
+                                </p>
+                                {% if error %}
+                                    <div class="alert alert-danger">{{ error }}</div>
+                                {% else %}
                                     <div class="row g-3">
-                                        {% for testimonial in testimonials %}
                                         <div class="col-md-4">
                                             <div class="card h-100 shadow-sm border-0">
-                                                <div class="card-body">
-                                                    <p class="card-text">"{{ testimonial.content | truncate(150) }}"</p>
-                                                    <p class="card-text text-muted">
-                                                        <small>
-                                                            <i class="bi bi-person-circle me-1"></i>
-                                                            {{ testimonial.user_id | get_username }} on {{ testimonial.approved_at | datetimeformat }}
-                                                        </small>
-                                                    </p>
+                                                <div class="card-body text-center">
+                                                    <h5 class="card-title">Total Donations</h5>
+                                                    <p class="card-text display-4">₦{{ total_donations | int }}</p>
+                                                    <p class="text-muted">{{ donation_count }} contributions</p>
                                                 </div>
                                             </div>
                                         </div>
-                                        {% else %}
-                                        <div class="col-12">
-                                            <p class="text-muted">No testimonials available. Be the first to <a href="{{ url_for('testimonials.submit_testimonial') }}">share your story</a>!</p>
+                                        <div class="col-md-4">
+                                            <div class="card h-100 shadow-sm border-0">
+                                                <div class="card-body text-center">
+                                                    <h5 class="card-title">Verified Quotes</h5>
+                                                    <p class="card-text display-4">{{ verified_quotes }}</p>
+                                                    <p class="text-muted">Inspirational insights shared</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        {% endfor %}
+                                        <div class="col-md-4">
+                                            <div class="card h-100 shadow-sm border-0">
+                                                <div class="card-body text-center">
+                                                    <h5 class="card-title">Active Users</h5>
+                                                    <p class="card-text display-4">{{ active_users }}</p>
+                                                    <p class="text-muted">Last 30 days</p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
+                                    <div class="row mt-4">
+                                        <div class="col-12">
+                                            <div class="card shadow-sm border-0">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">Donation Breakdown by Tier</h5>
+                                                    <canvas id="tierChart" height="100"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-center mt-4">
+                                        <a href="{{ url_for('analytics.export_report') }}" class="btn btn-primary">Download Impact Report</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- Testimonials Section -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <h3 class="mb-3">What Our Community Says</h3>
+                                <div class="row g-3">
+                                    {% for testimonial in testimonials %}
+                                    <div class="col-md-4">
+                                        <div class="card h-100 shadow-sm border-0">
+                                            <div class="card-body">
+                                                <p class="card-text">"{{ testimonial.content | truncate(150) }}"</p>
+                                                <p class="card-text text-muted">
+                                                    <small>
+                                                        <i class="bi bi-person-circle me-1"></i>
+                                                        {{ testimonial.user_id | get_username }} on {{ testimonial.approved_at | datetimeformat }}
+                                                    </small>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="col-12">
+                                        <p class="text-muted">No testimonials available. Be the first to <a href="{{ url_for('testimonials.submit_testimonial') }}">share your story</a>!</p>
+                                    </div>
+                                    {% endfor %}
                                 </div>
                             </div>
                         </div>
@@ -209,16 +257,59 @@
             </div>
         </div>
     </div>
-    {% else %}
-    <div class="row">
-        <div class="col-12 text-center">
-            <h1 class="display-4 fw-bold text-primary">Welcome to Nook & Hook</h1>
-            <p class="lead text-muted">Please log in to access your personalized dashboard.</p>
-            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Login</a>
-            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg">Register</a>
-        </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12 text-center">
+        <h1 class="display-4 fw-bold text-primary">Welcome to Nook & Hook</h1>
+        <p class="lead text-muted">Please log in to access your personalized dashboard.</p>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Login</a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg">Register</a>
     </div>
-    {% endif %}
-    {% endblock %}
-</body>
-</html>
+</div>
+{% endif %}
+
+<!-- Chart.js Script for Donation Breakdown -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('tierChart')?.getContext('2d');
+        if (ctx) {
+            const tierData = {
+                labels: ['Bronze', 'Silver', 'Gold'],
+                datasets: [{
+                    label: 'Donation Amounts (NGN)',
+                    data: [
+                        {{ tier_data.bronze.total | default(0) }},
+                        {{ tier_data.silver.total | default(0) }},
+                        {{ tier_data.gold.total | default(0) }}
+                    ],
+                    backgroundColor: ['#cd7f32', '#c0c0c0', '#ffd700'],
+                    borderColor: ['#8b4513', '#808080', '#b8860b'],
+                    borderWidth: 1
+                }]
+            };
+            new Chart(ctx, {
+                type: 'bar',
+                data: tierData,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Amount (NGN)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
