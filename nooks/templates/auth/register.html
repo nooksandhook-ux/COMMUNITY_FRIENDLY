@@ -33,16 +33,18 @@
                             <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 password-toggle-wrapper position-relative">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" id="password" name="password" required>
+                        <i class="bi bi-eye-slash toggle-password position-absolute" style="top: 38px; right: 10px; cursor: pointer;" toggle="#password"></i>
                         {% for error in form.password.errors %}
                             <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 password-toggle-wrapper position-relative">
                         <label for="confirm_password" class="form-label">Confirm Password</label>
                         <input type="password" class="form-control {% if form.confirm_password.errors %}is-invalid{% endif %}" id="confirm_password" name="confirm_password" required>
+                        <i class="bi bi-eye-slash toggle-password position-absolute" style="top: 38px; right: 10px; cursor: pointer;" toggle="#confirm_password"></i>
                         {% for error in form.confirm_password.errors %}
                             <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
@@ -72,4 +74,18 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".toggle-password").forEach(function (eye) {
+        eye.addEventListener("click", function () {
+            const input = document.querySelector(eye.getAttribute("toggle"));
+            const isHidden = input.getAttribute("type") === "password";
+            input.setAttribute("type", isHidden ? "text" : "password");
+            eye.classList.toggle("bi-eye");
+            eye.classList.toggle("bi-eye-slash");
+        });
+    });
+});
+</script>
 {% endblock %}
