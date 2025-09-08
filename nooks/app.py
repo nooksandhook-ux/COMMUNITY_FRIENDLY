@@ -4,8 +4,8 @@ from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_caching import Cache
 from flask_session import Session
-from flask_session.sessions import MongoDBSessionInterface
 from pymongo import MongoClient
+from pymongo.collection import Collection
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
@@ -14,6 +14,16 @@ import requests
 from bson import ObjectId
 import json
 import logging
+
+# Monkey patch for PyMongo 4.x compatibility with flask-session
+def update(self, spec, document, upsert=False, multi=False, safe=False, check_keys=True, manipulate=False, write_concern=None, **kwargs):
+    """Monkey patch for deprecated collection.update method."""
+    if multi:
+        return self.update_many(spec, document, upsert=upsert, write_concern=write_concern, **kwargs)
+    else:
+        return self.update_one(spec, document, upsert=upsert, write_concern=write_concern, **kwargs)
+
+Collection.update = update
 
 # Import models and database utilities
 from models import DatabaseManager, User, TestimonialModel
@@ -42,21 +52,6 @@ from utils.breadcrumbs import register_breadcrumbs
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# Custom MongoDBSessionInterface to fix deprecated 'update' method
-class CustomMongoDBSessionInterface(MongoDBSessionInterface):
-    def save_session(self, app, session, response):
-        if not self.should_set_cookie(app, session):
-            return
-        store_id = session.sid
-        if session.modified or not self.permanent:
-            expires = self.get_expiration_time(app, session)
-            val = self.serializer.dumps(dict(session))
-            self.store.update_one(
-                {'id': store_id},
-                {'$set': {'val': val, 'expiration': expires}},
-                upsert=True
-            )
-
 def create_app():
     app = Flask(__name__)
     
@@ -67,7 +62,7 @@ def create_app():
     if not app.config['MONGO_URI']:
         raise ValueError("MONGO_URI environment variable is not set")
     app.config['SESSION_TYPE'] = 'mongodb'
-    app.config['SESSION_MONGODB'] = MongoClient(app.config['MONGO_URI'])
+    app.config['SESSION_MONGODB'] = None  # Will set to MongoClient
     app.config['SESSION_MONGODB_DB'] = 'ficore_accounting'
     app.config['SESSION_MONGODB_COLLECT'] = 'sessions'
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -76,16 +71,13 @@ def create_app():
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
     app.config['CACHE_TYPE'] = 'simple'
     
-    # Initialize MongoDB
-    mongo = PyMongo(app)
-    app.mongo = mongo
+    # Initialize MongoDB Client
+    client = MongoClient(app.config['MONGO_URI'])
+    app.extensions['mongo'] = client  # Store client in app.extensions
+    app.mongo = PyMongo(app)  # Keep PyMongo for other uses
+    app.config['SESSION_MONGODB'] = client  # Set to MongoClient for sessions
     
-    # Initialize Flask-Session with custom interface
-    app.session_interface = CustomMongoDBSessionInterface(
-        app,
-        db=app.config['SESSION_MONGODB'],
-        collection=app.config['SESSION_MONGODB_COLLECT']
-    )
+    # Initialize Flask-Session
     Session(app)
     
     # Initialize Flask-Login
@@ -136,7 +128,7 @@ def create_app():
     @login_manager.user_loader
     def load_user(user_id):
         try:
-            user_data = mongo.db.users.find_one({'_id': ObjectId(user_id)})
+            user_data = app.mongo.db.users.find_one({'_id': ObjectId(user_id)})
             if user_data:
                 logger.info(f"Loaded user {user_id} successfully")
                 return User(user_data)
