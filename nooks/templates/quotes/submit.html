@@ -46,15 +46,14 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <button type="button" class="btn btn-outline-primary w-100" 
-                                            data-bs-toggle="modal" data-bs-target="#addBookModal">
-                                        <i class="fas fa-plus"></i> Add New Book
-                                    </button>
+                                    <a href="{{ url_for('nook.library') }}" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-book"></i> Go to My Library
+                                    </a>
                                 </div>
                             </div>
                             {% if not books %}
                                 <div class="form-text text-muted">
-                                    Your library is empty. Add a book to submit quotes.
+                                    No books found. Make sure to mark a book as "Reading" or "Finished" before submitting quotes.
                                 </div>
                             {% endif %}
                         </div>
@@ -277,21 +276,20 @@ function addBookToLibrary(googleId, title) {
             const option = document.createElement('option');
             option.value = data.book_id;
             option.textContent = `${data.title} (To Read)`;
-            option.selected = true;
             bookSelect.appendChild(option);
-            
-            // Close modal and show success message
-            const modal = bootstrap.Modal.getInstance(document.getElementById('addBookModal'));
-            modal.hide();
             
             // Show success alert
             const alertDiv = document.createElement('div');
             alertDiv.className = 'alert alert-success alert-dismissible fade show';
             alertDiv.innerHTML = `
-                <i class="fas fa-check-circle"></i> ${data.message}
+                <i class="fas fa-check-circle"></i> ${data.message} Please mark the book as "Reading" or "Finished" in your library to submit quotes.
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
             document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.row'));
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addBookModal'));
+            modal.hide();
         } else {
             alert('Error: ' + (data.error || 'Failed to add book'));
         }
