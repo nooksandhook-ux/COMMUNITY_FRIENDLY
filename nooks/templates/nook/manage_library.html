@@ -19,14 +19,16 @@
         {% for book in books %}
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow-sm">
-                <img src="{{ book.cover_image or '/static/images/default-book-cover.png' }}" class="card-img-top" style="max-height: 200px; object-fit: cover;" alt="{{ book.title }}">
+                <img src="{{ book.book_image or '/static/images/default-book-cover.png' }}" class="card-img-top" style="max-height: 200px; object-fit: cover;" alt="{{ book.title }}">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">{{ book.title }}</h5>
                     <p class="card-text text-muted">by {{ book.authors | join(', ') }}</p>
                     <p class="card-text text-muted small">Status: {{ book.status|title }}</p>
                     {% if book.pdf_path %}
                     <p class="card-text text-muted small">PDF: {{ 'Encrypted' if book.is_encrypted else 'Unencrypted' }}</p>
-                    <a href="{{ url_for('nook.serve_pdf', book_id=book._id) }}" class="btn btn-primary btn-sm mb-2"><i class="bi bi-file-earmark-pdf me-1"></i>Read Now</a>
+                    <a href="{{ url_for('nook.serve_pdf', book_id=book._id) }}" class="btn btn-primary btn-sm mb-2" title="Open this book in your browser">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>Read Now
+                    </a>
                     {% endif %}
                     <a href="{{ url_for('nook.book_detail', book_id=book._id) }}" class="btn btn-outline-success btn-sm mb-2">Details</a>
                     <a href="{{ url_for('nook.edit_book', book_id=book._id) }}" class="btn btn-outline-warning btn-sm mb-2">Edit</a>
