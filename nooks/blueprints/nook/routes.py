@@ -406,35 +406,56 @@ def serve_pdf(book_id):
         # Fetch user to check admin status
         user = current_app.mongo.db.users.find_one({'_id': user_id})
         if not user:
+            logger.error(f"User not found: {user_id}")
             flash("User not found.", "danger")
             return redirect(url_for('nook.book_detail', book_id=book_id))
         
         book = current_app.mongo.db.books.find_one({'_id': ObjectId(book_id)})
         if not book or not book.get('pdf_path'):
+            logger.error(f"Book {book_id} not found or no PDF path associated")
             flash('PDF not available for this book.', 'danger')
             return redirect(url_for('nook.book_detail', book_id=book_id))
         
         # Restrict access to owner or admin
         if not (book['user_id'] == user_id or user.get('is_admin', False)):
+            logger.error(f"User {user_id} does not have permission to access PDF for book {book_id}")
             flash('You do not have permission to view this file.', 'danger')
             return redirect(url_for('nook.book_detail', book_id=book_id))
         
         pdf_path_full = os.path.join(current_app.root_path, 'static', book['pdf_path'])
+        logger.info(f"Attempting to serve PDF: {pdf_path_full}")
         if not os.path.exists(pdf_path_full):
+            logger.error(f"PDF file does not exist at path: {pdf_path_full}")
             flash('PDF file not found.', 'danger')
             return redirect(url_for('nook.book_detail', book_id=book_id))
         
+        # Verify file readability
+        try:
+            with open(pdf_path_full, 'rb') as f:
+                encrypted_pdf = f.read()
+                if not encrypted_pdf:
+                    logger.error(f"PDF file at {pdf_path_full} is empty")
+                    flash('PDF file is empty or corrupted.', 'danger')
+                    return redirect(url_for('nook.book_detail', book_id=book_id))
+        except Exception as e:
+            logger.error(f"Error reading PDF file at {pdf_path_full}: {str(e)}")
+            flash('Error accessing PDF file.', 'danger')
+            return redirect(url_for('nook.book_detail', book_id=book_id))
+        
         # Decrypt PDF
-        with open(pdf_path_full, 'rb') as f:
-            encrypted_pdf = f.read()
-        decrypted_pdf = fernet.decrypt(encrypted_pdf)
+        try:
+            decrypted_pdf = fernet.decrypt(encrypted_pdf)
+        except Exception as e:
+            logger.error(f"Error decrypting PDF for book {book_id}: {str(e)}")
+            flash('Error decrypting PDF file.', 'danger')
+            return redirect(url_for('nook.book_detail', book_id=book_id))
         
         # Log access
         ActivityLogger.log_activity(
             user_id=user_id,
             action='pdf_access',
             description=f'Accessed PDF for book: {book["title"]}',
-            metadata={'book_id': book_id}
+            metadata={'book_id': book_id, 'pdf_path': book['pdf_path']}
         )
 
         return send_file(
@@ -1063,4 +1084,3 @@ def update_progress_ajax(book_id):
     except Exception as e:
         logger.error(f"Error updating progress for book {book_id}: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
-
