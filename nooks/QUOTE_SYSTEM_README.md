@@ -237,7 +237,46 @@ GOOGLE_BOOKS_API_KEY=your_api_key_here  # Optional, for enhanced features
    - Register an account
    - Add books to your library at `/quotes/submit`
    - Start submitting quotes and earning rewards!
+  
+   Quote Submission Book Filter Logic
+
+Purpose:  
+To ensure that users can only submit quotes from books they are actively engaging with (i.e., not from books they haven’t started reading).
+
+Backend Query Logic:
+
+python
+books = list(current_app.mongo.db.books.find({
+    'user_id': user_id,
+    'status': {'$in': ['reading', 'finished']}
+}).sort('title', 1))
+
+
+- user_id: Filters only the books owned by the current user.
+- status: Limits results to books marked as 'reading' or 'finished' to prevent quoting from unread books.
+- sort: Alphabetical ordering by title for dropdown convenience.
 
 ---
+
+Frontend UX Enhancements:
+
+1. Hint Message  
+   If the user sees “No books found in your library,” a tooltip or note is shown:
+   > "Only books marked as reading or finished will appear here. Go to your library to update statuses."
+
+2. Go to My Library Button  
+   - Replaces the “Add New Book” button.
+   - Routes user to /library where they can update statuses.
+
+---
+
+Why This Matters:
+
+- Promotes genuine reading and discourages spammy quote submissions.
+- Keeps the quote verification process more reliable for admins.
+- Helps users understand system behavior without confusion.
+
+---
+
 
 **Remember**: This system is built specifically for Nigerian readers who understand the transformative power of books and need small financial incentives to support their reading journey. Every verified quote represents not just ₦10 earned, but knowledge gained and personal growth achieved.
