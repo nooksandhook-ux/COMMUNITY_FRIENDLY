@@ -981,8 +981,6 @@ def calculate_reading_streak(user_id):
         logger.error(f"Error calculating reading streak for user {user_id}: {str(e)}", exc_info=True)
         return 0
 
-from .forms import UpdateProgressForm
-
 @nook_bp.route('/update_progress_ajax/<book_id>', methods=['POST'])
 @login_required
 def update_progress_ajax(book_id):
@@ -1030,7 +1028,7 @@ def update_progress_ajax(book_id):
         current_app.mongo.db.reading_sessions.insert_one(session_data)
 
         # Log activity
-        current_app.activity_logger.log_activity(
+        ActivityLogger.log_activity(
             user_id=user_id,
             action='progress_update',
             description=f'Updated progress for book: {book["title"]}',
@@ -1065,3 +1063,4 @@ def update_progress_ajax(book_id):
     except Exception as e:
         logger.error(f"Error updating progress for book {book_id}: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
+
