@@ -459,6 +459,311 @@ def books():
         b['user_email'] = users.get(uid, {}).get('email', uid)
     return render_template('admin/books.html', books=books)
 
+# Partner Club Admin Routes
+
+@admin_bp.route('/partner_clubs')
+@admin_required
+def partner_clubs():
+    """View and manage partner clubs"""
+    from models import ClubModel, FeedbackModel
+    
+    # Get all partner clubs
+    partner_clubs = ClubModel.get_partner_clubs()
+    
+    # Get partner club statistics
+    stats = {
+        'total_partner_clubs': len(partner_clubs),
+        'total_partner_members': sum(len(club.get('members', [])) for club in partner_clubs),
+        'active_premium_trials': len(UserModel.get_premium_trial_users()),
+        'pending_feedback': current_app.mongo.db.feedback.count_documents({'status': 'pending'})
+    }
+    
+    # Add member count and trial users for each club
+    for club in partner_clubs:
+        club['member_count'] = len(club.get('members', []))
+        # Count premium trial users in this club
+        trial_users = current_app.mongo.db.users.count_documents({
+            'is_premium_trial': True,
+            'partner_club_id': club['_id']
+        })
+        club['trial_users_count'] = trial_users
+    
+    return render_template('admin/partner_clubs.html', 
+                         partner_clubs=partner_clubs, 
+                         stats=stats)
+
+@admin_bp.route('/create_partner_club', methods=['GET', 'POST'])
+@admin_required
+def create_partner_club():
+    """Create a new partner club"""
+    from models import ClubModel
+    from flask_wtf import FlaskForm
+    from wtforms import StringField, TextAreaField, SubmitField
+    from wtforms.validators import DataRequired, Length
+    
+    class PartnerClubForm(FlaskForm):
+        name = StringField('Club Name', validators=[DataRequired(), Length(min=3, max=100)])
+        description = TextAreaField('Description', validators=[Length(max=500)])
+        topic = StringField('Topic', validators=[Length(max=100)])
+        partner_organization_name = StringField('Partner Organization', validators=[DataRequired(), Length(min=2, max=100)])
+        genre = StringField('Genre', validators=[Length(max=50)])
+        language = StringField('Language', validators=[Length(max=50)])
+        submit = SubmitField('Create Partner Club')
+    
+    form = PartnerClubForm()
+    
+    if form.validate_on_submit():
+        try:
+            # Generate invitation code
+            invitation_code = ClubModel.generate_invitation_code()
+            
+            # Create partner club
+            result = ClubModel.create_partner_club(
+                name=form.name.data,
+                description=form.description.data,
+                topic=form.topic.data,
+                creator_id=current_user.id,
+                partner_organization_name=form.partner_organization_name.data,
+                invitation_code=invitation_code,
+                genre=form.genre.data or 'General',
+                language=form.language.data or 'English'
+            )
+            
+            if result.inserted_id:
+                flash(f'Partner club created successfully! Invitation code: {invitation_code}', 'success')
+                return redirect(url_for('admin.partner_clubs'))
+            else:
+                flash('Failed to create partner club. Please try again.', 'error')
+        
+        except Exception as e:
+            flash(f'Error creating partner club: {str(e)}', 'error')
+    
+    return render_template('admin/create_partner_club.html', form=form)
+
+@admin_bp.route('/partner_club/<club_id>')
+@admin_required
+def partner_club_detail(club_id):
+    """View detailed information about a partner club"""
+    from models import ClubModel, FeedbackModel
+    
+    club = ClubModel.get_club(club_id)
+    if not club or not club.get('is_partner_club'):
+        flash('Partner club not found.', 'error')
+        return redirect(url_for('admin.partner_clubs'))
+    
+    # Get club members with premium trial status
+    members = []
+    for member_id in club.get('members', []):
+        user = current_app.mongo.db.users.find_one({'_id': ObjectId(member_id)})
+        if user:
+            members.append({
+                'id': str(user['_id']),
+                'username': user['username'],
+                'email': user['email'],
+                'is_premium_trial': user.get('is_premium_trial', False),
+                'premium_trial_start_date': user.get('premium_trial_start_date'),
+                'joined_at': user.get('created_at')  # This could be improved with actual join date
+            })
+    
+    # Get feedback from club members
+    feedback_list, total_feedback = FeedbackModel.get_all_feedback(
+        category=None, 
+        page=1, 
+        per_page=20
+    )
+    
+    # Filter feedback from this club's members
+    club_member_ids = [ObjectId(m['id']) for m in members]
+    club_feedback = [f for f in feedback_list if f.get('user_id') in club_member_ids]
+    
+    # Get club statistics
+    stats = {
+        'total_members': len(members),
+        'premium_trial_members': sum(1 for m in members if m['is_premium_trial']),
+        'feedback_submissions': len(club_feedback),
+        'invitation_code': club.get('invitation_code'),
+        'created_at': club.get('created_at'),
+        'partner_organization': club.get('partner_organization_name')
+    }
+    
+    return render_template('admin/partner_club_detail.html', 
+                         club=club, 
+                         members=members, 
+                         feedback=club_feedback,
+                         stats=stats)
+
+@admin_bp.route('/regenerate_invitation_code/<club_id>', methods=['POST'])
+@admin_required
+def regenerate_invitation_code(club_id):
+    """Regenerate invitation code for a partner club"""
+    from models import ClubModel
+    
+    club = ClubModel.get_club(club_id)
+    if not club or not club.get('is_partner_club'):
+        flash('Partner club not found.', 'error')
+        return redirect(url_for('admin.partner_clubs'))
+    
+    new_code = ClubModel.regenerate_invitation_code(club_id)
+    if new_code:
+        flash(f'New invitation code generated: {new_code}', 'success')
+    else:
+        flash('Failed to generate new invitation code.', 'error')
+    
+    return redirect(url_for('admin.partner_club_detail', club_id=club_id))
+
+@admin_bp.route('/revoke_invitation_code/<club_id>', methods=['POST'])
+@admin_required
+def revoke_invitation_code(club_id):
+    """Revoke invitation code for a partner club"""
+    from models import ClubModel
+    
+    club = ClubModel.get_club(club_id)
+    if not club or not club.get('is_partner_club'):
+        flash('Partner club not found.', 'error')
+        return redirect(url_for('admin.partner_clubs'))
+    
+    result = ClubModel.revoke_invitation_code(club_id)
+    if result.modified_count > 0:
+        flash('Invitation code revoked successfully.', 'success')
+    else:
+        flash('Failed to revoke invitation code.', 'error')
+    
+    return redirect(url_for('admin.partner_club_detail', club_id=club_id))
+
+@admin_bp.route('/premium_trial_users')
+@admin_required
+def premium_trial_users():
+    """View and manage premium trial users"""
+    trial_users = UserModel.get_premium_trial_users()
+    
+    # Add additional information for each user
+    for user in trial_users:
+        # Calculate days remaining
+        if user.get('premium_trial_start_date'):
+            trial_end = user['premium_trial_start_date'] + timedelta(days=30)
+            days_remaining = (trial_end - datetime.utcnow()).days
+            user['days_remaining'] = max(0, days_remaining)
+        else:
+            user['days_remaining'] = 0
+        
+        # Get partner club name
+        if user.get('partner_club_id'):
+            club = current_app.mongo.db.clubs.find_one({'_id': user['partner_club_id']})
+            user['partner_club_name'] = club.get('name', 'Unknown Club') if club else 'Unknown Club'
+        
+        # Get feedback count
+        user['feedback_count'] = current_app.mongo.db.feedback.count_documents({
+            'user_id': user['_id']
+        })
+    
+    return render_template('admin/premium_trial_users.html', trial_users=trial_users)
+
+@admin_bp.route('/feedback_management')
+@admin_required
+def feedback_management():
+    """View and manage feedback from premium trial users"""
+    from models import FeedbackModel
+    
+    # Get filter parameters
+    status_filter = request.args.get('status', 'all')
+    category_filter = request.args.get('category', 'all')
+    page = int(request.args.get('page', 1))
+    
+    # Apply filters
+    status = status_filter if status_filter != 'all' else None
+    category = category_filter if category_filter != 'all' else None
+    
+    feedback_list, total_feedback = FeedbackModel.get_all_feedback(
+        status=status,
+        category=category,
+        page=page,
+        per_page=20
+    )
+    
+    # Get feedback statistics
+    feedback_stats = FeedbackModel.get_feedback_statistics()
+    
+    return render_template('admin/feedback_management.html',
+                         feedback_list=feedback_list,
+                         total_feedback=total_feedback,
+                         feedback_stats=feedback_stats,
+                         current_status=status_filter,
+                         current_category=category_filter,
+                         page=page,
+                         has_next=len(feedback_list) == 20)
+
+@admin_bp.route('/update_feedback_status/<feedback_id>', methods=['POST'])
+@admin_required
+def update_feedback_status(feedback_id):
+    """Update feedback status"""
+    from models import FeedbackModel
+    
+    status = request.form.get('status')
+    admin_notes = request.form.get('admin_notes', '')
+    
+    if status not in ['pending', 'reviewed', 'resolved']:
+        flash('Invalid status selected.', 'error')
+        return redirect(url_for('admin.feedback_management'))
+    
+    success = FeedbackModel.update_feedback_status(
+        feedback_id=feedback_id,
+        status=status,
+        admin_notes=admin_notes,
+        reviewed_by=current_user.id
+    )
+    
+    if success:
+        flash(f'Feedback status updated to {status}.', 'success')
+    else:
+        flash('Failed to update feedback status.', 'error')
+    
+    return redirect(url_for('admin.feedback_management'))
+
+@admin_bp.route('/partner_program_analytics')
+@admin_required
+def partner_program_analytics():
+    """Analytics dashboard for partner program"""
+    from models import ClubModel, FeedbackModel
+    
+    # Get partner clubs
+    partner_clubs = ClubModel.get_partner_clubs()
+    
+    # Calculate analytics
+    analytics = {
+        'total_partner_clubs': len(partner_clubs),
+        'total_partner_members': sum(len(club.get('members', [])) for club in partner_clubs),
+        'active_premium_trials': len(UserModel.get_premium_trial_users()),
+        'feedback_submissions': current_app.mongo.db.feedback.count_documents({}),
+        'conversion_rate': 0,  # This would need more complex calculation
+        'engagement_metrics': {}
+    }
+    
+    # Get feedback statistics
+    feedback_stats = FeedbackModel.get_feedback_statistics()
+    
+    # Get club-wise statistics
+    club_stats = []
+    for club in partner_clubs:
+        member_count = len(club.get('members', []))
+        trial_count = current_app.mongo.db.users.count_documents({
+            'is_premium_trial': True,
+            'partner_club_id': club['_id']
+        })
+        
+        club_stats.append({
+            'name': club['name'],
+            'partner_organization': club.get('partner_organization_name'),
+            'member_count': member_count,
+            'trial_count': trial_count,
+            'conversion_rate': (trial_count / max(1, member_count)) * 100,
+            'created_at': club.get('created_at')
+        })
+    
+    return render_template('admin/partner_program_analytics.html',
+                         analytics=analytics,
+                         feedback_stats=feedback_stats,
+                         club_stats=club_stats)
+
 # Helper functions
 
 def get_active_users_today():
@@ -776,3 +1081,78 @@ def get_system_configuration():
             'pwa_support': True
         }
     }
+
+@admin_bp.route('/cash_out_requests')
+@login_required
+def cash_out_requests():
+    """Manage cash-out requests"""
+    try:
+        # Get filter parameters
+        status_filter = request.args.get('status', 'all')
+        priority_filter = request.args.get('priority', 'all')
+        
+        # Build query
+        query = {}
+        if status_filter != 'all':
+            query['status'] = status_filter
+        if priority_filter == 'premium_trial':
+            query['is_premium_trial'] = True
+        elif priority_filter == 'regular':
+            query['is_premium_trial'] = False
+        
+        # Get requests
+        requests = list(current_app.mongo.db.cash_out_requests.find(query).sort('created_at', -1))
+        
+        # Get summary statistics
+        total_requests = current_app.mongo.db.cash_out_requests.count_documents({})
+        pending_requests = current_app.mongo.db.cash_out_requests.count_documents({'status': 'pending'})
+        premium_trial_requests = current_app.mongo.db.cash_out_requests.count_documents({'is_premium_trial': True, 'status': 'pending'})
+        
+        return render_template('admin/cash_out_requests.html',
+                             requests=requests,
+                             total_requests=total_requests,
+                             pending_requests=pending_requests,
+                             premium_trial_requests=premium_trial_requests,
+                             status_filter=status_filter,
+                             priority_filter=priority_filter)
+    except Exception as e:
+        current_app.logger.error(f"Error loading cash-out requests: {str(e)}")
+        flash("Error loading cash-out requests.", "danger")
+        return redirect(url_for('admin.dashboard'))
+
+@admin_bp.route('/cash_out_requests/<request_id>/process', methods=['POST'])
+@login_required
+def process_cash_out_request(request_id):
+    """Process a cash-out request"""
+    try:
+        action = request.form.get('action')  # approve, reject, complete
+        notes = request.form.get('notes', '')
+        
+        if action not in ['approve', 'reject', 'complete']:
+            flash("Invalid action.", "danger")
+            return redirect(url_for('admin.cash_out_requests'))
+        
+        # Update request
+        update_data = {
+            'status': action + 'd' if action != 'complete' else 'completed',
+            'processed_at': datetime.utcnow(),
+            'processed_by': current_user.username,
+            'notes': notes
+        }
+        
+        result = current_app.mongo.db.cash_out_requests.update_one(
+            {'_id': ObjectId(request_id)},
+            {'$set': update_data}
+        )
+        
+        if result.modified_count > 0:
+            flash(f"Cash-out request {action}d successfully.", "success")
+        else:
+            flash("Request not found or already processed.", "warning")
+        
+        return redirect(url_for('admin.cash_out_requests'))
+        
+    except Exception as e:
+        current_app.logger.error(f"Error processing cash-out request {request_id}: {str(e)}")
+        flash("Error processing request.", "danger")
+        return redirect(url_for('admin.cash_out_requests'))

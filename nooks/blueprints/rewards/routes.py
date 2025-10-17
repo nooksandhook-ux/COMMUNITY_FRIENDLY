@@ -348,3 +348,99 @@ def analytics():
     analytics_data = RewardService.get_reward_analytics(user_id)
     
     return render_template('rewards/analytics.html', analytics=analytics_data)
+
+@rewards_bp.route('/cash_out', methods=['GET', 'POST'])
+@login_required
+def cash_out():
+    """Request cash-out of reward points"""
+    try:
+        user_id = ObjectId(current_user.id)
+        user = current_app.mongo.db.users.find_one({'_id': user_id})
+        total_points = RewardService.get_user_total_points(user_id)
+        
+        # Check if user has pending cash-out request
+        pending_request = current_app.mongo.db.cash_out_requests.find_one({
+            'user_id': user_id,
+            'status': 'pending'
+        })
+        
+        if request.method == 'GET':
+            return render_template('rewards/cash_out.html',
+                                 user=user,
+                                 total_points=total_points,
+                                 pending_request=pending_request)
+        
+        # Handle POST request
+        if pending_request:
+            flash("You already have a pending cash-out request.", "warning")
+            return redirect(url_for('rewards.cash_out'))
+        
+        requested_amount = int(request.form.get('amount', 0))
+        payment_method = request.form.get('payment_method', '')
+        payment_details = request.form.get('payment_details', '')
+        
+        # Validate amount
+        if requested_amount <= 0:
+            flash("Please enter a valid amount.", "danger")
+            return redirect(url_for('rewards.cash_out'))
+        
+        if requested_amount > total_points:
+            flash("You don't have enough points for this cash-out.", "danger")
+            return redirect(url_for('rewards.cash_out'))
+        
+        # Check minimum threshold for non-premium trial users
+        is_premium_trial = user.get('is_premium_trial', False)
+        minimum_threshold = 0 if is_premium_trial else 1000  # 1000 points minimum for regular users
+        
+        if requested_amount < minimum_threshold:
+            flash(f"Minimum cash-out amount is {minimum_threshold} points.", "danger")
+            return redirect(url_for('rewards.cash_out'))
+        
+        # Create cash-out request
+        cash_out_request = {
+            'user_id': user_id,
+            'username': user['username'],
+            'requested_amount': requested_amount,
+            'payment_method': payment_method,
+            'payment_details': payment_details,
+            'status': 'pending',
+            'is_premium_trial': is_premium_trial,
+            'partner_club_id': user.get('partner_club_id'),
+            'created_at': datetime.utcnow(),
+            'processed_at': None,
+            'processed_by': None,
+            'notes': ''
+        }
+        
+        result = current_app.mongo.db.cash_out_requests.insert_one(cash_out_request)
+        
+        if is_premium_trial:
+            flash("Your Premium Trial cash-out request has been submitted and will be processed immediately!", "success")
+        else:
+            flash("Your cash-out request has been submitted and will be processed within 3-5 business days.", "success")
+        
+        return redirect(url_for('rewards.cash_out'))
+        
+    except Exception as e:
+        current_app.logger.error(f"Error processing cash-out request for user {current_user.id}: {str(e)}")
+        flash("An error occurred while processing your request. Please try again.", "danger")
+        return redirect(url_for('rewards.cash_out'))
+
+@rewards_bp.route('/cash_out_history')
+@login_required
+def cash_out_history():
+    """View cash-out request history"""
+    try:
+        user_id = ObjectId(current_user.id)
+        
+        # Get user's cash-out requests
+        requests = list(current_app.mongo.db.cash_out_requests.find({
+            'user_id': user_id
+        }).sort('created_at', -1))
+        
+        return render_template('rewards/cash_out_history.html', requests=requests)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error fetching cash-out history for user {current_user.id}: {str(e)}")
+        flash("An error occurred while loading your cash-out history.", "danger")
+        return redirect(url_for('rewards.index'))

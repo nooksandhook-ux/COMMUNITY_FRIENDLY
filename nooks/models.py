@@ -51,6 +51,9 @@ class DatabaseManager:
             # Initialize default data and migrations
             DatabaseManager._create_default_admin()
             DatabaseManager._migrate_user_avatars()  # New migration for avatar preferences
+            DatabaseManager._migrate_premium_trial_fields()  # New migration for premium trial fields
+            DatabaseManager._migrate_hook_preferences()  # New migration for Hook preferences
+            DatabaseManager._migrate_hook_nook_integration()  # New migration for Hook-Nook integration
             DatabaseManager._initialize_default_data()
             
             logger.info("Database initialization completed successfully")
@@ -70,7 +73,7 @@ class DatabaseManager:
             'quotes', 'transactions', 'user_purchases',
             'clubs', 'club_posts', 'club_chat_messages',
             'flashcards', 'quiz_questions', 'quiz_answers', 'user_progress',
-            'donations', 'testimonials'  # Added new collections
+            'donations', 'testimonials', 'feedback', 'cash_out_requests'  # Added feedback and cash_out_requests collections
         ]
         existing_collections = current_app.mongo.db.list_collection_names()
         
@@ -267,6 +270,51 @@ class DatabaseManager:
                 current_app.mongo.db.testimonials.create_index("created_at")
                 logger.info("Created index on testimonials.created_at")
 
+            # Feedback collection indexes
+            indexes = current_app.mongo.db.feedback.index_information()
+            if 'user_id_1_submitted_at_-1' not in indexes:
+                current_app.mongo.db.feedback.create_index([("user_id", 1), ("submitted_at", -1)])
+                logger.info("Created index on feedback.user_id_submitted_at")
+            if 'status_1' not in indexes:
+                current_app.mongo.db.feedback.create_index("status")
+                logger.info("Created index on feedback.status")
+            if 'category_1' not in indexes:
+                current_app.mongo.db.feedback.create_index("category")
+                logger.info("Created index on feedback.category")
+            if 'club_id_1' not in indexes:
+                current_app.mongo.db.feedback.create_index("club_id", sparse=True)
+                logger.info("Created sparse index on feedback.club_id")
+
+            # Cash-out requests collection indexes
+            indexes = current_app.mongo.db.cash_out_requests.index_information()
+            if 'user_id_1_created_at_-1' not in indexes:
+                current_app.mongo.db.cash_out_requests.create_index([("user_id", 1), ("created_at", -1)])
+                logger.info("Created index on cash_out_requests.user_id_created_at")
+            if 'status_1' not in indexes:
+                current_app.mongo.db.cash_out_requests.create_index("status")
+                logger.info("Created index on cash_out_requests.status")
+            if 'is_premium_trial_1' not in indexes:
+                current_app.mongo.db.cash_out_requests.create_index("is_premium_trial")
+                logger.info("Created index on cash_out_requests.is_premium_trial")
+
+            # Partner club indexes
+            indexes = current_app.mongo.db.clubs.index_information()
+            if 'invitation_code_1' not in indexes:
+                current_app.mongo.db.clubs.create_index("invitation_code", unique=True, sparse=True)
+                logger.info("Created unique sparse index on clubs.invitation_code")
+            if 'is_partner_club_1' not in indexes:
+                current_app.mongo.db.clubs.create_index("is_partner_club")
+                logger.info("Created index on clubs.is_partner_club")
+
+            # Premium trial user indexes
+            indexes = current_app.mongo.db.users.index_information()
+            if 'is_premium_trial_1' not in indexes:
+                current_app.mongo.db.users.create_index("is_premium_trial")
+                logger.info("Created index on users.is_premium_trial")
+            if 'partner_club_id_1' not in indexes:
+                current_app.mongo.db.users.create_index("partner_club_id", sparse=True)
+                logger.info("Created sparse index on users.partner_club_id")
+
             logger.info("Database indexes created successfully")
 
         except Exception as e:
@@ -325,6 +373,12 @@ class DatabaseManager:
                             'backgroundColor': ['#ffffff'],
                             'flip': False
                         }
+                    },
+                    'hook': {
+                        'theme': None,  # Hook-specific theme (overrides global if set)
+                        'ambient_sounds': False,  # Background sounds toggle
+                        'sync_global_theme': True,  # Whether to sync with global theme
+                        'timer_presets': []  # Custom timer presets
                     }
                 },
                 'statistics': {
@@ -398,6 +452,150 @@ class DatabaseManager:
             logger.error(f"Error during avatar migration: {str(e)}")
     
     @staticmethod
+    def _migrate_premium_trial_fields():
+        """Migrate existing users to include premium trial fields"""
+        try:
+            logger.info("Starting premium trial fields migration...")
+            users = current_app.mongo.db.users.find({
+                '$or': [
+                    {'is_premium_trial': {'$exists': False}},
+                    {'premium_trial_start_date': {'$exists': False}},
+                    {'partner_club_id': {'$exists': False}}
+                ]
+            })
+            updated_count = 0
+
+            for user in users:
+                user_id = user['_id']
+                # Update user with default premium trial fields
+                result = current_app.mongo.db.users.update_one(
+                    {'_id': user_id},
+                    {
+                        '$set': {
+                            'is_premium_trial': False,
+                            'premium_trial_start_date': None,
+                            'partner_club_id': None,
+                            'updated_at': datetime.utcnow()
+                        }
+                    }
+                )
+                
+                if result.modified_count > 0:
+                    updated_count += 1
+                    logger.info(f"Updated premium trial fields for user_id: {str(user_id)}")
+            
+            logger.info(f"Premium trial migration completed: Updated {updated_count} users")
+            
+        except Exception as e:
+            logger.error(f"Error during premium trial migration: {str(e)}")
+    
+    @staticmethod
+    def _migrate_hook_preferences():
+        """Migrate existing users to include Hook-specific preferences"""
+        try:
+            logger.info("Starting Hook preferences migration...")
+            users = current_app.mongo.db.users.find({'preferences.hook': {'$exists': False}})
+            updated_count = 0
+
+            for user in users:
+                user_id = user['_id']
+                # Update user with default Hook preferences
+                result = current_app.mongo.db.users.update_one(
+                    {'_id': user_id},
+                    {
+                        '$set': {
+                            'preferences.hook': {
+                                'theme': None,  # Hook-specific theme (overrides global if set)
+                                'ambient_sounds': False,  # Background sounds toggle
+                                'sync_global_theme': True,  # Whether to sync with global theme
+                                'timer_presets': [],  # Custom timer presets
+                                'distraction_domains': []  # Focus Lock distraction domains list
+                            },
+                            'updated_at': datetime.utcnow()
+                        }
+                    }
+                )
+                
+                if result.modified_count > 0:
+                    updated_count += 1
+                    logger.info(f"Updated Hook preferences for user_id: {str(user_id)}")
+            
+            # Also update existing users who have hook preferences but missing distraction_domains
+            existing_hook_users = current_app.mongo.db.users.find({
+                'preferences.hook': {'$exists': True},
+                'preferences.hook.distraction_domains': {'$exists': False}
+            })
+            
+            for user in existing_hook_users:
+                user_id = user['_id']
+                result = current_app.mongo.db.users.update_one(
+                    {'_id': user_id},
+                    {
+                        '$set': {
+                            'preferences.hook.distraction_domains': [],
+                            'updated_at': datetime.utcnow()
+                        }
+                    }
+                )
+                
+                if result.modified_count > 0:
+                    updated_count += 1
+                    logger.info(f"Added distraction_domains to existing Hook user: {str(user_id)}")
+            
+            logger.info(f"Hook preferences migration completed: Updated {updated_count} users")
+            
+        except Exception as e:
+            logger.error(f"Error during Hook preferences migration: {str(e)}")
+    
+    @staticmethod
+    def _migrate_hook_nook_integration():
+        """Migrate existing completed_tasks to include Hook-Nook integration fields"""
+        try:
+            logger.info("Starting Hook-Nook integration migration...")
+            
+            # Add linked_module field to existing completed_tasks
+            completed_tasks = current_app.mongo.db.completed_tasks.find({
+                'linked_module': {'$exists': False}
+            })
+            updated_count = 0
+
+            for task in completed_tasks:
+                task_id = task['_id']
+                # Determine linked_module based on existing data
+                linked_module = 'hook'  # Default to hook
+                linked_book_id = None
+                pages_read = 0
+                
+                # Check if this looks like a reading session based on task name
+                task_name = task.get('task_name', '').lower()
+                if any(keyword in task_name for keyword in ['reading', 'read', 'book', 'chapter', 'page']):
+                    linked_module = 'nook'
+                
+                result = current_app.mongo.db.completed_tasks.update_one(
+                    {'_id': task_id},
+                    {
+                        '$set': {
+                            'linked_module': linked_module,
+                            'linked_book_id': linked_book_id,
+                            'pages_read': pages_read,
+                            'reading_progress': {
+                                'start_page': 0,
+                                'end_page': 0,
+                                'pages_read': pages_read
+                            }
+                        }
+                    }
+                )
+                
+                if result.modified_count > 0:
+                    updated_count += 1
+            
+            logger.info(f"Hook-Nook integration migration completed: Updated {updated_count} completed tasks")
+            
+        except Exception as e:
+            logger.error(f"Error during Hook-Nook integration migration: {str(e)}")
+    
+    @staticmethod
     def _initialize_default_data():
         """Initialize default application data"""
         try:
@@ -461,60 +659,624 @@ class ClubModel:
             'creator_id': creator_id,
             'members': [creator_id],
             'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow(),
             'admins': [creator_id],
             'goals': [],
             'shared_quotes': [],
             'is_active': True,
+            'is_private': kwargs.get('is_private', False),
+            'genre': kwargs.get('genre', ''),
+            'language': kwargs.get('language', 'English'),
+            'current_book': kwargs.get('current_book', None),
+            'reading_schedule': [],
+            'past_books': [],
+            'upcoming_books': [],
+            'shared_resources': [],
+            'join_requests': [],
+            'activity_level': 'new',
+            'last_activity': datetime.utcnow(),
+            # Partner club fields
+            'is_partner_club': kwargs.get('is_partner_club', False),
+            'partner_organization_name': kwargs.get('partner_organization_name', None),
+            'invitation_code': kwargs.get('invitation_code', None),
             **kwargs
         }
         return current_app.mongo.db.clubs.insert_one(club)
 
     @staticmethod
     def add_member(club_id, user_id):
-        return current_app.mongo.db.clubs.update_one({'_id': ObjectId(club_id)}, {'$addToSet': {'members': user_id}})
+        result = current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)}, 
+            {
+                '$addToSet': {'members': user_id},
+                '$set': {'last_activity': datetime.utcnow()},
+                '$pull': {'join_requests': user_id}  # Remove from requests if joining
+            }
+        )
+        # Update activity level based on member count
+        ClubModel._update_activity_level(club_id)
+        return result
 
     @staticmethod
     def add_admin(club_id, user_id):
-        return current_app.mongo.db.clubs.update_one({'_id': ObjectId(club_id)}, {'$addToSet': {'admins': user_id}})
+        return current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)}, 
+            {
+                '$addToSet': {'admins': user_id},
+                '$set': {'last_activity': datetime.utcnow()}
+            }
+        )
+
+    @staticmethod
+    def request_to_join(club_id, user_id):
+        """Add user to join requests for private clubs"""
+        return current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)}, 
+            {'$addToSet': {'join_requests': user_id}}
+        )
+
+    @staticmethod
+    def approve_join_request(club_id, user_id):
+        """Approve a join request and add user as member"""
+        return ClubModel.add_member(club_id, user_id)
+
+    @staticmethod
+    def reject_join_request(club_id, user_id):
+        """Reject a join request"""
+        return current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)}, 
+            {'$pull': {'join_requests': user_id}}
+        )
 
     @staticmethod
     def get_club(club_id):
         return current_app.mongo.db.clubs.find_one({'_id': ObjectId(club_id)})
 
     @staticmethod
-    def get_all_clubs():
-        return list(current_app.mongo.db.clubs.find({'is_active': True}))
+    def get_all_clubs(search=None, filters=None, sort_by='created_at', sort_order=-1):
+        """Get all clubs with optional search and filters"""
+        query = {'is_active': True}
+        
+        # Add search functionality
+        if search:
+            query['$or'] = [
+                {'name': {'$regex': search, '$options': 'i'}},
+                {'description': {'$regex': search, '$options': 'i'}},
+                {'topic': {'$regex': search, '$options': 'i'}},
+                {'genre': {'$regex': search, '$options': 'i'}}
+            ]
+        
+        # Add filters
+        if filters:
+            if filters.get('genre'):
+                query['genre'] = filters['genre']
+            if filters.get('activity_level'):
+                query['activity_level'] = filters['activity_level']
+            if filters.get('language'):
+                query['language'] = filters['language']
+            if filters.get('privacy'):
+                if filters['privacy'] == 'public':
+                    query['is_private'] = False
+                elif filters['privacy'] == 'private':
+                    query['is_private'] = True
+            if filters.get('size'):
+                size_filter = filters['size']
+                if size_filter == 'small':
+                    query['$expr'] = {'$lte': [{'$size': '$members'}, 10]}
+                elif size_filter == 'medium':
+                    query['$expr'] = {'$and': [
+                        {'$gt': [{'$size': '$members'}, 10]},
+                        {'$lte': [{'$size': '$members'}, 50]}
+                    ]}
+                elif size_filter == 'large':
+                    query['$expr'] = {'$gt': [{'$size': '$members'}, 50]}
+        
+        # Set up sorting
+        sort_field = sort_by
+        if sort_by == 'member_count':
+            # For member count, we need to use aggregation
+            pipeline = [
+                {'$match': query},
+                {'$addFields': {'member_count': {'$size': '$members'}}},
+                {'$sort': {'member_count': sort_order}}
+            ]
+            return list(current_app.mongo.db.clubs.aggregate(pipeline))
+        elif sort_by == 'activity':
+            sort_field = 'last_activity'
+        elif sort_by == 'name':
+            sort_field = 'name'
+            sort_order = 1  # Alphabetical is always ascending
+        
+        return list(current_app.mongo.db.clubs.find(query).sort(sort_field, sort_order))
 
     @staticmethod
     def get_user_clubs(user_id):
         return list(current_app.mongo.db.clubs.find({
             'members': user_id,
             'is_active': True
-        }))
+        }).sort('last_activity', -1))
 
     @staticmethod
     def get_created_clubs(creator_id):
         return list(current_app.mongo.db.clubs.find({
             'creator_id': creator_id,
             'is_active': True
-        }))
+        }).sort('created_at', -1))
+
+    @staticmethod
+    def update_club_activity(club_id):
+        """Update last activity timestamp"""
+        current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {'$set': {'last_activity': datetime.utcnow()}}
+        )
+        ClubModel._update_activity_level(club_id)
+
+    @staticmethod
+    def _update_activity_level(club_id):
+        """Update activity level based on recent activity and member count"""
+        club = current_app.mongo.db.clubs.find_one({'_id': ObjectId(club_id)})
+        if not club:
+            return
+        
+        member_count = len(club.get('members', []))
+        last_activity = club.get('last_activity', club.get('created_at'))
+        days_since_activity = (datetime.utcnow() - last_activity).days
+        
+        # Determine activity level
+        if days_since_activity <= 1 and member_count >= 5:
+            activity_level = 'very_active'
+        elif days_since_activity <= 7 and member_count >= 3:
+            activity_level = 'moderately_active'
+        elif days_since_activity <= 30:
+            activity_level = 'active'
+        else:
+            activity_level = 'inactive'
+        
+        # New clubs (less than 7 days old) get special treatment
+        days_since_creation = (datetime.utcnow() - club.get('created_at')).days
+        if days_since_creation <= 7:
+            activity_level = 'new'
+        
+        current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {'$set': {'activity_level': activity_level}}
+        )
+
+    @staticmethod
+    def add_current_book(club_id, book_data):
+        """Set current book for the club"""
+        return current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {
+                '$set': {
+                    'current_book': book_data,
+                    'last_activity': datetime.utcnow()
+                }
+            }
+        )
+
+    @staticmethod
+    def add_reading_goal(club_id, goal_data):
+        """Add a reading goal/deadline"""
+        return current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {
+                '$push': {'reading_schedule': goal_data},
+                '$set': {'last_activity': datetime.utcnow()}
+            }
+        )
+
+    @staticmethod
+    def add_shared_resource(club_id, resource_data):
+        """Add a shared resource/link"""
+        return current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {
+                '$push': {'shared_resources': resource_data},
+                '$set': {'last_activity': datetime.utcnow()}
+            }
+        )
+
+    @staticmethod
+    def get_club_analytics(club_id):
+        """Get club analytics data"""
+        club = current_app.mongo.db.clubs.find_one({'_id': ObjectId(club_id)})
+        if not club:
+            return None
+        
+        # Get post count
+        post_count = current_app.mongo.db.club_posts.count_documents({'club_id': ObjectId(club_id)})
+        
+        # Get message count
+        message_count = current_app.mongo.db.club_chat_messages.count_documents({'club_id': ObjectId(club_id)})
+        
+        # Get member join dates for growth tracking
+        member_count = len(club.get('members', []))
+        
+        return {
+            'member_count': member_count,
+            'post_count': post_count,
+            'message_count': message_count,
+            'activity_level': club.get('activity_level', 'new'),
+            'last_activity': club.get('last_activity'),
+            'created_at': club.get('created_at')
+        }
+
+    @staticmethod
+    def add_book_suggestion(club_id, user_id, book_data):
+        """Add a book suggestion for voting"""
+        suggestion = {
+            'id': str(ObjectId()),
+            'book_data': book_data,
+            'suggested_by': user_id,
+            'suggested_at': datetime.utcnow(),
+            'votes': [],
+            'status': 'pending'  # pending, approved, rejected
+        }
+        
+        return current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {
+                '$push': {'book_suggestions': suggestion},
+                '$set': {'last_activity': datetime.utcnow()}
+            }
+        )
+
+    @staticmethod
+    def vote_for_book(club_id, suggestion_id, user_id, vote_type='up'):
+        """Vote for a book suggestion"""
+        # Remove any existing vote from this user for this suggestion
+        current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {'$pull': {'book_suggestions.$[elem].votes': {'user_id': user_id}}},
+            array_filters=[{'elem.id': suggestion_id}]
+        )
+        
+        # Add new vote
+        vote = {
+            'user_id': user_id,
+            'vote_type': vote_type,  # up, down
+            'voted_at': datetime.utcnow()
+        }
+        
+        return current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {'$push': {'book_suggestions.$[elem].votes': vote}},
+            array_filters=[{'elem.id': suggestion_id}]
+        )
+
+    @staticmethod
+    def select_next_book(club_id, suggestion_id):
+        """Select a book suggestion as the next book to read"""
+        club = current_app.mongo.db.clubs.find_one({'_id': ObjectId(club_id)})
+        if not club:
+            return False
+        
+        # Find the suggestion
+        suggestion = None
+        for s in club.get('book_suggestions', []):
+            if s['id'] == suggestion_id:
+                suggestion = s
+                break
+        
+        if not suggestion:
+            return False
+        
+        # Move current book to past books if exists
+        current_book = club.get('current_book')
+        update_data = {
+            'current_book': suggestion['book_data'],
+            'last_activity': datetime.utcnow()
+        }
+        
+        if current_book:
+            current_app.mongo.db.clubs.update_one(
+                {'_id': ObjectId(club_id)},
+                {'$push': {'past_books': current_book}}
+            )
+        
+        # Update current book and mark suggestion as approved
+        current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {'$set': update_data}
+        )
+        
+        current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {'$set': {'book_suggestions.$[elem].status': 'approved'}},
+            array_filters=[{'elem.id': suggestion_id}]
+        )
+        
+        return True
+
+    @staticmethod
+    def add_reading_progress(club_id, user_id, progress_data):
+        """Add reading progress for a user"""
+        progress = {
+            'user_id': user_id,
+            'book_id': progress_data.get('book_id'),
+            'current_page': progress_data.get('current_page', 0),
+            'total_pages': progress_data.get('total_pages', 0),
+            'percentage': progress_data.get('percentage', 0),
+            'updated_at': datetime.utcnow(),
+            'notes': progress_data.get('notes', '')
+        }
+        
+        # Update or insert progress
+        return current_app.mongo.db.club_reading_progress.update_one(
+            {
+                'club_id': ObjectId(club_id),
+                'user_id': user_id,
+                'book_id': progress_data.get('book_id')
+            },
+            {'$set': progress},
+            upsert=True
+        )
+
+    @staticmethod
+    def get_reading_progress(club_id, book_id=None):
+        """Get reading progress for all members or specific book"""
+        query = {'club_id': ObjectId(club_id)}
+        if book_id:
+            query['book_id'] = book_id
+        
+        progress_list = list(current_app.mongo.db.club_reading_progress.find(query))
+        
+        # Add usernames
+        for progress in progress_list:
+            progress['username'] = UserModel.get_username_by_id(progress['user_id']) or progress['user_id']
+        
+        return progress_list
+
+    @staticmethod
+    def create_reading_challenge(club_id, challenge_data):
+        """Create a reading challenge for the club"""
+        challenge = {
+            'id': str(ObjectId()),
+            'title': challenge_data.get('title'),
+            'description': challenge_data.get('description'),
+            'challenge_type': challenge_data.get('type', 'pages'),  # pages, books, time
+            'target': challenge_data.get('target', 0),
+            'start_date': challenge_data.get('start_date', datetime.utcnow()),
+            'end_date': challenge_data.get('end_date'),
+            'created_by': challenge_data.get('created_by'),
+            'created_at': datetime.utcnow(),
+            'participants': [],
+            'is_active': True
+        }
+        
+        return current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {'$push': {'reading_challenges': challenge}}
+        )
+
+    @staticmethod
+    def join_reading_challenge(club_id, challenge_id, user_id):
+        """Join a reading challenge"""
+        return current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {'$addToSet': {'reading_challenges.$[elem].participants': user_id}},
+            array_filters=[{'elem.id': challenge_id}]
+        )
+
+    # Partner Club Methods
+    @staticmethod
+    def create_partner_club(name, description, topic, creator_id, partner_organization_name, invitation_code, **kwargs):
+        """Create a partner club with special privileges"""
+        kwargs.update({
+            'is_partner_club': True,
+            'partner_organization_name': partner_organization_name,
+            'invitation_code': invitation_code,
+            'is_private': True  # Partner clubs are private by default
+        })
+        return ClubModel.create_club(name, description, topic, creator_id, **kwargs)
+
+    @staticmethod
+    def generate_invitation_code():
+        """Generate a unique invitation code for partner clubs"""
+        import secrets
+        import string
+        # Generate 8-character alphanumeric code
+        alphabet = string.ascii_uppercase + string.digits
+        code = ''.join(secrets.choice(alphabet) for _ in range(8))
+        
+        # Ensure uniqueness
+        while current_app.mongo.db.clubs.find_one({'invitation_code': code}):
+            code = ''.join(secrets.choice(alphabet) for _ in range(8))
+        
+        return code
+
+    @staticmethod
+    def find_club_by_invitation_code(invitation_code):
+        """Find a partner club by invitation code"""
+        return current_app.mongo.db.clubs.find_one({
+            'invitation_code': invitation_code,
+            'is_partner_club': True,
+            'is_active': True
+        })
+
+    @staticmethod
+    def join_partner_club_with_code(invitation_code, user_id):
+        """Join a partner club using invitation code and activate premium trial if eligible"""
+        club = ClubModel.find_club_by_invitation_code(invitation_code)
+        if not club:
+            return {'success': False, 'message': 'Invalid invitation code'}
+        
+        club_id = str(club['_id'])
+        
+        # Check if user is already a member
+        if user_id in club.get('members', []):
+            return {'success': False, 'message': 'You are already a member of this club'}
+        
+        # Add user to club
+        result = ClubModel.add_member(club_id, user_id)
+        if result.modified_count == 0:
+            return {'success': False, 'message': 'Failed to join club'}
+        
+        # Check if user is among first 50 members for premium trial
+        updated_club = ClubModel.get_club(club_id)
+        member_count = len(updated_club.get('members', []))
+        
+        premium_trial_activated = False
+        if member_count <= 50:
+            # Activate premium trial
+            UserModel.activate_premium_trial(user_id, club_id)
+            premium_trial_activated = True
+        
+        return {
+            'success': True,
+            'message': f'Successfully joined {club["name"]}',
+            'club_name': club['name'],
+            'premium_trial_activated': premium_trial_activated,
+            'club_id': club_id
+        }
+
+    @staticmethod
+    def get_partner_clubs():
+        """Get all partner clubs"""
+        return list(current_app.mongo.db.clubs.find({
+            'is_partner_club': True,
+            'is_active': True
+        }).sort('created_at', -1))
+
+    @staticmethod
+    def revoke_invitation_code(club_id):
+        """Revoke invitation code for a partner club"""
+        return current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {'$unset': {'invitation_code': ''}}
+        )
+
+    @staticmethod
+    def regenerate_invitation_code(club_id):
+        """Generate a new invitation code for a partner club"""
+        new_code = ClubModel.generate_invitation_code()
+        result = current_app.mongo.db.clubs.update_one(
+            {'_id': ObjectId(club_id)},
+            {'$set': {'invitation_code': new_code}}
+        )
+        return new_code if result.modified_count > 0 else None
 
 class ClubPostModel:
     @staticmethod
-    def create_post(club_id, user_id, content):
+    def create_post(club_id, user_id, content, post_type='discussion', title=None, category=None, is_pinned=False):
         post = {
             'club_id': ObjectId(club_id),
             'user_id': user_id,
             'content': content,
+            'title': title,
+            'post_type': post_type,  # discussion, announcement, question, book_review, etc.
+            'category': category,  # general, current_book, suggestions, etc.
             'created_at': datetime.utcnow(),
+            'updated_at': datetime.utcnow(),
             'comments': [],
-            'likes': []
+            'likes': [],
+            'is_pinned': is_pinned,
+            'is_locked': False,
+            'view_count': 0,
+            'tags': []
         }
         return current_app.mongo.db.club_posts.insert_one(post)
 
     @staticmethod
-    def get_posts(club_id):
-        return list(current_app.mongo.db.club_posts.find({'club_id': ObjectId(club_id)}).sort('created_at', -1))
+    def get_posts(club_id, category=None, post_type=None, sort_by='created_at', sort_order=-1):
+        query = {'club_id': ObjectId(club_id)}
+        if category:
+            query['category'] = category
+        if post_type:
+            query['post_type'] = post_type
+        
+        # Sort pinned posts first, then by specified criteria
+        pipeline = [
+            {'$match': query},
+            {'$sort': {'is_pinned': -1, sort_by: sort_order}}
+        ]
+        return list(current_app.mongo.db.club_posts.aggregate(pipeline))
+
+    @staticmethod
+    def add_comment(post_id, user_id, content, parent_comment_id=None):
+        comment = {
+            'id': str(ObjectId()),
+            'user_id': user_id,
+            'content': content,
+            'created_at': datetime.utcnow(),
+            'parent_id': parent_comment_id,  # For threaded replies
+            'likes': []
+        }
+        
+        result = current_app.mongo.db.club_posts.update_one(
+            {'_id': ObjectId(post_id)},
+            {
+                '$push': {'comments': comment},
+                '$set': {'updated_at': datetime.utcnow()}
+            }
+        )
+        return comment['id'] if result.modified_count > 0 else None
+
+    @staticmethod
+    def like_post(post_id, user_id):
+        # Toggle like - remove if exists, add if doesn't
+        post = current_app.mongo.db.club_posts.find_one({'_id': ObjectId(post_id)})
+        if not post:
+            return False
+        
+        likes = post.get('likes', [])
+        if user_id in likes:
+            # Unlike
+            current_app.mongo.db.club_posts.update_one(
+                {'_id': ObjectId(post_id)},
+                {'$pull': {'likes': user_id}}
+            )
+            return False
+        else:
+            # Like
+            current_app.mongo.db.club_posts.update_one(
+                {'_id': ObjectId(post_id)},
+                {'$addToSet': {'likes': user_id}}
+            )
+            return True
+
+    @staticmethod
+    def pin_post(post_id, is_pinned=True):
+        return current_app.mongo.db.club_posts.update_one(
+            {'_id': ObjectId(post_id)},
+            {'$set': {'is_pinned': is_pinned, 'updated_at': datetime.utcnow()}}
+        )
+
+    @staticmethod
+    def lock_post(post_id, is_locked=True):
+        return current_app.mongo.db.club_posts.update_one(
+            {'_id': ObjectId(post_id)},
+            {'$set': {'is_locked': is_locked, 'updated_at': datetime.utcnow()}}
+        )
+
+    @staticmethod
+    def increment_view_count(post_id):
+        return current_app.mongo.db.club_posts.update_one(
+            {'_id': ObjectId(post_id)},
+            {'$inc': {'view_count': 1}}
+        )
+
+    @staticmethod
+    def get_post_by_id(post_id):
+        return current_app.mongo.db.club_posts.find_one({'_id': ObjectId(post_id)})
+
+    @staticmethod
+    def update_post(post_id, content, title=None, category=None):
+        update_data = {
+            'content': content,
+            'updated_at': datetime.utcnow()
+        }
+        if title is not None:
+            update_data['title'] = title
+        if category is not None:
+            update_data['category'] = category
+        
+        return current_app.mongo.db.club_posts.update_one(
+            {'_id': ObjectId(post_id)},
+            {'$set': update_data}
+        )
 
 class ClubChatMessageModel:
     @staticmethod
@@ -1015,6 +1777,115 @@ class UserModel:
             
         except Exception as e:
             logger.error(f"Error deleting user: {str(e)}")
+            return False
+
+    # Premium Trial Methods for Partner Club Members
+    @staticmethod
+    def activate_premium_trial(user_id, partner_club_id):
+        """Activate premium trial for partner club member"""
+        try:
+            result = current_app.mongo.db.users.update_one(
+                {'_id': ObjectId(user_id)},
+                {
+                    '$set': {
+                        'is_premium_trial': True,
+                        'premium_trial_start_date': datetime.utcnow(),
+                        'partner_club_id': ObjectId(partner_club_id),
+                        'updated_at': datetime.utcnow()
+                    }
+                }
+            )
+            
+            if result.modified_count > 0:
+                ActivityLogger.log_activity(
+                    user_id=ObjectId(user_id),
+                    action='premium_trial_activated',
+                    description='Premium trial activated through partner club',
+                    metadata={'partner_club_id': str(partner_club_id)}
+                )
+                logger.info(f"Premium trial activated for user {user_id} via partner club {partner_club_id}")
+            
+            return result.modified_count > 0
+            
+        except Exception as e:
+            logger.error(f"Error activating premium trial for user {user_id}: {str(e)}")
+            return False
+
+    @staticmethod
+    def is_premium_trial_active(user_id):
+        """Check if user has active premium trial"""
+        try:
+            user = current_app.mongo.db.users.find_one(
+                {'_id': ObjectId(user_id)},
+                {'is_premium_trial': 1, 'premium_trial_start_date': 1}
+            )
+            
+            if not user or not user.get('is_premium_trial'):
+                return False
+            
+            # Check if trial is still within valid period (30 days)
+            trial_start = user.get('premium_trial_start_date')
+            if trial_start:
+                trial_end = trial_start + timedelta(days=30)
+                return datetime.utcnow() <= trial_end
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error checking premium trial status for user {user_id}: {str(e)}")
+            return False
+
+    @staticmethod
+    def get_premium_trial_users():
+        """Get all users with active premium trials"""
+        try:
+            # Find users with premium trial that started within last 30 days
+            thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+            
+            users = list(current_app.mongo.db.users.find({
+                'is_premium_trial': True,
+                'premium_trial_start_date': {'$gte': thirty_days_ago}
+            }, {
+                'username': 1,
+                'email': 1,
+                'is_premium_trial': 1,
+                'premium_trial_start_date': 1,
+                'partner_club_id': 1
+            }))
+            
+            return users
+            
+        except Exception as e:
+            logger.error(f"Error getting premium trial users: {str(e)}")
+            return []
+
+    @staticmethod
+    def expire_premium_trial(user_id):
+        """Expire premium trial for a user"""
+        try:
+            result = current_app.mongo.db.users.update_one(
+                {'_id': ObjectId(user_id)},
+                {
+                    '$set': {
+                        'is_premium_trial': False,
+                        'premium_trial_end_date': datetime.utcnow(),
+                        'updated_at': datetime.utcnow()
+                    }
+                }
+            )
+            
+            if result.modified_count > 0:
+                ActivityLogger.log_activity(
+                    user_id=ObjectId(user_id),
+                    action='premium_trial_expired',
+                    description='Premium trial expired'
+                )
+                logger.info(f"Premium trial expired for user {user_id}")
+            
+            return result.modified_count > 0
+            
+        except Exception as e:
+            logger.error(f"Error expiring premium trial for user {user_id}: {str(e)}")
             return False
 
 class BookModel:
@@ -1913,3 +2784,190 @@ class GoogleBooksAPI:
         except Exception as e:
             logger.error(f"Error getting book details: {str(e)}")
             return None
+
+class FeedbackModel:
+    """Feedback model for partner club premium trial users"""
+    
+    @staticmethod
+    def create_feedback(user_id, feedback_text, category, club_id=None):
+        """Create a new feedback entry"""
+        try:
+            feedback_data = {
+                'user_id': ObjectId(user_id),
+                'club_id': ObjectId(club_id) if club_id else None,
+                'feedback_text': feedback_text,
+                'category': category,  # weekly_feedback, bug_report, feature_request, general
+                'submitted_at': datetime.utcnow(),
+                'status': 'pending',  # pending, reviewed, resolved
+                'admin_notes': None,
+                'reviewed_at': None,
+                'reviewed_by': None
+            }
+            
+            result = current_app.mongo.db.feedback.insert_one(feedback_data)
+            
+            ActivityLogger.log_activity(
+                user_id=ObjectId(user_id),
+                action='feedback_submitted',
+                description=f'Submitted {category} feedback',
+                metadata={
+                    'feedback_id': str(result.inserted_id),
+                    'category': category,
+                    'club_id': str(club_id) if club_id else None
+                }
+            )
+            
+            logger.info(f"Feedback created for user {user_id}, category: {category}")
+            return result.inserted_id
+            
+        except Exception as e:
+            logger.error(f"Error creating feedback: {str(e)}")
+            return None
+    
+    @staticmethod
+    def get_user_feedback(user_id, page=1, per_page=20):
+        """Get feedback submitted by a user"""
+        try:
+            skip = (page - 1) * per_page
+            
+            feedback_list = list(current_app.mongo.db.feedback.find({
+                'user_id': ObjectId(user_id)
+            }).sort('submitted_at', -1).skip(skip).limit(per_page))
+            
+            total_feedback = current_app.mongo.db.feedback.count_documents({
+                'user_id': ObjectId(user_id)
+            })
+            
+            return feedback_list, total_feedback
+            
+        except Exception as e:
+            logger.error(f"Error getting user feedback: {str(e)}")
+            return [], 0
+    
+    @staticmethod
+    def get_all_feedback(status=None, category=None, page=1, per_page=50):
+        """Get all feedback with optional filters (admin view)"""
+        try:
+            query = {}
+            if status:
+                query['status'] = status
+            if category:
+                query['category'] = category
+            
+            skip = (page - 1) * per_page
+            
+            pipeline = [
+                {'$match': query},
+                {'$lookup': {
+                    'from': 'users',
+                    'localField': 'user_id',
+                    'foreignField': '_id',
+                    'as': 'user'
+                }},
+                {'$lookup': {
+                    'from': 'clubs',
+                    'localField': 'club_id',
+                    'foreignField': '_id',
+                    'as': 'club'
+                }},
+                {'$sort': {'submitted_at': -1}},
+                {'$skip': skip},
+                {'$limit': per_page}
+            ]
+            
+            feedback_list = list(current_app.mongo.db.feedback.aggregate(pipeline))
+            total_feedback = current_app.mongo.db.feedback.count_documents(query)
+            
+            return feedback_list, total_feedback
+            
+        except Exception as e:
+            logger.error(f"Error getting all feedback: {str(e)}")
+            return [], 0
+    
+    @staticmethod
+    def update_feedback_status(feedback_id, status, admin_notes=None, reviewed_by=None):
+        """Update feedback status (admin action)"""
+        try:
+            update_data = {
+                'status': status,
+                'reviewed_at': datetime.utcnow()
+            }
+            
+            if admin_notes:
+                update_data['admin_notes'] = admin_notes
+            if reviewed_by:
+                update_data['reviewed_by'] = ObjectId(reviewed_by)
+            
+            result = current_app.mongo.db.feedback.update_one(
+                {'_id': ObjectId(feedback_id)},
+                {'$set': update_data}
+            )
+            
+            if result.modified_count > 0:
+                feedback = current_app.mongo.db.feedback.find_one({'_id': ObjectId(feedback_id)})
+                if feedback:
+                    ActivityLogger.log_activity(
+                        user_id=feedback['user_id'],
+                        action=f'feedback_{status}',
+                        description=f'Feedback marked as {status}',
+                        metadata={
+                            'feedback_id': str(feedback_id),
+                            'admin_notes': admin_notes,
+                            'reviewed_by': str(reviewed_by) if reviewed_by else None
+                        }
+                    )
+                logger.info(f"Feedback {feedback_id} updated to status {status}")
+            
+            return result.modified_count > 0
+            
+        except Exception as e:
+            logger.error(f"Error updating feedback status: {str(e)}")
+            return False
+    
+    @staticmethod
+    def get_feedback_statistics():
+        """Get feedback statistics for admin dashboard"""
+        try:
+            pipeline = [
+                {
+                    '$group': {
+                        '_id': '$status',
+                        'count': {'$sum': 1}
+                    }
+                }
+            ]
+            
+            results = list(current_app.mongo.db.feedback.aggregate(pipeline))
+            
+            stats = {
+                'pending': 0,
+                'reviewed': 0,
+                'resolved': 0,
+                'total': 0
+            }
+            
+            for result in results:
+                status = result['_id']
+                count = result['count']
+                if status in stats:
+                    stats[status] = count
+                stats['total'] += count
+            
+            # Get category breakdown
+            category_pipeline = [
+                {
+                    '$group': {
+                        '_id': '$category',
+                        'count': {'$sum': 1}
+                    }
+                }
+            ]
+            
+            category_results = list(current_app.mongo.db.feedback.aggregate(category_pipeline))
+            stats['by_category'] = {result['_id']: result['count'] for result in category_results}
+            
+            return stats
+            
+        except Exception as e:
+            logger.error(f"Error getting feedback statistics: {str(e)}")
+            return {}

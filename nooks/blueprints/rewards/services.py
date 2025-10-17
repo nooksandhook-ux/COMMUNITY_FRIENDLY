@@ -124,7 +124,8 @@ class RewardService:
             RewardService._check_reading_badges,
             RewardService._check_productivity_badges,
             RewardService._check_streak_badges,
-            RewardService._check_milestone_badges
+            RewardService._check_milestone_badges,
+            RewardService._check_integration_badges  # Hook-Nook integration badges
         ]
         
         for badge_checker in badges_to_check:
@@ -420,6 +421,12 @@ class RewardService:
             {'id': 'monthly_master', 'name': 'Monthly Master', 'description': 'Read every day for a month', 'icon': '📅', 'category': 'reading', 'tier': 'exclusive'},
             {'id': 'focus_marathon', 'name': 'Focus Marathon', 'description': 'Focused for 3+ hours in one day', 'icon': '🏃', 'category': 'productivity', 'tier': 'exclusive'},
             {'id': 'productivity_beast', 'name': 'Productivity Beast', 'description': 'Completed 10+ tasks in one day', 'icon': '🦁', 'category': 'productivity', 'tier': 'exclusive'},
+            # Hook-Nook Integration badges
+            {'id': 'synced_scholar', 'name': 'Synced Scholar', 'description': 'Linked 5 reading sessions with Hook timer', 'icon': '🔗', 'category': 'integration', 'tier': 'exclusive'},
+            {'id': 'focus_reader', 'name': 'Focus Reader', 'description': 'Read 100 pages in focused sessions', 'icon': '🎯', 'category': 'integration', 'tier': 'exclusive'},
+            {'id': 'focus_reader_master', 'name': 'Focus Reader Master', 'description': 'Read 500 pages in focused sessions', 'icon': '🏆', 'category': 'integration', 'tier': 'exclusive'},
+            {'id': 'efficiency_expert', 'name': 'Efficiency Expert', 'description': 'Achieved 1+ pages per minute reading efficiency', 'icon': '⚡', 'category': 'integration', 'tier': 'exclusive'},
+            {'id': 'multi_book_focus', 'name': 'Multi-Book Focus', 'description': 'Used focused sessions with 3 different books', 'icon': '📖', 'category': 'integration', 'tier': 'exclusive'},
         ]
         
         badges.extend(special_badges)
@@ -659,6 +666,70 @@ class RewardService:
                     category='focus_goal',
                     goal_type='focus_marathon'
                 )
+    
+    @staticmethod
+    def _check_integration_badges(user_id):
+        """Check and award Hook-Nook integration badges"""
+        # Synced Scholar badge - for users who link multiple reading sessions
+        linked_sessions = current_app.mongo.db.completed_tasks.count_documents({
+            'user_id': user_id,
+            'linked_module': 'nook',
+            'linked_book_id': {'$ne': None}
+        })
+        
+        if linked_sessions >= 5 and not RewardService._has_badge(user_id, 'synced_scholar'):
+            RewardService._award_badge(user_id, 'synced_scholar', 'Linked 5 reading sessions with Hook timer!')
+        
+        # Focus Reader badge - for users who read a lot of pages in focused sessions
+        total_focused_pages = current_app.mongo.db.completed_tasks.aggregate([
+            {'$match': {
+                'user_id': user_id,
+                'linked_module': 'nook',
+                'pages_read': {'$gt': 0}
+            }},
+            {'$group': {'_id': None, 'total_pages': {'$sum': '$pages_read'}}}
+        ])
+        total_focused_pages = list(total_focused_pages)
+        focused_pages = total_focused_pages[0]['total_pages'] if total_focused_pages else 0
+        
+        if focused_pages >= 100 and not RewardService._has_badge(user_id, 'focus_reader'):
+            RewardService._award_badge(user_id, 'focus_reader', 'Read 100 pages in focused sessions!')
+        
+        if focused_pages >= 500 and not RewardService._has_badge(user_id, 'focus_reader_master'):
+            RewardService._award_badge(user_id, 'focus_reader_master', 'Read 500 pages in focused sessions!')
+        
+        # Efficiency Expert badge - for users with high reading efficiency
+        if focused_pages >= 50:  # Only check if they have enough data
+            avg_efficiency = current_app.mongo.db.completed_tasks.aggregate([
+                {'$match': {
+                    'user_id': user_id,
+                    'linked_module': 'nook',
+                    'pages_read': {'$gt': 0},
+                    'duration': {'$gt': 0}
+                }},
+                {'$project': {
+                    'efficiency': {'$divide': ['$pages_read', '$duration']}
+                }},
+                {'$group': {
+                    '_id': None,
+                    'avg_efficiency': {'$avg': '$efficiency'}
+                }}
+            ])
+            avg_efficiency = list(avg_efficiency)
+            
+            if avg_efficiency and avg_efficiency[0]['avg_efficiency'] >= 1.0:  # 1 page per minute
+                if not RewardService._has_badge(user_id, 'efficiency_expert'):
+                    RewardService._award_badge(user_id, 'efficiency_expert', 'Achieved 1+ pages per minute reading efficiency!')
+        
+        # Multi-Book Focus badge - for users who focus on multiple different books
+        unique_books = current_app.mongo.db.completed_tasks.distinct('linked_book_id', {
+            'user_id': user_id,
+            'linked_module': 'nook',
+            'linked_book_id': {'$ne': None}
+        })
+        
+        if len(unique_books) >= 3 and not RewardService._has_badge(user_id, 'multi_book_focus'):
+            RewardService._award_badge(user_id, 'multi_book_focus', 'Used focused sessions with 3 different books!')
     
     @staticmethod
     def get_shop_items():

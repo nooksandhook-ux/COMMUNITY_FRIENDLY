@@ -7,10 +7,12 @@ A comprehensive Flask web application that combines reading tracking (Nook) and 
 ### 🔐 Authentication System
 - **User Registration & Login** with secure password hashing
 - **Session Management** with persistent login
-- **User Profiles** with customizable preferences
+- **User Profiles** with customizable preferences and profile pictures
+- **Profile Picture Upload**: Secure image upload with automatic processing and optimization
 - **Settings Management** for personalization
 - **Password Change** functionality
 - **Admin Role Management** with separate access levels
+- **Avatar Customization**: Generated avatars with multiple styles and options
 
 ### 📚 Nook (Reading Tracker)
 - **Book Management**: Add books manually or via Google Books API
@@ -28,12 +30,16 @@ A comprehensive Flask web application that combines reading tracking (Nook) and 
 - **Custom Timers**: Flexible duration settings (1-120 minutes)
 - **Task Management**: Categorization with icons by type
 - **Advanced Controls**: Start, pause, reset, and complete functionality
-- **Mood Tracking**: Emoji check-ins after sessions
+- **Mood Tracking**: Icon-based mood check-ins after sessions
 - **Productivity Analytics**: Session history and trends analysis
 - **Multiple Themes**: Light, Dark, Retro, Neon, Anime, Forest, Ocean, Space, Zen
 - **Audio Features**: Notification sounds and ambient sounds
 - **Session Types**: Work sessions and break periods
-- **Quick Presets**: Pomodoro, Short Break, Long Break, Deep Work, Quick Task
+- **Quick Timer Presets**: Save and instantly start custom timer configurations
+- **Theme Quick Access**: Instant theme switching without page reload
+- **Hook-Specific Themes**: Override global theme with Hook-specific preferences
+- **Enhanced Analytics**: Track theme usage and preset effectiveness
+- **One-Click Presets**: Start timers directly from dashboard with saved configurations
 
 ### 🏆 Comprehensive Reward System
 - **Points System**: Earn points for all activities across Nook and Hook
@@ -64,13 +70,27 @@ A comprehensive Flask web application that combines reading tracking (Nook) and 
 - **Theme Preview**: Live preview before applying
 - **Import/Export**: Share custom theme configurations
 - **Responsive Design**: Optimized for all screen sizes
-- **Accessibility**: High contrast and readable fonts
+- **Accessibility**: High contrast and readable fonts with Font Awesome icons
+- **Instant Theme Switching**: AJAX-powered theme changes without page reload
+
+### 👤 Profile & Personalization
+- **Profile Pictures**: Upload and manage custom profile pictures
+- **Image Processing**: Automatic resize, crop, and optimization
+- **Avatar Generation**: Fallback to customizable generated avatars
+- **Secure File Handling**: 5MB limit with comprehensive validation
+- **Real-time Updates**: Instant profile picture updates across the app
+
+### 🎨 Modern UI/UX
+- **Font Awesome Icons**: Consistent iconography throughout the application
+- **Responsive Design**: Mobile-first approach with Bootstrap 5
+- **Interactive Elements**: Hover effects, loading states, and smooth transitions
+- **Toast Notifications**: Real-time feedback for user actions
+- **Accessibility**: ARIA labels, keyboard navigation, and screen reader support
 
 ### 📱 Progressive Web App (PWA)
 - **Offline Support**: Service Worker for offline functionality
 - **App Installation**: Install as native app on mobile/desktop
 - **Push Notifications**: Timer completion and streak reminders
-   Create a `.env` file:
 
 # NOOKSBRIDGE: Social Reading & Productivity Hub
 
@@ -185,14 +205,24 @@ static/
 
 ---
 
-## Suggested Enhancements
-- **Notifications:** Real-time or email notifications for club activity, quiz results, etc.
-- **API for 3rd-party Mini-Apps:** Allow external developers to add new modules.
-- **Mobile App:** Wrap with React Native or Flutter for a native experience.
-- **Advanced Analytics:** More detailed stats, visualizations, and insights.
-- **OAuth Integration:** Google, Facebook, or Apple login.
-- **Content Moderation Tools:** Enhanced admin dashboard for managing clubs, posts, and users.
-- **Accessibility Improvements:** ARIA roles, keyboard navigation, and color contrast.
+## Recent Updates & Enhancements
+
+### ✅ Recently Implemented
+- **Profile Picture Upload**: Secure image upload with automatic processing
+- **Font Awesome Icons**: Replaced emojis with consistent, accessible icons
+- **Hook Theme Quick Access**: Instant theme switching without page reload
+- **Custom Timer Presets**: Save and manage personalized timer configurations
+- **Enhanced Analytics**: Track theme usage and preset effectiveness
+- **Improved Accessibility**: ARIA labels, keyboard navigation, and screen reader support
+- **Real-time UI Updates**: AJAX-powered interactions for better user experience
+
+### 🚀 Future Enhancements
+- **Real-time Notifications**: Push notifications for timer completion and streaks
+- **OAuth Integration**: Google, Facebook, or Apple login options
+- **Mobile App**: Native mobile application with React Native or Flutter
+- **Advanced Analytics**: More detailed insights and data visualizations
+- **API for Extensions**: Allow third-party developers to create mini-modules
+- **Content Moderation**: Enhanced admin tools for community management
 
 ---
 
@@ -200,6 +230,24 @@ static/
 MIT License. See LICENSE file for details.
 
 ---
+
+## Version History
+
+### v2.1.0 (Latest) - October 2025
+- ✨ **Profile Picture Upload**: Secure image upload with automatic processing and optimization
+- 🎨 **UI/UX Overhaul**: Replaced emojis with Font Awesome icons for better accessibility
+- ⚡ **Hook Enhancements**: Quick theme access and custom timer presets
+- 🔄 **Real-time Updates**: AJAX-powered theme switching and profile updates
+- 📊 **Enhanced Analytics**: Track theme usage and preset effectiveness
+- 🛡️ **Security Improvements**: Comprehensive file validation and secure handling
+- ♿ **Accessibility**: Improved screen reader support and keyboard navigation
+
+### v2.0.0 - Previous Release
+- 🏗️ **Modular Architecture**: Blueprint-based structure for scalability
+- 🎮 **Gamification System**: Points, badges, and level progression
+- 📱 **PWA Support**: Offline functionality and app installation
+- 🎨 **Theme System**: Multiple themes with customization options
+- 📊 **Analytics Dashboard**: Comprehensive progress tracking
 
 ## Credits
 Developed by Warpiiv and contributors. Special thanks to the open-source community!
@@ -322,9 +370,14 @@ For support, please open an issue on GitHub or contact the development team.
 - `GET|POST /login` - User login
 - `GET|POST /register` - User registration  
 - `GET /logout` - User logout
-- `GET /profile` - User profile
-- `GET|POST /settings` - User preferences
+- `GET /profile` - User profile with avatar display
+- `GET|POST /settings` - User preferences and profile management
 - `POST /change_password` - Password change
+- `POST /upload_profile_picture` - Profile picture upload with processing
+- `POST /delete_profile_picture` - Remove profile picture
+- `POST /settings/general` - Update general settings
+- `POST /settings/avatar` - Update avatar customization
+- `POST /settings/password` - Change password
 
 ### Nook - Reading Tracker (`/nook/`)
 - `GET /` - Reading dashboard
@@ -339,9 +392,10 @@ For support, please open an issue on GitHub or contact the development team.
 - `GET /analytics` - Reading analytics
 
 ### Hook - Productivity Timer (`/hook/`)
-- `GET /` - Timer dashboard
+- `GET /` - Timer dashboard with quick presets and theme controls
 - `GET /timer` - Timer interface
 - `POST /start_timer` - Start new timer
+- `POST /start_timer_with_preset` - Start timer using saved preset
 - `POST /pause_timer` - Pause/resume timer
 - `POST /complete_timer` - Complete session
 - `POST /cancel_timer` - Cancel timer
@@ -350,6 +404,11 @@ For support, please open an issue on GitHub or contact the development team.
 - `GET /analytics` - Productivity analytics
 - `GET /themes` - Timer themes
 - `POST /set_theme` - Set timer theme
+- `POST /quick_theme_update` - AJAX theme switching
+- `POST /toggle_ambient_sounds` - Toggle ambient sounds
+- `POST /save_preset` - Save custom timer preset
+- `POST /delete_preset` - Delete custom preset
+- `GET /get_user_preferences` - Get Hook preferences for frontend
 
 ### Rewards System (`/rewards/`)
 - `GET /` - Rewards dashboard
@@ -466,14 +525,22 @@ For support, please open an issue on GitHub or contact the development team.
 ## 🔧 Technical Features
 
 ### Database Schema
-- **Users**: Authentication, preferences, points, level
+- **Users**: Authentication, preferences, points, level, profile pictures
 - **Books**: Book details, progress, quotes, takeaways
-- **Completed Tasks**: Task history with analytics data
+- **Completed Tasks**: Task history with analytics data and theme tracking
 - **Reading Sessions**: Detailed reading activity logs
 - **Rewards**: Point history with source attribution
 - **User Badges**: Badge achievements with timestamps
 - **Active Timers**: Current timer state management
 - **User Goals**: Personal goal tracking
+- **Profile Data**: Avatar URLs, upload timestamps, and metadata
+
+### File Management
+- **Secure Upload**: Profile picture upload with validation and processing
+- **Image Processing**: PIL/Pillow integration for resize, crop, and optimization
+- **File Storage**: Organized storage in `/static/uploads/avatars/`
+- **Cleanup**: Automatic deletion of old files when updating
+- **Security**: File type validation, size limits, and secure naming
 
 ### Security
 - **Password Hashing**: Werkzeug secure password hashing
@@ -488,6 +555,15 @@ For support, please open an issue on GitHub or contact the development team.
 - **Lazy Loading**: Efficient data loading
 - **Pagination**: Large dataset handling
 - **API Optimization**: Efficient data serialization
+- **AJAX Operations**: Real-time updates without page reloads
+- **Image Optimization**: Automatic compression and resizing
+
+### UI/UX Improvements
+- **Icon Consistency**: Replaced emojis with Font Awesome icons for better accessibility
+- **Visual Feedback**: Loading states, hover effects, and smooth transitions
+- **Mobile Optimization**: Touch-friendly interfaces and responsive design
+- **Error Handling**: Comprehensive error messages and recovery options
+- **User Guidance**: Clear instructions and helpful tooltips
 
 Security & Fair Use
 

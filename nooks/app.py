@@ -179,6 +179,15 @@ def create_app():
     def datetimeformat(value):
         return value.strftime('%Y-%m-%d') if value else ''
     
+    @app.template_global('get_user_by_id')
+    def get_user_by_id(user_id):
+        """Template global function to get user data by ID"""
+        try:
+            from bson import ObjectId
+            return app.mongo.db.users.find_one({'_id': ObjectId(user_id)})
+        except:
+            return None
+    
     # Initialize database with application context
     with app.app_context():
         DatabaseManager.initialize_database()

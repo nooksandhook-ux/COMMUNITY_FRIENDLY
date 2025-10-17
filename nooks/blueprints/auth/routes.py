@@ -1,12 +1,18 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, jsonify
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, SelectField, IntegerField, SelectMultipleField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from bson import ObjectId
 from flask_login import login_user, logout_user, login_required, current_user
 from models import UserModel, User
 import logging
+import os
+from PIL import Image
+import uuid
+from datetime import datetime
 from blueprints.themes.routes import get_available_themes, get_timer_themes, get_available_avatars, get_free_avatar_styles, get_avatar_customization_options, validate_avatar_options
 
 # Configure logging
@@ -60,6 +66,14 @@ class AvatarForm(FlaskForm):
     background_color = SelectMultipleField('Background Color', validators=[DataRequired()])
     flip = BooleanField('Flip Avatar')
     submit = SubmitField('Save Avatar')
+
+# Flask-WTF Form for Profile Picture Upload
+class ProfilePictureForm(FlaskForm):
+    profile_picture = FileField('Profile Picture', validators=[
+        FileRequired(),
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')
+    ])
+    submit = SubmitField('Upload Picture')
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -323,3 +337,165 @@ def change_password():
             for error in errors:
                 flash(f"Change Password - {field}: {error}", 'error')
     return redirect(url_for('auth.settings'))
+
+@auth_bp.route('/upload_profile_picture', methods=['POST'])
+@login_required
+def upload_profile_picture():
+    """Handle profile picture upload with validation and processing"""
+    try:
+        if 'profile_picture' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No file selected'}), 400
+        
+        file = request.files['profile_picture']
+        if file.filename == '':
+            return jsonify({'status': 'error', 'message': 'No file selected'}), 400
+        
+        # Validate file type
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+        if not ('.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in allowed_extensions):
+            return jsonify({'status': 'error', 'message': 'Invalid file type. Please upload PNG, JPG, JPEG, or GIF files only.'}), 400
+        
+        # Validate file size (5MB limit)
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)
+        
+        if file_size > 5 * 1024 * 1024:  # 5MB
+            return jsonify({'status': 'error', 'message': 'File too large. Maximum size is 5MB.'}), 400
+        
+        # Create uploads directory if it doesn't exist
+        upload_dir = os.path.join(current_app.static_folder, 'uploads', 'avatars')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Generate unique filename
+        file_extension = file.filename.rsplit('.', 1)[1].lower()
+        unique_filename = f"{current_user.id}_{uuid.uuid4().hex}.{file_extension}"
+        file_path = os.path.join(upload_dir, unique_filename)
+        
+        # Save and process the image
+        file.save(file_path)
+        
+        # Process image (resize and crop to square)
+        processed_path = process_profile_image(file_path, unique_filename)
+        
+        # Remove original if different from processed
+        if processed_path != file_path:
+            os.remove(file_path)
+        
+        # Get current user to check for existing avatar
+        user = current_app.mongo.db.users.find_one({'_id': ObjectId(current_user.id)})
+        old_avatar = user.get('profile', {}).get('avatar_url')
+        
+        # Delete old avatar file if it exists
+        if old_avatar and old_avatar.startswith('/static/uploads/avatars/'):
+            old_file_path = os.path.join(current_app.static_folder, old_avatar[8:])  # Remove '/static/'
+            if os.path.exists(old_file_path):
+                try:
+                    os.remove(old_file_path)
+                except OSError:
+                    logger.warning(f"Could not delete old avatar file: {old_file_path}")
+        
+        # Update user profile with new avatar URL
+        avatar_url = f"/static/uploads/avatars/{os.path.basename(processed_path)}"
+        current_app.mongo.db.users.update_one(
+            {'_id': ObjectId(current_user.id)},
+            {
+                '$set': {
+                    'profile.avatar_url': avatar_url,
+                    'profile.avatar_updated_at': datetime.utcnow()
+                }
+            }
+        )
+        
+        logger.info(f"Profile picture updated for user_id: {current_user.id}")
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Profile picture updated successfully!',
+            'avatar_url': avatar_url
+        })
+        
+    except Exception as e:
+        logger.error(f"Error uploading profile picture for user_id: {current_user.id}: {str(e)}")
+        return jsonify({'status': 'error', 'message': 'An error occurred while uploading your picture. Please try again.'}), 500
+
+@auth_bp.route('/delete_profile_picture', methods=['POST'])
+@login_required
+def delete_profile_picture():
+    """Delete user's profile picture and revert to default"""
+    try:
+        user = current_app.mongo.db.users.find_one({'_id': ObjectId(current_user.id)})
+        avatar_url = user.get('profile', {}).get('avatar_url')
+        
+        # Delete the file if it exists
+        if avatar_url and avatar_url.startswith('/static/uploads/avatars/'):
+            file_path = os.path.join(current_app.static_folder, avatar_url[8:])  # Remove '/static/'
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    logger.warning(f"Could not delete avatar file: {file_path}")
+        
+        # Update user profile to remove avatar
+        current_app.mongo.db.users.update_one(
+            {'_id': ObjectId(current_user.id)},
+            {
+                '$unset': {
+                    'profile.avatar_url': '',
+                    'profile.avatar_updated_at': ''
+                }
+            }
+        )
+        
+        logger.info(f"Profile picture deleted for user_id: {current_user.id}")
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Profile picture removed successfully!'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error deleting profile picture for user_id: {current_user.id}: {str(e)}")
+        return jsonify({'status': 'error', 'message': 'An error occurred while deleting your picture. Please try again.'}), 500
+
+def process_profile_image(file_path, filename):
+    """Process uploaded image: resize, crop to square, and optimize"""
+    try:
+        with Image.open(file_path) as img:
+            # Convert to RGB if necessary (for PNG with transparency)
+            if img.mode in ('RGBA', 'LA', 'P'):
+                # Create white background
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                img = background
+            
+            # Get dimensions
+            width, height = img.size
+            
+            # Crop to square (center crop)
+            if width != height:
+                size = min(width, height)
+                left = (width - size) // 2
+                top = (height - size) // 2
+                right = left + size
+                bottom = top + size
+                img = img.crop((left, top, right, bottom))
+            
+            # Resize to standard size (200x200)
+            img = img.resize((200, 200), Image.Resampling.LANCZOS)
+            
+            # Save processed image
+            processed_filename = f"processed_{filename}"
+            processed_path = os.path.join(os.path.dirname(file_path), processed_filename)
+            
+            # Save with optimization
+            img.save(processed_path, 'JPEG', quality=85, optimize=True)
+            
+            return processed_path
+            
+    except Exception as e:
+        logger.error(f"Error processing image {file_path}: {str(e)}")
+        # Return original path if processing fails
+        return file_path
