@@ -119,6 +119,30 @@ def index():
                          stats=stats,
                          recent_sessions=recent_sessions)
 
+@nook_bp.route('/my_uploads')
+@login_required
+def my_uploads():
+    try:
+        user_id = ObjectId(current_user.id)
+        # Fetch only books that have a pdf_path for the current user
+        books = list(current_app.mongo.db.books.find({
+            'user_id': user_id,
+            'pdf_path': {'$ne': None}  # Filter for books with a PDF
+        }).sort('added_at', -1))
+        delete_form = DeleteBookForm()  # Instantiate the form for delete buttons
+        delete_form.csrf_token.data = generate_csrf()  # Set CSRF token
+        ActivityLogger.log_activity(
+            user_id=user_id,
+            action='view_my_uploads',
+            description='Viewed uploaded books',
+            metadata={'uploaded_book_count': len(books)}
+        )
+        return render_template('nook/my_uploads.html', books=books, delete_form=delete_form)
+    except Exception as e:
+        logger.error(f"Error loading my_uploads: {str(e)}", exc_info=True)
+        flash(f"An error occurred: {str(e)}", "danger")
+        return redirect(url_for('nook.index'))
+
 @nook_bp.route('/add_book', methods=['GET', 'POST'])
 @login_required
 def add_book():
