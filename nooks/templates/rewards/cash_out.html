@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Cash Out Rewards{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-money-bill-wave"></i> Cash Out Your Rewards
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- User Points Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h3>{{ total_points }}</h3>
+                                    <p class="mb-0">Available Points</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h3>₦{{ "%.2f"|format(total_points * 0.1) }}</h3>
+                                    <p class="mb-0">Estimated Value</p>
+                                    <small>1 point = ₦0.10</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if user.is_premium_trial %}
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-star"></i> Premium Trial Benefits Active!</h6>
+                        <ul class="mb-0">
+                            <li>No minimum cash-out threshold</li>
+                            <li>Immediate processing (within 24 hours)</li>
+                            <li>Priority support</li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Cash-Out Information</h6>
+                        <ul class="mb-0">
+                            <li>Minimum cash-out: 1,000 points (₦100)</li>
+                            <li>Processing time: 3-5 business days</li>
+                            <li>Available payment methods: Bank transfer, Mobile money</li>
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if pending_request %}
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-clock"></i> Pending Request</h6>
+                        <p>You have a pending cash-out request for <strong>{{ pending_request.requested_amount }} points</strong> 
+                           submitted on {{ pending_request.created_at.strftime('%B %d, %Y at %I:%M %p') }}.</p>
+                        <p class="mb-0">Status: <span class="badge badge-warning">{{ pending_request.status.title() }}</span></p>
+                    </div>
+                    {% else %}
+                    <!-- Cash-Out Form -->
+                    <form method="POST">
+                        <div class="form-group mb-3">
+                            <label for="amount" class="form-label">
+                                <i class="fas fa-coins"></i> Points to Cash Out
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="amount" 
+                                   name="amount" 
+                                   min="{% if user.is_premium_trial %}1{% else %}1000{% endif %}" 
+                                   max="{{ total_points }}" 
+                                   placeholder="Enter amount"
+                                   required>
+                            <small class="form-text text-muted">
+                                {% if user.is_premium_trial %}
+                                    Minimum: 1 point (Premium Trial)
+                                {% else %}
+                                    Minimum: 1,000 points
+                                {% endif %}
+                                | Maximum: {{ total_points }} points
+                            </small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="payment_method" class="form-label">
+                                <i class="fas fa-credit-card"></i> Payment Method
+                            </label>
+                            <select class="form-control" id="payment_method" name="payment_method" required>
+                                <option value="">Select payment method</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="mobile_money">Mobile Money (MTN, Airtel, etc.)</option>
+                                <option value="paypal">PayPal</option>
+                                <option value="other">Other (specify in details)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="payment_details" class="form-label">
+                                <i class="fas fa-info-circle"></i> Payment Details
+                            </label>
+                            <textarea class="form-control" 
+                                      id="payment_details" 
+                                      name="payment_details" 
+                                      rows="4" 
+                                      placeholder="Please provide your payment details:&#10;- For Bank Transfer: Account name, number, bank name&#10;- For Mobile Money: Phone number, network&#10;- For PayPal: Email address"
+                                      required></textarea>
+                            <small class="form-text text-muted">
+                                Ensure your payment details are accurate to avoid delays.
+                            </small>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-calculator"></i> Cash-Out Summary
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">Points to cash out:</div>
+                                    <div class="col-6 text-right" id="summary-points">-</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">Estimated amount:</div>
+                                    <div class="col-6 text-right" id="summary-amount">-</div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">Processing fee:</div>
+                                    <div class="col-6 text-right">₦0.00</div>
+                                </div>
+                                <hr>
+                                <div class="row font-weight-bold">
+                                    <div class="col-6">You will receive:</div>
+                                    <div class="col-6 text-right" id="summary-final">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-paper-plane"></i> Submit Cash-Out Request
+                            </button>
+                            <a href="{{ url_for('rewards.cash_out_history') }}" class="btn btn-outline-info">
+                                <i class="fas fa-history"></i> View Request History
+                            </a>
+                            <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Rewards
+                            </a>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Terms and Conditions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-file-contract"></i> Terms & Conditions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="small mb-0">
+                        <li>Cash-out requests are processed manually by our team</li>
+                        <li>Processing times may vary based on payment method and verification requirements</li>
+                        <li>You must provide accurate payment details to avoid delays</li>
+                        <li>NOOKS reserves the right to verify account activity before processing</li>
+                        <li>Points cannot be refunded once a cash-out request is approved</li>
+                        <li>Premium Trial members receive priority processing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('amount').addEventListener('input', function(e) {
+    const points = parseInt(e.target.value) || 0;
+    const amount = points * 0.1;
+    
+    document.getElementById('summary-points').textContent = points.toLocaleString() + ' points';
+    document.getElementById('summary-amount').textContent = '₦' + amount.toFixed(2);
+    document.getElementById('summary-final').textContent = '₦' + amount.toFixed(2);
+});
+
+// Auto-format payment details based on selected method
+document.getElementById('payment_method').addEventListener('change', function(e) {
+    const method = e.target.value;
+    const detailsField = document.getElementById('payment_details');
+    
+    let placeholder = '';
+    switch(method) {
+        case 'bank_transfer':
+            placeholder = 'Account Name: [Your Full Name]\nAccount Number: [Your Account Number]\nBank Name: [Your Bank]\nAccount Type: [Savings/Current]';
+            break;
+        case 'mobile_money':
+            placeholder = 'Phone Number: [Your Phone Number]\nNetwork: [MTN/Airtel/Glo/9mobile]\nAccount Name: [Name on Account]';
+            break;
+        case 'paypal':
+            placeholder = 'PayPal Email: [your.email@example.com]\nFull Name: [Your Full Name]';
+            break;
+        default:
+            placeholder = 'Please provide your payment details...';
+    }
+    
+    detailsField.placeholder = placeholder;
+});
+</script>
+{% endblock %}

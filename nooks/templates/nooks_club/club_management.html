@@ -1,0 +1,512 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-cog"></i> Club Management: {{ club_name }}</h2>
+    <a href="{{ url_for('nooks_club.view_club', club_id=club_id) }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Club
+    </a>
+  </div>
+
+  <!-- Management Navigation -->
+  <ul class="nav nav-tabs mb-4" id="managementTabs" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="overview-tab" data-toggle="tab" href="#overview" role="tab">
+        <i class="fas fa-chart-bar"></i> Overview
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="members-management-tab" data-toggle="tab" href="#members-management" role="tab">
+        <i class="fas fa-users-cog"></i> Members
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="content-tab" data-toggle="tab" href="#content" role="tab">
+        <i class="fas fa-edit"></i> Content
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="books-management-tab" data-toggle="tab" href="#books-management" role="tab">
+        <i class="fas fa-book"></i> Books
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="settings-tab" data-toggle="tab" href="#settings" role="tab">
+        <i class="fas fa-cog"></i> Settings
+      </a>
+    </li>
+  </ul>
+
+  <!-- Tab Content -->
+  <div class="tab-content" id="managementTabsContent">
+    <!-- Overview Tab -->
+    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-chart-line"></i> Club Statistics</h5>
+            </div>
+            <div class="card-body">
+              <div id="detailed-statistics">
+                <div class="text-center">
+                  <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-2">Loading statistics...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Recent Issues</h5>
+            </div>
+            <div class="card-body">
+              <div id="recent-issues">
+                <p class="text-muted">No recent issues to report.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="fas fa-clock"></i> Quick Actions</h6>
+            </div>
+            <div class="card-body">
+              <button class="btn btn-primary btn-block mb-2" onclick="createAnnouncement()">
+                <i class="fas fa-bullhorn"></i> Create Announcement
+              </button>
+              <button class="btn btn-success btn-block mb-2" onclick="selectNewBook()">
+                <i class="fas fa-book"></i> Select New Book
+              </button>
+              <button class="btn btn-warning btn-block mb-2" onclick="createChallenge()">
+                <i class="fas fa-trophy"></i> Create Challenge
+              </button>
+              <button class="btn btn-info btn-block" onclick="exportClubData()">
+                <i class="fas fa-download"></i> Export Data
+              </button>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="fas fa-bell"></i> Pending Actions</h6>
+            </div>
+            <div class="card-body">
+              <div id="pending-actions">
+                <div class="text-center">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-2 small">Loading...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Members Management Tab -->
+    <div class="tab-pane fade" id="members-management" role="tabpanel">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0"><i class="fas fa-users"></i> Club Members</h5>
+              <div>
+                <input type="text" class="form-control form-control-sm" placeholder="Search members..." id="member-search">
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="members-list">
+                <div class="text-center">
+                  <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-2">Loading members...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="fas fa-user-plus"></i> Join Requests</h6>
+            </div>
+            <div class="card-body">
+              <div id="join-requests-management">
+                <div class="text-center">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-2 small">Loading requests...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="fas fa-crown"></i> Promote Member</h6>
+            </div>
+            <div class="card-body">
+              <form id="promote-member-form">
+                <div class="form-group">
+                  <input type="text" class="form-control" placeholder="Username" name="username" required>
+                </div>
+                <button type="submit" class="btn btn-warning btn-block">
+                  <i class="fas fa-crown"></i> Promote to Admin
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Management Tab -->
+    <div class="tab-pane fade" id="content" role="tabpanel">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-thumbtack"></i> Pinned Posts</h5>
+            </div>
+            <div class="card-body">
+              <div id="pinned-posts">
+                <div class="text-center">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-2 small">Loading pinned posts...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-flag"></i> Reported Content</h5>
+            </div>
+            <div class="card-body">
+              <div id="reported-content">
+                <p class="text-muted">No reported content.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-edit"></i> Content Moderation Tools</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <button class="btn btn-outline-primary btn-block" onclick="bulkDeletePosts()">
+                <i class="fas fa-trash"></i> Bulk Delete Posts
+              </button>
+            </div>
+            <div class="col-md-4">
+              <button class="btn btn-outline-warning btn-block" onclick="lockAllPosts()">
+                <i class="fas fa-lock"></i> Lock All Posts
+              </button>
+            </div>
+            <div class="col-md-4">
+              <button class="btn btn-outline-info btn-block" onclick="exportContent()">
+                <i class="fas fa-download"></i> Export Content
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Books Management Tab -->
+    <div class="tab-pane fade" id="books-management" role="tabpanel">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-book-open"></i> Current Book</h5>
+            </div>
+            <div class="card-body">
+              <div id="current-book-management">
+                {% if club.current_book %}
+                  <h6>{{ club.current_book.title }}</h6>
+                  <p class="text-muted">by {{ club.current_book.author or 'Unknown Author' }}</p>
+                  <button class="btn btn-outline-primary btn-sm" onclick="viewReadingProgress()">
+                    <i class="fas fa-chart-line"></i> View Progress
+                  </button>
+                  <button class="btn btn-outline-warning btn-sm" onclick="changeCurrentBook()">
+                    <i class="fas fa-edit"></i> Change Book
+                  </button>
+                {% else %}
+                  <p class="text-muted">No current book selected</p>
+                  <button class="btn btn-primary" onclick="selectCurrentBook()">
+                    <i class="fas fa-plus"></i> Select Current Book
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-history"></i> Reading History</h5>
+            </div>
+            <div class="card-body">
+              <div id="reading-history">
+                {% if club.past_books %}
+                  {% for book in club.past_books %}
+                    <div class="border-bottom pb-2 mb-2">
+                      <h6 class="mb-1">{{ book.title }}</h6>
+                      <small class="text-muted">by {{ book.author or 'Unknown Author' }}</small>
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <p class="text-muted">No books completed yet</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-vote-yea"></i> Book Suggestions</h5>
+            </div>
+            <div class="card-body">
+              <div id="book-suggestions-management">
+                <div class="text-center">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-2 small">Loading suggestions...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-trophy"></i> Reading Challenges</h5>
+            </div>
+            <div class="card-body">
+              <div id="reading-challenges-management">
+                {% if club.reading_challenges %}
+                  {% for challenge in club.reading_challenges %}
+                    <div class="border-bottom pb-2 mb-2">
+                      <h6 class="mb-1">{{ challenge.title }}</h6>
+                      <small class="text-muted">{{ challenge.participants|length }} participants</small>
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <p class="text-muted">No active challenges</p>
+                {% endif %}
+                <button class="btn btn-success btn-sm mt-2" onclick="createReadingChallenge()">
+                  <i class="fas fa-plus"></i> Create Challenge
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-pane fade" id="settings" role="tabpanel">
+      <div class="row">
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fas fa-cog"></i> Club Settings</h5>
+            </div>
+            <div class="card-body">
+              <form id="club-settings-form">
+                <div class="form-group">
+                  <label for="club-name">Club Name</label>
+                  <input type="text" class="form-control" id="club-name" value="{{ club.name }}" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="club-description">Description</label>
+                  <textarea class="form-control" id="club-description" rows="4">{{ club.description or '' }}</textarea>
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="club-topic">Topic</label>
+                      <input type="text" class="form-control" id="club-topic" value="{{ club.topic or '' }}">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="club-genre">Genre</label>
+                      <select class="form-control" id="club-genre">
+                        <option value="">Select a genre</option>
+                        <option value="Fantasy" {{ 'selected' if club.genre == 'Fantasy' }}>Fantasy</option>
+                        <option value="Sci-Fi" {{ 'selected' if club.genre == 'Sci-Fi' }}>Science Fiction</option>
+                        <option value="Romance" {{ 'selected' if club.genre == 'Romance' }}>Romance</option>
+                        <option value="Mystery" {{ 'selected' if club.genre == 'Mystery' }}>Mystery & Thriller</option>
+                        <option value="History" {{ 'selected' if club.genre == 'History' }}>History</option>
+                        <option value="Biography" {{ 'selected' if club.genre == 'Biography' }}>Biography</option>
+                        <option value="Self-Help" {{ 'selected' if club.genre == 'Self-Help' }}>Self-Help</option>
+                        <option value="Fiction" {{ 'selected' if club.genre == 'Fiction' }}>General Fiction</option>
+                        <option value="Non-Fiction" {{ 'selected' if club.genre == 'Non-Fiction' }}>Non-Fiction</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="club-private" {{ 'checked' if club.is_private }}>
+                  <label class="form-check-label" for="club-private">
+                    Private Club (requires approval to join)
+                  </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save"></i> Save Settings
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="fas fa-shield-alt"></i> Privacy & Safety</h6>
+            </div>
+            <div class="card-body">
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="auto-approve-posts">
+                <label class="form-check-label" for="auto-approve-posts">
+                  Auto-approve posts
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="allow-member-invites">
+                <label class="form-check-label" for="allow-member-invites">
+                  Allow members to invite others
+                </label>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="enable-notifications">
+                <label class="form-check-label" for="enable-notifications">
+                  Enable notifications
+                </label>
+              </div>
+              <button class="btn btn-outline-primary btn-block" onclick="savePrivacySettings()">
+                <i class="fas fa-save"></i> Save Privacy Settings
+              </button>
+            </div>
+          </div>
+          
+          <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+              <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h6>
+            </div>
+            <div class="card-body">
+              <p class="text-muted small">These actions cannot be undone.</p>
+              <button class="btn btn-outline-warning btn-block mb-2" onclick="archiveClub()">
+                <i class="fas fa-archive"></i> Archive Club
+              </button>
+              <button class="btn btn-outline-danger btn-block" onclick="deleteClub()">
+                <i class="fas fa-trash"></i> Delete Club
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Load detailed statistics
+function loadDetailedStatistics() {
+  fetch('{{ url_for("nooks_club.api_get_detailed_club_statistics", club_id=club_id) }}')
+    .then(response => response.json())
+    .then(data => {
+      const statsDiv = document.getElementById('detailed-statistics');
+      
+      if (data.statistics) {
+        const stats = data.statistics;
+        statsDiv.innerHTML = `
+          <div class="row text-center">
+            <div class="col-md-3">
+              <h3 class="text-primary">${stats.member_count}</h3>
+              <small class="text-muted">Total Members</small>
+            </div>
+            <div class="col-md-3">
+              <h3 class="text-success">${stats.post_count}</h3>
+              <small class="text-muted">Total Posts</small>
+            </div>
+            <div class="col-md-3">
+              <h3 class="text-info">${stats.message_count}</h3>
+              <small class="text-muted">Chat Messages</small>
+            </div>
+            <div class="col-md-3">
+              <h3 class="text-warning">${stats.books_read}</h3>
+              <small class="text-muted">Books Read</small>
+            </div>
+          </div>
+          <hr>
+          <div class="row text-center">
+            <div class="col-md-4">
+              <h4 class="text-primary">${stats.recent_posts}</h4>
+              <small class="text-muted">Posts (30 days)</small>
+            </div>
+            <div class="col-md-4">
+              <h4 class="text-success">${stats.recent_messages}</h4>
+              <small class="text-muted">Messages (30 days)</small>
+            </div>
+            <div class="col-md-4">
+              <h4 class="text-info">${stats.total_likes}</h4>
+              <small class="text-muted">Total Likes</small>
+            </div>
+          </div>
+        `;
+      } else {
+        statsDiv.innerHTML = '<p class="text-danger">Error loading statistics</p>';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading statistics:', error);
+      document.getElementById('detailed-statistics').innerHTML = '<p class="text-danger">Error loading statistics</p>';
+    });
+}
+
+// Initialize management dashboard
+document.addEventListener('DOMContentLoaded', () => {
+  loadDetailedStatistics();
+  
+  // Load data when tabs are shown
+  document.getElementById('members-management-tab').addEventListener('shown.bs.tab', () => {
+    // Load members and join requests
+  });
+  
+  document.getElementById('content-tab').addEventListener('shown.bs.tab', () => {
+    // Load pinned posts and reported content
+  });
+  
+  document.getElementById('books-management-tab').addEventListener('shown.bs.tab', () => {
+    // Load book suggestions and challenges
+  });
+});
+</script>
+{% endblock %}

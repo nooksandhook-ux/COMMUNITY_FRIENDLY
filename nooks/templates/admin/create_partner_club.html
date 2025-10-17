@@ -1,0 +1,165 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Create Partner Club - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Create Partner Club</h1>
+                <a href="{{ url_for('admin.partner_clubs') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Partner Clubs
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Partner Club Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST">
+                                {{ form.hidden_tag() }}
+                                
+                                <div class="form-group">
+                                    {{ form.name.label(class="form-label") }}
+                                    {{ form.name(class="form-control") }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.name.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="form-group">
+                                    {{ form.partner_organization_name.label(class="form-label") }}
+                                    {{ form.partner_organization_name(class="form-control") }}
+                                    {% if form.partner_organization_name.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.partner_organization_name.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">
+                                        The name of the organization partnering with NooksBridge
+                                    </small>
+                                </div>
+
+                                <div class="form-group">
+                                    {{ form.description.label(class="form-label") }}
+                                    {{ form.description(class="form-control", rows="4") }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.description.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            {{ form.topic.label(class="form-label") }}
+                                            {{ form.topic(class="form-control") }}
+                                            {% if form.topic.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.topic.errors %}
+                                                        <small>{{ error }}</small>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            {{ form.genre.label(class="form-label") }}
+                                            {{ form.genre(class="form-control") }}
+                                            {% if form.genre.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.genre.errors %}
+                                                        <small>{{ error }}</small>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    {{ form.language.label(class="form-label") }}
+                                    {{ form.language(class="form-control") }}
+                                    {% if form.language.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.language.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="form-group">
+                                    {{ form.submit(class="btn btn-primary") }}
+                                    <a href="{{ url_for('admin.partner_clubs') }}" class="btn btn-secondary ml-2">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Partner Club Features</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success"></i>
+                                    <strong>Private by Default:</strong> Partner clubs are automatically set to private
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success"></i>
+                                    <strong>Unique Invitation Code:</strong> Generated automatically for member access
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success"></i>
+                                    <strong>Premium Trial:</strong> First 50 members get 30-day premium trial
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success"></i>
+                                    <strong>Priority Support:</strong> Faster cash-out processing for trial members
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check text-success"></i>
+                                    <strong>Feedback Collection:</strong> Detailed feedback from trial users
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Important Notes</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <small>
+                                    <i class="fas fa-info-circle"></i>
+                                    After creating the partner club, share the invitation code with the partner organization. 
+                                    The first 50 users to join will automatically receive premium trial benefits.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

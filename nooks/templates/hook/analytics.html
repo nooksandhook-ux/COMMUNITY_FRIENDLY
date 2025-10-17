@@ -138,7 +138,19 @@
                         <tbody>
                             {% for mood, count in analytics.tasks_by_mood.items() %}
                                 <tr>
-                                    <td>{{ mood | default('😊') }}</td>
+                                    <td>
+                                        {% if mood == 'happy' or not mood %}
+                                            <i class="fas fa-smile text-success" title="Happy"></i>
+                                        {% elif mood == 'cool' %}
+                                            <i class="fas fa-sunglasses text-primary" title="Cool"></i>
+                                        {% elif mood == 'thinking' %}
+                                            <i class="fas fa-brain text-info" title="Thinking"></i>
+                                        {% elif mood == 'tired' %}
+                                            <i class="fas fa-bed text-warning" title="Tired"></i>
+                                        {% else %}
+                                            {{ mood }}
+                                        {% endif %}
+                                    </td>
                                     <td>{{ count }}</td>
                                 </tr>
                             {% endfor %}
@@ -154,6 +166,141 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Hook-Nook Integration Analytics -->
+    {% if analytics.hook_nook_integration %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-link-45deg text-info me-2"></i>Hook-Nook Integration
+            </h5>
+        </div>
+        <div class="card-body">
+            <!-- Integration Summary -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-stopwatch display-4 mb-2"></i>
+                            <h3 class="fw-bold">{{ analytics.hook_nook_integration.hook_sessions }}</h3>
+                            <p class="mb-0">Hook Sessions</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-book display-4 mb-2"></i>
+                            <h3 class="fw-bold">{{ analytics.hook_nook_integration.nook_sessions }}</h3>
+                            <p class="mb-0">Reading Sessions</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body text-center">
+                            <i class="bi bi-file-earmark-text display-4 mb-2"></i>
+                            <h3 class="fw-bold">{{ analytics.hook_nook_integration.total_pages_read }}</h3>
+                            <p class="mb-0">Pages Read</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-star display-4 mb-2"></i>
+                            <h3 class="fw-bold">{{ analytics.hook_nook_integration.bonus_points_earned }}</h3>
+                            <p class="mb-0">Bonus Points</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Detailed Stats -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Focus Time Breakdown</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Hook Sessions:</span>
+                                    <strong>{{ analytics.hook_nook_integration.hook_time }} min</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" 
+                                         style="width: {{ (analytics.hook_nook_integration.hook_time / (analytics.hook_nook_integration.hook_time + analytics.hook_nook_integration.nook_time) * 100) if (analytics.hook_nook_integration.hook_time + analytics.hook_nook_integration.nook_time) > 0 else 0 }}%">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Reading Sessions:</span>
+                                    <strong>{{ analytics.hook_nook_integration.nook_time }} min</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" 
+                                         style="width: {{ (analytics.hook_nook_integration.nook_time / (analytics.hook_nook_integration.hook_time + analytics.hook_nook_integration.nook_time) * 100) if (analytics.hook_nook_integration.hook_time + analytics.hook_nook_integration.nook_time) > 0 else 0 }}%">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Reading Efficiency</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if analytics.hook_nook_integration.reading_efficiency %}
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <h4 class="text-success">{{ analytics.hook_nook_integration.reading_efficiency.pages_per_minute }}</h4>
+                                    <small class="text-muted">Pages/Minute</small>
+                                </div>
+                                <div class="col-6">
+                                    <h4 class="text-info">{{ analytics.hook_nook_integration.reading_efficiency.minutes_per_page }}</h4>
+                                    <small class="text-muted">Minutes/Page</small>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <h5 class="text-warning">{{ analytics.hook_nook_integration.avg_pages_per_session | round(1) }}</h5>
+                                    <small class="text-muted">Avg Pages/Session</small>
+                                </div>
+                                <div class="col-6">
+                                    <h5 class="text-primary">{{ analytics.hook_nook_integration.linked_books }}</h5>
+                                    <small class="text-muted">Books Linked</small>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-3">
+                                <i class="bi bi-book text-muted display-4"></i>
+                                <p class="text-muted mt-2">Start reading sessions to see efficiency stats!</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Integration Benefits -->
+            <div class="alert alert-info mt-4">
+                <h6><i class="bi bi-lightbulb text-warning me-2"></i>Integration Benefits</h6>
+                <ul class="mb-0">
+                    <li><strong>Bonus Points:</strong> Earn extra points for focused reading sessions</li>
+                    <li><strong>Progress Tracking:</strong> Automatically update book progress during sessions</li>
+                    <li><strong>Combined Analytics:</strong> See your productivity across both modules</li>
+                    <li><strong>Focus Enhancement:</strong> Use Hook's focus tools while reading</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Productivity Trend (Placeholder) -->
     <div class="card">

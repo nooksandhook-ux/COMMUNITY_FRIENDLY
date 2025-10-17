@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0">📈 Progress Tracker</h1>
+                <h1 class="h3 mb-0"><i class="fas fa-chart-line me-2"></i>Progress Tracker</h1>
                 <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Rewards
                 </a>
@@ -20,7 +20,7 @@
         <div class="col-md-6">
             <div class="card border-primary">
                 <div class="card-body text-center">
-                    <div class="fs-1 mb-2">📚</div>
+                    <div class="fs-1 mb-2"><i class="fas fa-book text-primary"></i></div>
                     <h5 class="card-title">Reading Streak</h5>
                     <h2 class="text-primary">{{ reading_streak }} days</h2>
                     <p class="text-muted">Keep reading daily to maintain your streak!</p>
@@ -43,7 +43,7 @@
     {% if recent_goals %}
     <div class="row mb-4">
         <div class="col-12">
-            <h4 class="mb-3">🎯 Recent Goal Achievements</h4>
+            <h4 class="mb-3"><i class="fas fa-bullseye me-2"></i>Recent Goal Achievements</h4>
             <div class="row">
                 {% for goal in recent_goals %}
                 <div class="col-md-6 col-lg-4 mb-3">
@@ -55,7 +55,7 @@
                                     <p class="text-muted small mb-1">{{ goal.date.strftime('%B %d, %Y') }}</p>
                                     <span class="badge bg-warning text-dark">+{{ goal.points }} points</span>
                                 </div>
-                                <div class="fs-3">🏆</div>
+                                <div class="fs-3"><i class="fas fa-trophy text-warning"></i></div>
                             </div>
                         </div>
                     </div>
@@ -70,13 +70,13 @@
     {% if progress_data %}
     <div class="row mb-4">
         <div class="col-12">
-            <h4 class="mb-3">🎯 Progress Towards Milestones</h4>
+            <h4 class="mb-3"><i class="fas fa-bullseye me-2"></i>Progress Towards Milestones</h4>
             <div class="row">
                 {% if progress_data.books %}
                 <div class="col-md-4 mb-3">
                     <div class="card">
                         <div class="card-body">
-                            <h6 class="card-title">📚 Books Finished</h6>
+                            <h6 class="card-title"><i class="fas fa-book me-2"></i>Books Finished</h6>
                             <div class="progress mb-2">
                                 <div class="progress-bar bg-primary" 
                                      style="width: {{ progress_data.books.percentage }}%"></div>
@@ -112,7 +112,7 @@
                 <div class="col-md-4 mb-3">
                     <div class="card">
                         <div class="card-body">
-                            <h6 class="card-title">💰 Points Earned</h6>
+                            <h6 class="card-title"><i class="fas fa-coins me-2"></i>Points Earned</h6>
                             <div class="progress mb-2">
                                 <div class="progress-bar bg-warning" 
                                      style="width: {{ progress_data.points.percentage }}%"></div>
@@ -134,7 +134,7 @@
     {% if next_badges %}
     <div class="row mb-4">
         <div class="col-12">
-            <h4 class="mb-3">🏅 Next Badges to Earn</h4>
+            <h4 class="mb-3"><i class="fas fa-medal me-2"></i>Next Badges to Earn</h4>
             <div class="row">
                 {% for badge_info in next_badges %}
                 <div class="col-md-6 col-lg-4 mb-3">
@@ -176,10 +176,10 @@
         <div class="col-12">
             <div class="card bg-light">
                 <div class="card-body">
-                    <h5 class="card-title">💡 Tips for Faster Progress</h5>
+                    <h5 class="card-title"><i class="fas fa-lightbulb me-2"></i>Tips for Faster Progress</h5>
                     <div class="row">
                         <div class="col-md-6">
-                            <h6>📚 Reading Goals</h6>
+                            <h6><i class="fas fa-book me-2"></i>Reading Goals</h6>
                             <ul class="small">
                                 <li>Read 500+ pages in a week for bonus points</li>
                                 <li>Submit quotes to show active engagement</li>

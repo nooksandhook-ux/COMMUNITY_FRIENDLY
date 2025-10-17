@@ -39,7 +39,7 @@
                     {% for badge in earned_badges %}
                         <div class="col-md-2 col-sm-4 mb-3 text-center">
                             <div class="badge-item p-3 border rounded">
-                                <div class="badge-icon mb-2" style="font-size: 2rem;">🏆</div>
+                                <div class="badge-icon mb-2" style="font-size: 2rem;"><i class="fas fa-trophy text-warning"></i></div>
                                 <h6 class="fw-bold">{{ badge.description }}</h6>
                                 <small class="text-muted">{{ badge.earned_at.strftime('%m/%d/%Y') }}</small>
                             </div>
@@ -67,7 +67,7 @@
                     {% for badge in unearned_badges %}
                         <div class="col-md-2 col-sm-4 mb-3 text-center">
                             <div class="badge-item p-3 border rounded text-muted" style="opacity: 0.6;">
-                                <div class="badge-icon mb-2" style="font-size: 2rem;">🏆</div>
+                                <div class="badge-icon mb-2" style="font-size: 2rem;"><i class="fas fa-trophy text-muted"></i></div>
                                 <h6 class="fw-bold">{{ badge.description }}</h6>
                                 <small>Not yet earned</small>
                             </div>

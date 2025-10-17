@@ -31,6 +31,20 @@
                 </a>
             </div>
             {% endif %}
+            
+            <!-- Hook-Nook Integration: Focus on This Book -->
+            {% if book.status in ['reading', 'to_read'] %}
+            <div class="mb-3">
+                <button class="btn btn-warning w-100" id="focus-on-book-btn" 
+                        data-book-id="{{ book._id }}" 
+                        data-book-title="{{ book.title }}"
+                        data-current-page="{{ book.current_page }}"
+                        data-page-count="{{ book.page_count }}">
+                    <i class="bi bi-stopwatch me-2"></i>Focus on This Book
+                    <div class="small">Start a focused reading session with Hook timer</div>
+                </button>
+            </div>
+            {% endif %}
                     <h5 class="card-title">{{ book.title }}</h5>
                     <p class="card-text text-muted">by {{ book.authors | join(', ') }}</p>
                     {% if book.genre %}
@@ -347,6 +361,191 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="/static/js/pdf_viewer.js"></script>
+{% endif %}
+
+<!-- Hook-Nook Integration Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const focusOnBookBtn = document.getElementById('focus-on-book-btn');
+    
+    if (focusOnBookBtn) {
+        focusOnBookBtn.addEventListener('click', function() {
+            const bookId = this.dataset.bookId;
+            const bookTitle = this.dataset.bookTitle;
+            const currentPage = this.dataset.currentPage;
+            const pageCount = this.dataset.pageCount;
+            
+            // Show duration selection modal
+            showFocusSessionModal(bookId, bookTitle, currentPage, pageCount);
+        });
+    }
+    
+    function showFocusSessionModal(bookId, bookTitle, currentPage, pageCount) {
+        const modalHtml = `
+            <div class="modal fade" id="focusSessionModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-stopwatch text-warning me-2"></i>Start Focused Reading Session
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <i class="bi bi-book text-info me-2"></i>
+                                <strong>${bookTitle}</strong><br>
+                                <small>Current progress: ${currentPage}/${pageCount} pages</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Focus Duration</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="duration" id="duration15" value="15">
+                                    <label class="btn btn-outline-primary" for="duration15">15 min</label>
+                                    
+                                    <input type="radio" class="btn-check" name="duration" id="duration25" value="25" checked>
+                                    <label class="btn btn-outline-primary" for="duration25">25 min</label>
+                                    
+                                    <input type="radio" class="btn-check" name="duration" id="duration45" value="45">
+                                    <label class="btn btn-outline-primary" for="duration45">45 min</label>
+                                    
+                                    <input type="radio" class="btn-check" name="duration" id="duration60" value="60">
+                                    <label class="btn btn-outline-primary" for="duration60">60 min</label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="custom-duration" class="form-label">Or custom duration (minutes)</label>
+                                <input type="number" class="form-control" id="custom-duration" min="5" max="120" placeholder="Enter custom duration">
+                            </div>
+                            
+                            <div class="alert alert-warning">
+                                <i class="bi bi-star text-warning me-1"></i>
+                                <strong>Bonus Points:</strong> Earn extra points for focused reading sessions!
+                                <br><small>You'll be able to track pages read and update your progress when the session completes.</small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-warning" id="start-focus-session">
+                                <i class="bi bi-play-circle me-1"></i>Start Focus Session
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        const existingModal = document.getElementById('focusSessionModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('focusSessionModal'));
+        modal.show();
+        
+        // Handle custom duration input
+        const customDurationInput = document.getElementById('custom-duration');
+        const durationRadios = document.querySelectorAll('input[name="duration"]');
+        
+        customDurationInput.addEventListener('input', function() {
+            if (this.value) {
+                durationRadios.forEach(radio => radio.checked = false);
+            }
+        });
+        
+        durationRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    customDurationInput.value = '';
+                }
+            });
+        });
+        
+        // Handle start button
+        document.getElementById('start-focus-session').addEventListener('click', function() {
+            let duration = customDurationInput.value;
+            
+            if (!duration) {
+                const selectedRadio = document.querySelector('input[name="duration"]:checked');
+                duration = selectedRadio ? selectedRadio.value : '25';
+            }
+            
+            if (!duration || duration < 5 || duration > 120) {
+                showToast('Please select a valid duration (5-120 minutes)', 'warning');
+                return;
+            }
+            
+            startFocusSession(bookId, duration);
+            modal.hide();
+        });
+    }
+    
+    function startFocusSession(bookId, duration) {
+        // Show loading state
+        const btn = document.getElementById('focus-on-book-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Starting...';
+        btn.disabled = true;
+        
+        fetch('/hook/start_reading_session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                book_id: bookId,
+                duration: duration
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+                
+                // Redirect to Hook timer after a short delay
+                setTimeout(() => {
+                    window.location.href = '/hook/timer';
+                }, 1500);
+            } else {
+                showToast(data.message || 'Failed to start focus session', 'error');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error starting focus session:', error);
+            showToast('Failed to start focus session', 'error');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+    
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 5000);
+    }
+});
+</script>
 
 <div class="modal fade" id="pdfViewerModal" tabindex="-1" aria-labelledby="pdfViewerModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">

@@ -1,0 +1,186 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Premium Trial Users - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Premium Trial Users</h1>
+                <a href="{{ url_for('admin.partner_clubs') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Partner Clubs
+                </a>
+            </div>
+
+            <!-- Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ trial_users|length }}</h4>
+                                    <p class="mb-0">Active Premium Trials</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-star fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ trial_users|selectattr('days_remaining', 'le', 7)|list|length }}</h4>
+                                    <p class="mb-0">Expiring Soon</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-clock fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ trial_users|sum(attribute='feedback_count') }}</h4>
+                                    <p class="mb-0">Total Feedback</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-comment fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Premium Trial Users Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Premium Trial Users</h5>
+                </div>
+                <div class="card-body">
+                    {% if trial_users %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Partner Club</th>
+                                    <th>Trial Started</th>
+                                    <th>Days Remaining</th>
+                                    <th>Feedback Count</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in trial_users %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ user.username }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ user.email }}</small>
+                                    </td>
+                                    <td>
+                                        {% if user.partner_club_name %}
+                                            {{ user.partner_club_name }}
+                                        {% else %}
+                                            <span class="text-muted">Unknown Club</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.premium_trial_start_date %}
+                                            {{ user.premium_trial_start_date.strftime('%Y-%m-%d') }}
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.days_remaining > 7 %}
+                                            <span class="badge badge-success">{{ user.days_remaining }} days</span>
+                                        {% elif user.days_remaining > 0 %}
+                                            <span class="badge badge-warning">{{ user.days_remaining }} days</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Expired</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">{{ user.feedback_count }}</span>
+                                    </td>
+                                    <td>
+                                        {% if user.is_premium_trial %}
+                                            <span class="badge badge-success">Active</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin.user_detail', user_id=user._id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-star fa-3x text-muted mb-3"></i>
+                        <h5>No Premium Trial Users</h5>
+                        <p class="text-muted">Premium trial users will appear here when they join partner clubs.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Quick Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <a href="{{ url_for('admin.feedback_management') }}" class="btn btn-outline-info btn-block mb-2">
+                                <i class="fas fa-comment"></i> Review All Feedback
+                            </a>
+                            <a href="{{ url_for('admin.partner_program_analytics') }}" class="btn btn-outline-success btn-block">
+                                <i class="fas fa-chart-bar"></i> View Analytics
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Trial Status Legend</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <span class="badge badge-success">Active</span> - Premium trial is currently active
+                            </div>
+                            <div class="mb-2">
+                                <span class="badge badge-warning">Expiring Soon</span> - Less than 7 days remaining
+                            </div>
+                            <div class="mb-2">
+                                <span class="badge badge-danger">Expired</span> - Trial period has ended
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

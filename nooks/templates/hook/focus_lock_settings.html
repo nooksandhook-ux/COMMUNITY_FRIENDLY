@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Focus Lock Settings - Hook{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="bi bi-lock-fill text-warning me-2"></i>Focus Lock Settings</h2>
+                    <p class="text-muted">Manage your distraction domains for better focus sessions</p>
+                </div>
+                <a href="{{ url_for('hook.timer') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left"></i> Back to Timer
+                </a>
+            </div>
+
+            <!-- Focus Lock Configuration -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-gear-fill me-2"></i>Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>How it works:</strong> Focus Lock shows gentle visual reminders during work sessions 
+                        to help you stay focused. No blocking is performed - this is purely a mindfulness tool.
+                    </div>
+
+                    <form id="focus-lock-form">
+                        <div class="mb-4">
+                            <label for="distraction-domains-main" class="form-label">
+                                <strong>Distracting Websites</strong>
+                            </label>
+                            <textarea class="form-control" id="distraction-domains-main" rows="5" 
+                                      placeholder="Enter domains separated by commas or new lines&#10;&#10;Examples:&#10;twitter.com&#10;reddit.com&#10;youtube.com&#10;facebook.com&#10;instagram.com">{{ distraction_domains | join(', ') }}</textarea>
+                            <div class="form-text">
+                                <i class="bi bi-lightbulb text-warning me-1"></i>
+                                <strong>Tips:</strong> Don't include http:// or www. Maximum 20 domains. 
+                                Common distractions: social media, news sites, entertainment platforms.
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button type="button" class="btn btn-success" id="save-focus-lock-settings">
+                                <i class="bi bi-check-circle"></i> Save Settings
+                            </button>
+                            <div>
+                                <button type="button" class="btn btn-outline-secondary me-2" id="clear-domains">
+                                    <i class="bi bi-trash"></i> Clear All
+                                </button>
+                                <button type="button" class="btn btn-outline-info" id="load-common-domains">
+                                    <i class="bi bi-plus-circle"></i> Add Common Sites
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Current Domains Display -->
+            <div class="card mt-4" id="current-domains-card" style="display: none;">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-check me-2"></i>Current Domains
+                        <span class="badge bg-primary ms-2" id="domain-count">0</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="domains-display" class="d-flex flex-wrap gap-2">
+                        <!-- Domains will be displayed here as badges -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Widget -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-eye me-2"></i>Preview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">This is how the Focus Lock reminder will appear during your work sessions:</p>
+                    
+                    <div class="alert alert-warning border-0 shadow-sm" id="preview-widget">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-lock-fill text-warning me-2 fs-4"></i>
+                            <div class="flex-grow-1">
+                                <strong>STAY FOCUSED</strong>
+                                <div class="small mt-1" id="preview-message">
+                                    Remember to avoid distracting sites during your focus session
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close btn-close-sm ms-2" disabled title="Dismiss for 5 minutes"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usage Statistics -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>Usage Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-check-circle text-success me-1"></i>Best Practices</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-dot"></i> Add your most visited distracting sites</li>
+                                <li><i class="bi bi-dot"></i> Keep the list focused (5-10 domains work best)</li>
+                                <li><i class="bi bi-dot"></i> Review and update your list regularly</li>
+                                <li><i class="bi bi-dot"></i> Use the dismiss feature sparingly</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="bi bi-lightbulb text-warning me-1"></i>How to Use</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-dot"></i> Widget appears only during work sessions</li>
+                                <li><i class="bi bi-dot"></i> Messages rotate every 30 seconds</li>
+                                <li><i class="bi bi-dot"></i> Click X to dismiss for 5 minutes</li>
+                                <li><i class="bi bi-dot"></i> Automatically resets when timer ends</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const domainsTextarea = document.getElementById('distraction-domains-main');
+    const saveBtn = document.getElementById('save-focus-lock-settings');
+    const clearBtn = document.getElementById('clear-domains');
+    const loadCommonBtn = document.getElementById('load-common-domains');
+    const currentDomainsCard = document.getElementById('current-domains-card');
+    const domainsDisplay = document.getElementById('domains-display');
+    const domainCount = document.getElementById('domain-count');
+    const previewMessage = document.getElementById('preview-message');
+    
+    const commonDomains = [
+        'twitter.com', 'facebook.com', 'instagram.com', 'reddit.com',
+        'youtube.com', 'tiktok.com', 'netflix.com', 'twitch.tv',
+        'news.ycombinator.com', 'cnn.com', 'bbc.com', 'buzzfeed.com'
+    ];
+    
+    // Save settings
+    saveBtn.addEventListener('click', function() {
+        const domainsText = domainsTextarea.value.trim();
+        const domains = domainsText.split(/[,\n]/).map(d => d.trim()).filter(d => d.length > 0);
+        
+        fetch('/hook/update_distraction_list', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                domains: domains
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast(data.message, 'success');
+                displayDomains(data.domains);
+                updatePreview(data.domains);
+            } else {
+                showToast('Error saving settings', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error saving settings', 'error');
+        });
+    });
+    
+    // Clear all domains
+    clearBtn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear all domains?')) {
+            domainsTextarea.value = '';
+            displayDomains([]);
+            updatePreview([]);
+        }
+    });
+    
+    // Load common domains
+    loadCommonBtn.addEventListener('click', function() {
+        const currentDomains = domainsTextarea.value.trim();
+        const newDomains = currentDomains ? currentDomains + ', ' + commonDomains.join(', ') : commonDomains.join(', ');
+        domainsTextarea.value = newDomains;
+        updatePreview(newDomains.split(', '));
+    });
+    
+    // Display current domains
+    function displayDomains(domains) {
+        if (domains.length > 0) {
+            domainsDisplay.innerHTML = domains
+                .map(domain => `<span class="badge bg-secondary">${domain}</span>`)
+                .join('');
+            domainCount.textContent = domains.length;
+            currentDomainsCard.style.display = 'block';
+        } else {
+            currentDomainsCard.style.display = 'none';
+        }
+    }
+    
+    // Update preview message
+    function updatePreview(domains) {
+        if (domains.length === 0) {
+            previewMessage.textContent = 'Remember to avoid distracting sites during your focus session';
+        } else {
+            const randomDomains = domains.sort(() => 0.5 - Math.random()).slice(0, 3);
+            let message = `Stay focused! Avoid: ${randomDomains.join(', ')}`;
+            if (domains.length > 3) {
+                message += ` (+${domains.length - 3} more)`;
+            }
+            previewMessage.textContent = message;
+        }
+    }
+    
+    // Initialize display
+    const initialDomains = domainsTextarea.value.split(',').map(d => d.trim()).filter(d => d.length > 0);
+    displayDomains(initialDomains);
+    updatePreview(initialDomains);
+    
+    // Update preview as user types
+    domainsTextarea.addEventListener('input', function() {
+        const domains = this.value.split(/[,\n]/).map(d => d.trim()).filter(d => d.length > 0);
+        updatePreview(domains);
+    });
+});
+
+// Toast notification function
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

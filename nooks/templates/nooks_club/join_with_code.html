@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Join with Invitation Code{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-key"></i> Join Partner Club
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Enter your invitation code to join a partner book club and unlock special benefits!
+                    </p>
+                    
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        
+                        <div class="form-group mb-3">
+                            <label for="invitation_code" class="form-label">
+                                <i class="fas fa-ticket-alt"></i> Invitation Code
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="invitation_code" 
+                                   name="invitation_code" 
+                                   placeholder="Enter your invitation code"
+                                   required
+                                   style="letter-spacing: 2px; text-transform: uppercase;">
+                            <small class="form-text text-muted">
+                                The invitation code should be provided by your book club organizer.
+                            </small>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-star"></i> Premium Trial Benefits</h6>
+                            <ul class="mb-0">
+                                <li>Priority reward cash-outs (no minimum threshold)</li>
+                                <li>Immediate processing of reward requests</li>
+                                <li>Access to exclusive partner club features</li>
+                                <li>Direct feedback channel to NooksBridge team</li>
+                            </ul>
+                            <small class="text-muted">
+                                <em>Available for the first 50 members of each partner club</em>
+                            </small>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt"></i> Join Club
+                            </button>
+                            <a href="{{ url_for('nooks_club.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Clubs
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6><i class="fas fa-question-circle"></i> Don't have an invitation code?</h6>
+                    <p class="text-muted mb-2">
+                        Invitation codes are provided by partner book clubs and organizations. 
+                        Contact your book club organizer or check with your local library or reading group.
+                    </p>
+                    <a href="{{ url_for('nooks_club.index') }}" class="btn btn-sm btn-outline-primary">
+                        Browse Public Clubs Instead
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('invitation_code').addEventListener('input', function(e) {
+    // Auto-uppercase and format the invitation code
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+});
+</script>
+{% endblock %}

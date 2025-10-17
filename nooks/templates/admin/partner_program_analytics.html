@@ -1,0 +1,234 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Partner Program Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Partner Program Analytics</h2>
+            
+            <!-- Key Metrics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Partner Clubs</h5>
+                            <h3>{{ analytics.total_partner_clubs }}</h3>
+                            <small>Total partner clubs</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Active Trials</h5>
+                            <h3>{{ analytics.active_trial_users }}</h3>
+                            <small>Users on premium trial</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Members</h5>
+                            <h3>{{ analytics.total_partner_members }}</h3>
+                            <small>Across all partner clubs</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">Feedback Rate</h5>
+                            <h3>{{ analytics.feedback_submission_rate }}%</h3>
+                            <small>Trial users submitting feedback</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Trial User Engagement</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="engagementChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Partner Club Growth</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="growthChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Tables -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Top Performing Partner Clubs</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Club Name</th>
+                                            <th>Members</th>
+                                            <th>Active Trials</th>
+                                            <th>Engagement</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for club in analytics.top_clubs %}
+                                        <tr>
+                                            <td>{{ club.name }}</td>
+                                            <td>{{ club.member_count }}</td>
+                                            <td>{{ club.active_trials }}</td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar" role="progressbar" 
+                                                         style="width: {{ club.engagement_rate }}%">
+                                                        {{ club.engagement_rate }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Recent Feedback Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Count</th>
+                                            <th>Avg Rating</th>
+                                            <th>Latest</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for feedback in analytics.feedback_summary %}
+                                        <tr>
+                                            <td>{{ feedback.category }}</td>
+                                            <td>{{ feedback.count }}</td>
+                                            <td>
+                                                {% for i in range(feedback.avg_rating) %}
+                                                    <i class="fas fa-star text-warning"></i>
+                                                {% endfor %}
+                                            </td>
+                                            <td>{{ feedback.latest_date.strftime('%m/%d') }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Options -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Export Data</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('admin.export_partner_data', format='csv') }}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-file-csv"></i> Export CSV
+                                </a>
+                                <a href="{{ url_for('admin.export_partner_data', format='excel') }}" 
+                                   class="btn btn-outline-success">
+                                    <i class="fas fa-file-excel"></i> Export Excel
+                                </a>
+                                <button class="btn btn-outline-info" onclick="generateReport()">
+                                    <i class="fas fa-file-pdf"></i> Generate Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Engagement Chart
+const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+new Chart(engagementCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Active', 'Inactive', 'Expired'],
+        datasets: [{
+            data: [{{ analytics.active_trial_users }}, {{ analytics.inactive_trial_users }}, {{ analytics.expired_trial_users }}],
+            backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Growth Chart
+const growthCtx = document.getElementById('growthChart').getContext('2d');
+new Chart(growthCtx, {
+    type: 'line',
+    data: {
+        labels: {{ analytics.growth_labels | tojsonfilter }},
+        datasets: [{
+            label: 'New Members',
+            data: {{ analytics.growth_data | tojsonfilter }},
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+function generateReport() {
+    // This would trigger a PDF report generation
+    alert('Report generation feature coming soon!');
+}
+</script>
+{% endblock %}

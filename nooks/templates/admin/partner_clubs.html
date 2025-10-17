@@ -1,0 +1,167 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Partner Clubs - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Partner Clubs Management</h1>
+                <a href="{{ url_for('admin.create_partner_club') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create Partner Club
+                </a>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.total_partner_clubs }}</h4>
+                                    <p class="mb-0">Partner Clubs</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.total_partner_members }}</h4>
+                                    <p class="mb-0">Total Members</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-user-friends fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.active_premium_trials }}</h4>
+                                    <p class="mb-0">Premium Trials</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-star fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.pending_feedback }}</h4>
+                                    <p class="mb-0">Pending Feedback</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-comment fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Partner Clubs Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Partner Clubs</h5>
+                </div>
+                <div class="card-body">
+                    {% if partner_clubs %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Club Name</th>
+                                    <th>Partner Organization</th>
+                                    <th>Members</th>
+                                    <th>Trial Users</th>
+                                    <th>Invitation Code</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for club in partner_clubs %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ club.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ club.description[:50] }}{% if club.description|length > 50 %}...{% endif %}</small>
+                                    </td>
+                                    <td>{{ club.partner_organization_name }}</td>
+                                    <td>
+                                        <span class="badge badge-primary">{{ club.member_count }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-warning">{{ club.trial_users_count }}</span>
+                                    </td>
+                                    <td>
+                                        <code>{{ club.invitation_code }}</code>
+                                    </td>
+                                    <td>{{ club.created_at.strftime('%Y-%m-%d') if club.created_at else 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin.partner_club_detail', club_id=club._id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5>No Partner Clubs</h5>
+                        <p class="text-muted">Create your first partner club to get started.</p>
+                        <a href="{{ url_for('admin.create_partner_club') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Create Partner Club
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Quick Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <a href="{{ url_for('admin.premium_trial_users') }}" class="btn btn-outline-primary btn-block mb-2">
+                                <i class="fas fa-star"></i> Manage Premium Trial Users
+                            </a>
+                            <a href="{{ url_for('admin.feedback_management') }}" class="btn btn-outline-info btn-block mb-2">
+                                <i class="fas fa-comment"></i> Review Feedback
+                            </a>
+                            <a href="{{ url_for('admin.partner_program_analytics') }}" class="btn btn-outline-success btn-block">
+                                <i class="fas fa-chart-bar"></i> View Analytics
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

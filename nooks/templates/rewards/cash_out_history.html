@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Cash-Out History{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Cash-Out Request History</h2>
+                <a href="{{ url_for('rewards.cash_out') }}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> New Cash-Out Request
+                </a>
+            </div>
+
+            {% if requests %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Status</th>
+                                    <th>Processed</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in requests %}
+                                <tr>
+                                    <td>
+                                        <div>{{ request.created_at.strftime('%b %d, %Y') }}</div>
+                                        <small class="text-muted">{{ request.created_at.strftime('%I:%M %p') }}</small>
+                                    </td>
+                                    <td>
+                                        <strong>{{ request.requested_amount }} points</strong>
+                                        <br>
+                                        <small class="text-muted">₦{{ "%.2f"|format(request.requested_amount * 0.1) }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-light">{{ request.payment_method.replace('_', ' ').title() }}</span>
+                                        {% if request.is_premium_trial %}
+                                        <br><span class="badge badge-success badge-sm">Premium Trial</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if request.status == 'pending' %}
+                                            <span class="badge badge-warning">Pending</span>
+                                        {% elif request.status == 'approved' %}
+                                            <span class="badge badge-success">Approved</span>
+                                        {% elif request.status == 'completed' %}
+                                            <span class="badge badge-primary">Completed</span>
+                                        {% elif request.status == 'rejected' %}
+                                            <span class="badge badge-danger">Rejected</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">{{ request.status.title() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if request.processed_at %}
+                                            <div>{{ request.processed_at.strftime('%b %d, %Y') }}</div>
+                                            <small class="text-muted">{{ request.processed_at.strftime('%I:%M %p') }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Not processed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info" 
+                                                data-toggle="modal" 
+                                                data-target="#requestModal{{ loop.index }}">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request Detail Modals -->
+            {% for request in requests %}
+            <div class="modal fade" id="requestModal{{ loop.index }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                Cash-Out Request Details
+                                {% if request.is_premium_trial %}
+                                <span class="badge badge-success ml-2">Premium Trial</span>
+                                {% endif %}
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal">
+                                <span>&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Request Information</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Request ID:</strong></td>
+                                            <td>{{ request._id }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Date Submitted:</strong></td>
+                                            <td>{{ request.created_at.strftime('%B %d, %Y at %I:%M %p') }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Amount:</strong></td>
+                                            <td>{{ request.requested_amount }} points (₦{{ "%.2f"|format(request.requested_amount * 0.1) }})</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Status:</strong></td>
+                                            <td>
+                                                {% if request.status == 'pending' %}
+                                                    <span class="badge badge-warning">Pending</span>
+                                                {% elif request.status == 'approved' %}
+                                                    <span class="badge badge-success">Approved</span>
+                                                {% elif request.status == 'completed' %}
+                                                    <span class="badge badge-primary">Completed</span>
+                                                {% elif request.status == 'rejected' %}
+                                                    <span class="badge badge-danger">Rejected</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Payment Information</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Method:</strong></td>
+                                            <td>{{ request.payment_method.replace('_', ' ').title() }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Details:</strong></td>
+                                            <td>
+                                                <div style="white-space: pre-line; font-size: 0.9em;">{{ request.payment_details }}</div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            {% if request.processed_at %}
+                            <hr>
+                            <div class="row">
+                                <div class="col-12">
+                                    <h6>Processing Information</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Processed Date:</strong></td>
+                                            <td>{{ request.processed_at.strftime('%B %d, %Y at %I:%M %p') }}</td>
+                                        </tr>
+                                        {% if request.processed_by %}
+                                        <tr>
+                                            <td><strong>Processed By:</strong></td>
+                                            <td>{{ request.processed_by }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        {% if request.notes %}
+                                        <tr>
+                                            <td><strong>Notes:</strong></td>
+                                            <td>{{ request.notes }}</td>
+                                        </tr>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
+                    <h5>No Cash-Out Requests Yet</h5>
+                    <p class="text-muted">You haven't made any cash-out requests. Start earning points and cash them out when you're ready!</p>
+                    <a href="{{ url_for('rewards.cash_out') }}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Make Your First Cash-Out Request
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Rewards
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

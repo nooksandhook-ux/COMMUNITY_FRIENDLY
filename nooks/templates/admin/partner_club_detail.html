@@ -1,0 +1,228 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ club.name }} - Partner Club Detail{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">{{ club.name }}</h1>
+                <a href="{{ url_for('admin.partner_clubs') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Partner Clubs
+                </a>
+            </div>
+
+            <!-- Club Information -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Club Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Partner Organization:</strong> {{ stats.partner_organization }}</p>
+                                    <p><strong>Description:</strong> {{ club.description or 'No description' }}</p>
+                                    <p><strong>Topic:</strong> {{ club.topic or 'General' }}</p>
+                                    <p><strong>Genre:</strong> {{ club.genre or 'General' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Language:</strong> {{ club.language or 'English' }}</p>
+                                    <p><strong>Created:</strong> {{ stats.created_at.strftime('%Y-%m-%d %H:%M') if stats.created_at else 'N/A' }}</p>
+                                    <p><strong>Status:</strong> 
+                                        <span class="badge badge-success">Active</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Statistics</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <h4 class="text-primary">{{ stats.total_members }}</h4>
+                                    <small>Total Members</small>
+                                </div>
+                                <div class="col-6">
+                                    <h4 class="text-warning">{{ stats.premium_trial_members }}</h4>
+                                    <small>Premium Trials</small>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="text-center">
+                                <h4 class="text-info">{{ stats.feedback_submissions }}</h4>
+                                <small>Feedback Submissions</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invitation Code Management -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Invitation Code Management</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <p class="mb-0"><strong>Current Invitation Code:</strong></p>
+                                    <code class="h4">{{ stats.invitation_code or 'No code generated' }}</code>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    {% if stats.invitation_code %}
+                                    <form method="POST" action="{{ url_for('admin.regenerate_invitation_code', club_id=club._id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-warning" onclick="return confirm('Generate a new invitation code? The old code will no longer work.')">
+                                            <i class="fas fa-sync"></i> Regenerate Code
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('admin.revoke_invitation_code', club_id=club._id) }}" class="d-inline ml-2">
+                                        <button type="submit" class="btn btn-danger" onclick="return confirm('Revoke the invitation code? No new members will be able to join.')">
+                                            <i class="fas fa-ban"></i> Revoke Code
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Members List -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Club Members ({{ members|length }})</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if members %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th>Premium Trial</th>
+                                            <th>Trial Start Date</th>
+                                            <th>Joined</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for member in members %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ member.username }}</strong>
+                                            </td>
+                                            <td>{{ member.email }}</td>
+                                            <td>
+                                                {% if member.is_premium_trial %}
+                                                    <span class="badge badge-warning">Active Trial</span>
+                                                {% else %}
+                                                    <span class="badge badge-secondary">No Trial</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if member.premium_trial_start_date %}
+                                                    {{ member.premium_trial_start_date.strftime('%Y-%m-%d') }}
+                                                {% else %}
+                                                    N/A
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ member.joined_at.strftime('%Y-%m-%d') if member.joined_at else 'N/A' }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5>No Members Yet</h5>
+                                <p class="text-muted">Share the invitation code to get members to join this partner club.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Feedback -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Recent Feedback from Club Members</h5>
+                            <a href="{{ url_for('admin.feedback_management') }}" class="btn btn-sm btn-outline-primary">
+                                View All Feedback
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if feedback %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Category</th>
+                                            <th>Feedback</th>
+                                            <th>Status</th>
+                                            <th>Submitted</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for fb in feedback[:10] %}
+                                        <tr>
+                                            <td>
+                                                {% if fb.user %}
+                                                    {{ fb.user[0].username }}
+                                                {% else %}
+                                                    Unknown User
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-info">{{ fb.category }}</span>
+                                            </td>
+                                            <td>
+                                                {{ fb.feedback_text[:100] }}{% if fb.feedback_text|length > 100 %}...{% endif %}
+                                            </td>
+                                            <td>
+                                                {% if fb.status == 'pending' %}
+                                                    <span class="badge badge-warning">Pending</span>
+                                                {% elif fb.status == 'reviewed' %}
+                                                    <span class="badge badge-info">Reviewed</span>
+                                                {% elif fb.status == 'resolved' %}
+                                                    <span class="badge badge-success">Resolved</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ fb.submitted_at.strftime('%Y-%m-%d') if fb.submitted_at else 'N/A' }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-comment fa-3x text-muted mb-3"></i>
+                                <h5>No Feedback Yet</h5>
+                                <p class="text-muted">Premium trial members will be able to submit feedback about their experience.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

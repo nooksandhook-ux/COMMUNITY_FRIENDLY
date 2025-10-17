@@ -127,7 +127,19 @@
                                         </span>
                                     </td>
                                     <td>{{ task.productivity_rating | default(3) }}/5</td>
-                                    <td>{{ task.mood | default('😊') }}</td>
+                                    <td>
+                                        {% if task.mood == 'happy' or not task.mood %}
+                                            <i class="fas fa-smile text-success" title="Happy"></i>
+                                        {% elif task.mood == 'cool' %}
+                                            <i class="fas fa-sunglasses text-primary" title="Cool"></i>
+                                        {% elif task.mood == 'thinking' %}
+                                            <i class="fas fa-brain text-info" title="Thinking"></i>
+                                        {% elif task.mood == 'tired' %}
+                                            <i class="fas fa-bed text-warning" title="Tired"></i>
+                                        {% else %}
+                                            {{ task.mood }}
+                                        {% endif %}
+                                    </td>
                                     <td>{{ task.notes | default('-') }}</td>
                                 </tr>
                             {% endfor %}

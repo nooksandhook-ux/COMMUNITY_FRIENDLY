@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Premium Trial Feedback{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-star"></i> Premium Trial Feedback
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Your Voice Matters!</h6>
+                        <p class="mb-0">
+                            As a Premium Trial member, your feedback directly influences the development of NOOKS. 
+                            Please share your detailed weekly feedback to help us improve the platform for everyone.
+                        </p>
+                    </div>
+                    
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        
+                        <div class="form-group mb-3">
+                            <label for="category" class="form-label">
+                                <i class="fas fa-tags"></i> Feedback Category
+                            </label>
+                            <select class="form-control" id="category" name="category" required>
+                                <option value="">Select a category</option>
+                                <option value="user_experience">User Experience</option>
+                                <option value="features">Features & Functionality</option>
+                                <option value="performance">Performance & Speed</option>
+                                <option value="book_clubs">Book Clubs Experience</option>
+                                <option value="rewards_system">Rewards System</option>
+                                <option value="mobile_experience">Mobile Experience</option>
+                                <option value="suggestions">Feature Suggestions</option>
+                                <option value="bugs">Bug Reports</option>
+                                <option value="general">General Feedback</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-4">
+                            <label for="feedback_text" class="form-label">
+                                <i class="fas fa-comment-alt"></i> Your Detailed Feedback
+                            </label>
+                            <textarea class="form-control" 
+                                      id="feedback_text" 
+                                      name="feedback_text" 
+                                      rows="8" 
+                                      placeholder="Please provide detailed feedback about your experience with NOOKS. What's working well? What could be improved? Any specific suggestions?"
+                                      required></textarea>
+                            <small class="form-text text-muted">
+                                The more detailed your feedback, the better we can improve the platform.
+                            </small>
+                        </div>
+                        
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-lightbulb"></i> Feedback Guidelines
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="mb-0">
+                                    <li><strong>Be Specific:</strong> Describe exactly what you experienced</li>
+                                    <li><strong>Include Context:</strong> When did this happen? What were you trying to do?</li>
+                                    <li><strong>Suggest Solutions:</strong> If you see a problem, how would you fix it?</li>
+                                    <li><strong>Rate Features:</strong> What features do you love? What needs work?</li>
+                                    <li><strong>Compare:</strong> How does NOOKS compare to other platforms you've used?</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-paper-plane"></i> Submit Feedback
+                            </button>
+                            <a href="{{ url_for('nooks_club.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Clubs
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6><i class="fas fa-gift"></i> Premium Trial Benefits Reminder</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success"></i> Priority reward cash-outs</li>
+                                <li><i class="fas fa-check text-success"></i> No minimum threshold</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success"></i> Immediate processing</li>
+                                <li><i class="fas fa-check text-success"></i> Direct feedback channel</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        Your trial status and feedback help us improve NOOKS for all users.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('feedback_text').addEventListener('input', function(e) {
+    const wordCount = e.target.value.trim().split(/\s+/).length;
+    const charCount = e.target.value.length;
+    
+    // Update character count display
+    let countDisplay = document.getElementById('char-count');
+    if (!countDisplay) {
+        countDisplay = document.createElement('small');
+        countDisplay.id = 'char-count';
+        countDisplay.className = 'form-text text-muted';
+        e.target.parentNode.appendChild(countDisplay);
+    }
+    
+    countDisplay.textContent = `${charCount} characters, ${wordCount} words`;
+});
+</script>
+{% endblock %}

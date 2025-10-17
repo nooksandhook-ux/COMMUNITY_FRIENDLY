@@ -2,10 +2,28 @@
 
 {% block title %}Timer - Hook{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hook-enhancements.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-lg-8">
+            <!-- Focus Lock Reminder Widget (shown only when timer is active) -->
+            <div id="focus-lock-widget" class="alert alert-warning border-0 shadow-sm mb-3" style="display: none;">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-lock-fill text-warning me-2 fs-4"></i>
+                    <div class="flex-grow-1">
+                        <strong>STAY FOCUSED</strong>
+                        <div id="focus-lock-message" class="small mt-1">
+                            Remember to avoid distracting sites during your focus session
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-sm ms-2" id="dismiss-focus-lock" title="Dismiss for 5 minutes"></button>
+                </div>
+            </div>
+
             <!-- Timer Display -->
             <div class="card shadow-lg border-0 timer-theme-{{ theme or 'light' }}">
                 <div class="card-body text-center p-5">
@@ -75,6 +93,7 @@
                                     <option value="general">General</option>
                                     <option value="work">Work</option>
                                     <option value="study">Study</option>
+                                    <option value="reading">Reading</option>
                                     <option value="creative">Creative</option>
                                     <option value="exercise">Exercise</option>
                                     <option value="personal">Personal</option>
@@ -93,9 +112,82 @@
                                         Long Break
                                     </button>
                                 </div>
+                                <button type="button" class="btn btn-outline-info w-100 mt-2" id="reading-session-btn">
+                                    <i class="bi bi-book me-1"></i>Reading Session
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Hook-Nook Integration -->
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_reading_session" name="is_reading_session">
+                                    <label class="form-check-label" for="is_reading_session">
+                                        <i class="bi bi-book text-info me-1"></i>
+                                        <strong>Link to a book</strong> (earn bonus points for focused reading)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="book-selection" class="row" style="display: none;">
+                            <div class="col-12 mb-3">
+                                <label for="linked_book_id" class="form-label">Select Book</label>
+                                <select class="form-select" id="linked_book_id" name="linked_book_id">
+                                    <option value="">Choose a book...</option>
+                                </select>
+                                <div class="form-text">
+                                    <i class="bi bi-lightbulb text-warning me-1"></i>
+                                    Linking to a book gives you <strong>bonus points</strong> and tracks your reading progress!
+                                </div>
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+
+            <!-- Focus Lock Settings -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lock-fill text-warning me-2"></i>Focus Lock
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#focus-lock-settings" aria-expanded="false">
+                        <i class="bi bi-gear"></i> Settings
+                    </button>
+                </div>
+                <div class="collapse" id="focus-lock-settings">
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">
+                            Add distracting websites to get gentle reminders during focus sessions. 
+                            This is a visual reminder only - no blocking is performed.
+                        </p>
+                        
+                        <div class="mb-3">
+                            <label for="distraction-domains" class="form-label">Distracting Sites</label>
+                            <textarea class="form-control" id="distraction-domains" rows="3" 
+                                      placeholder="Enter domains separated by commas (e.g., twitter.com, reddit.com, youtube.com)"></textarea>
+                            <div class="form-text">
+                                Enter up to 20 domains. Don't include http:// or www.
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-success btn-sm" id="save-distraction-list">
+                                <i class="bi bi-check"></i> Save List
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="load-distraction-list">
+                                <i class="bi bi-arrow-clockwise"></i> Load Current List
+                            </button>
+                        </div>
+                        
+                        <div id="current-domains" class="mt-3" style="display: none;">
+                            <small class="text-muted">Current domains:</small>
+                            <div id="domains-list" class="mt-1"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -112,6 +204,29 @@
                             <h4>Great job!</h4>
                             <p>You completed your focus session.</p>
                             
+                            <!-- Reading Progress (shown only for reading sessions) -->
+                            <div id="reading-progress-section" style="display: none;">
+                                <div class="alert alert-info mb-3">
+                                    <i class="bi bi-book text-info me-2"></i>
+                                    <strong id="linked-book-title">Reading Session</strong>
+                                    <div class="small mt-1">Update your reading progress to earn bonus points!</div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="pages_read" class="form-label">Pages Read</label>
+                                        <input type="number" class="form-control" id="pages_read" name="pages_read" min="0" value="0">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="current_page" class="form-label">Current Page</label>
+                                        <input type="number" class="form-control" id="current_page" name="current_page" min="0" value="0">
+                                        <div class="form-text">
+                                            <small id="page-progress-text">Progress: 0%</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="mb-3">
                                 <label class="form-label">How are you feeling?</label>
                                 <div class="btn-group" role="group">
@@ -127,6 +242,17 @@
                                     <input type="radio" class="btn-check" name="mood" id="mood4" value="😴">
                                     <label class="btn btn-outline-primary" for="mood4">😴</label>
                                 </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="productivity_rating" class="form-label">Productivity Rating</label>
+                                <select class="form-select" id="productivity_rating" name="productivity_rating">
+                                    <option value="1">1 - Poor</option>
+                                    <option value="2">2 - Below Average</option>
+                                    <option value="3" selected>3 - Average</option>
+                                    <option value="4">4 - Good</option>
+                                    <option value="5">5 - Excellent</option>
+                                </select>
                             </div>
                         </div>
                         <div class="modal-footer">

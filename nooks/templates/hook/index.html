@@ -2,7 +2,12 @@
 
 {% block title %}Hook - Productivity Timer{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hook-enhancements.css') }}">
+{% endblock %}
+
 {% block content %}
+<meta name="csrf-token" content="{{ csrf_token() }}"> 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="text-info">
         <i class="bi bi-stopwatch me-2"></i>Hook - Productivity Timer
@@ -70,40 +75,171 @@
 </div>
 {% endif %}
 
-<!-- Quick Start -->
+<!-- Quick Settings & Theme Control -->
 <div class="row mb-4">
-    <div class="col-12">
+    <div class="col-md-8">
         <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Quick Start</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Quick Timer Presets</h5>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-outline-secondary" id="theme-toggle" title="Theme Settings">
+                        <i class="bi bi-palette"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="sound-toggle" title="Ambient Sounds">
+                        <i class="bi bi-volume-up"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body">
-                <div class="row g-3">
+                <!-- Default Presets -->
+                <div class="row g-2 mb-3">
                     <div class="col-md-3">
-                        <a href="{{ url_for('hook.timer') }}?preset=pomodoro" class="btn btn-outline-danger w-100">
-                            <i class="bi bi-clock me-2"></i>Pomodoro<br>
-                            <small>25 min</small>
-                        </a>
+                        <button class="btn btn-outline-danger w-100 preset-btn" data-preset="Pomodoro">
+                            <i class="bi bi-clock me-1"></i>Pomodoro<br>
+                            <small>25 min work</small>
+                        </button>
                     </div>
                     <div class="col-md-3">
-                        <a href="{{ url_for('hook.timer') }}?preset=short" class="btn btn-outline-warning w-100">
-                            <i class="bi bi-clock me-2"></i>Short Break<br>
-                            <small>5 min</small>
-                        </a>
+                        <button class="btn btn-outline-warning w-100 preset-btn" data-preset="Short Break">
+                            <i class="bi bi-cup-hot me-1"></i>Short Break<br>
+                            <small>5 min break</small>
+                        </button>
                     </div>
                     <div class="col-md-3">
-                        <a href="{{ url_for('hook.timer') }}?preset=long" class="btn btn-outline-success w-100">
-                            <i class="bi bi-clock me-2"></i>Long Break<br>
-                            <small>15 min</small>
-                        </a>
+                        <button class="btn btn-outline-success w-100 preset-btn" data-preset="Long Break">
+                            <i class="bi bi-tree me-1"></i>Long Break<br>
+                            <small>15 min break</small>
+                        </button>
                     </div>
                     <div class="col-md-3">
-                        <a href="{{ url_for('hook.timer') }}?preset=custom" class="btn btn-outline-info w-100">
-                            <i class="bi bi-gear me-2"></i>Custom<br>
-                            <small>Your choice</small>
-                        </a>
+                        <button class="btn btn-outline-primary w-100 preset-btn" data-preset="Deep Work">
+                            <i class="bi bi-lightning me-1"></i>Deep Work<br>
+                            <small>90 min focus</small>
+                        </button>
                     </div>
                 </div>
+                
+                <!-- Custom Presets (if any) -->
+                <div id="custom-presets" class="row g-2" style="display: none;">
+                    <div class="col-12">
+                        <hr>
+                        <h6 class="text-muted">Your Custom Presets</h6>
+                    </div>
+                </div>
+                
+                <!-- Add Custom Preset Button -->
+                <div class="text-center mt-3">
+                    <button class="btn btn-outline-info btn-sm" id="add-preset-btn">
+                        <i class="bi bi-plus-circle me-1"></i>Create Custom Preset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body text-center">
+                <a href="{{ url_for('hook.timer') }}" class="btn btn-info w-100 mb-2">
+                    <i class="bi bi-play-circle me-2"></i>Start Custom Timer
+                </a>
+                <a href="{{ url_for('hook.analytics') }}" class="btn btn-outline-secondary w-100 mb-2">
+                    <i class="bi bi-graph-up me-2"></i>View Analytics
+                </a>
+                <a href="{{ url_for('hook.history') }}" class="btn btn-outline-secondary w-100 mb-2">
+                    <i class="bi bi-clock-history me-2"></i>Session History
+                </a>
+                <a href="{{ url_for('hook.focus_lock_settings') }}" class="btn btn-outline-warning w-100">
+                    <i class="bi bi-lock-fill me-2"></i>Focus Lock Settings
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Theme Settings Popover (Hidden by default) -->
+<div id="theme-settings" class="card position-absolute" style="display: none; z-index: 1000; top: 200px; right: 20px; width: 300px;">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">Theme Settings</h6>
+        <button class="btn-close" id="close-theme-settings"></button>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <label class="form-label">Theme</label>
+            <select class="form-select" id="theme-selector">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="retro">Retro</option>
+                <option value="neon">Neon</option>
+                <option value="anime">Anime</option>
+                <option value="forest">Forest</option>
+                <option value="ocean">Ocean</option>
+            </select>
+        </div>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="sync-global-theme">
+            <label class="form-check-label" for="sync-global-theme">
+                Sync with global theme
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="ambient-sounds">
+            <label class="form-check-label" for="ambient-sounds">
+                Enable ambient sounds
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Preset Modal -->
+<div class="modal fade" id="presetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Custom Preset</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="preset-form">
+                    <div class="mb-3">
+                        <label for="preset-name" class="form-label">Preset Name</label>
+                        <input type="text" class="form-control" id="preset-name" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="preset-duration" class="form-label">Focus Duration (min)</label>
+                            <input type="number" class="form-control" id="preset-duration" min="1" max="120" value="25" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="preset-break" class="form-label">Break Duration (min)</label>
+                            <input type="number" class="form-control" id="preset-break" min="1" max="30" value="5">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="preset-category" class="form-label">Category</label>
+                            <select class="form-select" id="preset-category">
+                                <option value="general">General</option>
+                                <option value="work">Work</option>
+                                <option value="study">Study</option>
+                                <option value="creative">Creative</option>
+                                <option value="exercise">Exercise</option>
+                                <option value="personal">Personal</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="preset-cycles" class="form-label">Cycles</label>
+                            <input type="number" class="form-control" id="preset-cycles" min="1" max="10" value="1">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-preset">Save Preset</button>
             </div>
         </div>
     </div>
@@ -156,4 +292,335 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Theme settings toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeSettings = document.getElementById('theme-settings');
+    const closeThemeSettings = document.getElementById('close-theme-settings');
+    const themeSelector = document.getElementById('theme-selector');
+    const syncGlobalTheme = document.getElementById('sync-global-theme');
+    const ambientSounds = document.getElementById('ambient-sounds');
+    
+    // Sound toggle
+    const soundToggle = document.getElementById('sound-toggle');
+    
+    // Preset management
+    const addPresetBtn = document.getElementById('add-preset-btn');
+    const presetModal = new bootstrap.Modal(document.getElementById('presetModal'));
+    const savePresetBtn = document.getElementById('save-preset');
+    
+    // Initialize current settings
+    initializeSettings();
+    
+    // Theme toggle functionality
+    themeToggle.addEventListener('click', function() {
+        themeSettings.style.display = themeSettings.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    closeThemeSettings.addEventListener('click', function() {
+        themeSettings.style.display = 'none';
+    });
+    
+    // Theme change handler
+    themeSelector.addEventListener('change', function() {
+        updateTheme();
+    });
+    
+    syncGlobalTheme.addEventListener('change', function() {
+        updateTheme();
+    });
+    
+    // Ambient sounds toggle
+    ambientSounds.addEventListener('change', function() {
+        toggleAmbientSounds();
+    });
+    
+    soundToggle.addEventListener('click', function() {
+        ambientSounds.checked = !ambientSounds.checked;
+        toggleAmbientSounds();
+    });
+    
+    // Preset management
+    addPresetBtn.addEventListener('click', function() {
+        presetModal.show();
+    });
+    
+    savePresetBtn.addEventListener('click', function() {
+        saveCustomPreset();
+    });
+    
+    // Preset buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('preset-btn') || e.target.closest('.preset-btn')) {
+            const btn = e.target.classList.contains('preset-btn') ? e.target : e.target.closest('.preset-btn');
+            const presetName = btn.dataset.preset;
+            startTimerWithPreset(presetName);
+        }
+    });
+    
+    function initializeSettings() {
+        // Load current user preferences
+        fetch('/hook/get_user_preferences')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const prefs = data.preferences;
+                    themeSelector.value = prefs.theme || 'light';
+                    syncGlobalTheme.checked = prefs.sync_global_theme !== false;
+                    ambientSounds.checked = prefs.ambient_sounds === true;
+                    
+                    // Update sound toggle icon
+                    updateSoundToggleIcon();
+                    
+                    // Load custom presets
+                    loadCustomPresets(prefs.timer_presets || []);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading preferences:', error);
+                // Fallback to defaults
+                const currentTheme = document.body.className.match(/theme-(\w+)/)?.[1] || 'light';
+                themeSelector.value = currentTheme;
+                updateSoundToggleIcon();
+            });
+    }
+    
+    function loadCustomPresets(presets) {
+        const customPresetsContainer = document.getElementById('custom-presets');
+        
+        if (presets.length > 0) {
+            customPresetsContainer.style.display = 'block';
+            
+            presets.forEach(preset => {
+                addCustomPresetToUI(preset);
+            });
+        }
+    }
+    
+    function addCustomPresetToUI(preset) {
+        const customPresetsContainer = document.getElementById('custom-presets');
+        customPresetsContainer.style.display = 'block';
+        
+        const presetCol = document.createElement('div');
+        presetCol.className = 'col-md-3 mb-2';
+        
+        presetCol.innerHTML = `
+            <div class="btn-group w-100">
+                <button class="btn btn-outline-info preset-btn" data-preset="${preset.name}">
+                    <i class="bi bi-star me-1"></i>${preset.name}<br>
+                    <small>${preset.duration} min${preset.cycles > 1 ? ` × ${preset.cycles}` : ''}</small>
+                </button>
+                <button class="btn btn-outline-danger btn-sm delete-preset" data-preset="${preset.name}" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `;
+        
+        customPresetsContainer.appendChild(presetCol);
+        
+        // Add delete functionality
+        presetCol.querySelector('.delete-preset').addEventListener('click', function() {
+            deleteCustomPreset(preset.name, presetCol);
+        });
+    }
+    
+    function deleteCustomPreset(presetName, element) {
+        if (!confirm(`Delete preset "${presetName}"?`)) return;
+        
+        // Get the CSRF Token from the meta tag
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        fetch('/hook/delete_preset', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken 
+            },
+            body: JSON.stringify({
+                preset_name: presetName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                element.remove();
+                showToast(data.message, 'success');
+                
+                // Hide custom presets section if empty
+                const remaining = document.querySelectorAll('#custom-presets .col-md-3').length;
+                if (remaining === 0) {
+                    document.getElementById('custom-presets').style.display = 'none';
+                }
+            } else {
+                showToast(data.message || 'Failed to delete preset', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting preset:', error);
+            showToast('Failed to delete preset', 'error');
+        });
+    }
+    
+    function updateTheme() {
+        // Get the CSRF Token from the meta tag
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        const theme = themeSelector.value;
+        const syncGlobal = syncGlobalTheme.checked;
+        
+        fetch('/hook/quick_theme_update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken 
+            },
+            body: JSON.stringify({
+                theme: theme,
+                sync_global: syncGlobal
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Apply theme immediately to body
+                document.body.className = document.body.className.replace(/theme-\w+/g, '');
+                document.body.classList.add(`theme-${theme}`);
+                
+                showToast(data.message, 'success');
+            } else {
+                showToast(data.message || 'Failed to update theme', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating theme:', error);
+            showToast('Failed to update theme', 'error');
+        });
+    }
+    
+    function toggleAmbientSounds() {
+        // Get the CSRF Token from the meta tag
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        const enabled = ambientSounds.checked;
+        
+        fetch('/hook/toggle_ambient_sounds', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken 
+            },
+            body: JSON.stringify({
+                enabled: enabled
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateSoundToggleIcon();
+                showToast(data.message, 'success');
+            } else {
+                showToast(data.message || 'Failed to update sound settings', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating sound settings:', error);
+            showToast('Failed to update sound settings', 'error');
+        });
+    }
+    
+    function updateSoundToggleIcon() {
+        const icon = soundToggle.querySelector('i');
+        if (ambientSounds.checked) {
+            icon.className = 'bi bi-volume-up';
+            soundToggle.classList.add('btn-outline-success');
+            soundToggle.classList.remove('btn-outline-secondary');
+        } else {
+            icon.className = 'bi bi-volume-mute';
+            soundToggle.classList.add('btn-outline-secondary');
+            soundToggle.classList.remove('btn-outline-success');
+        }
+    }
+    
+    function saveCustomPreset() {
+        // Get the CSRF Token from the meta tag
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        const formData = {
+            name: document.getElementById('preset-name').value.trim(),
+            duration: parseInt(document.getElementById('preset-duration').value),
+            break_duration: parseInt(document.getElementById('preset-break').value),
+            category: document.getElementById('preset-category').value,
+            cycles: parseInt(document.getElementById('preset-cycles').value)
+        };
+        
+        if (!formData.name) {
+            showToast('Please enter a preset name', 'error');
+            return;
+        }
+        
+        fetch('/hook/save_preset', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken 
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                presetModal.hide();
+                document.getElementById('preset-form').reset();
+                showToast(data.message, 'success');
+                
+                // Reload page to show new preset
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast(data.message || 'Failed to save preset', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving preset:', error);
+            showToast('Failed to save preset', 'error');
+        });
+    }
+    
+    function startTimerWithPreset(presetName) {
+        // Redirect to timer page with preset
+        window.location.href = `/hook/timer?preset=${encodeURIComponent(presetName)}`;
+    }
+    
+    function showToast(message, type = 'info') {
+        // Create a simple toast notification
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 3000);
+    }
+    
+    // Close theme settings when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!themeSettings.contains(e.target) && !themeToggle.contains(e.target)) {
+            themeSettings.style.display = 'none';
+        }
+    });
+});
+</script>
+
 {% endblock %}

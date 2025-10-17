@@ -42,6 +42,21 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.cash_out_requests' %}active{% endif %}" 
+                           href="{{ url_for('admin.cash_out_requests') }}">
+                            <i class="bi bi-cash-coin"></i> Cash-Out Requests
+                            {% if pending_cash_outs %}
+                            <span class="badge bg-warning ms-2">{{ pending_cash_outs }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.partner_clubs' %}active{% endif %}" 
+                           href="{{ url_for('admin.partner_clubs') }}">
+                            <i class="bi bi-people-fill"></i> Partner Clubs
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.settings') }}">
                             <i class="bi bi-gear"></i> Settings
                         </a>

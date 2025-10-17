@@ -18,6 +18,28 @@
     </div>
 </div>
 
+<!-- Premium Trial Banner -->
+{% if current_user.is_premium_trial %}
+<div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-star fa-2x me-3"></i>
+        <div class="flex-grow-1">
+            <h5 class="alert-heading mb-1">Premium Trial Active!</h5>
+            <p class="mb-2">You're enjoying premium benefits as part of our partner club program. Your feedback helps us improve NOOKS for everyone.</p>
+            <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('nooks_club.submit_feedback') }}" class="btn btn-success">
+                    <i class="fas fa-comment-alt"></i> Submit Weekly Feedback
+                </a>
+                <a href="{{ url_for('rewards.cash_out') }}" class="btn btn-outline-success">
+                    <i class="fas fa-money-bill-wave"></i> Priority Cash-Out
+                </a>
+            </div>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
 <!-- Overview Cards -->
 <div class="row mb-4">
     <div class="col-md-3">

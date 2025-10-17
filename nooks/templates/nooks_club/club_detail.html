@@ -1,98 +1,534 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container">
-  <h2>{{ club_name }}</h2>
-  <nav class="mb-3">
-    <a href="{{ url_for('nooks_club.index') }}" class="btn btn-outline-secondary">Back to Clubs</a>
-    <a href="{{ url_for('nooks_club.club_chat', club_id=club_id) }}" class="btn btn-info">Open {{ club_name }} Chat</a>
-    {% if not is_member %}
-    <form action="{{ url_for('nooks_club.join_club', club_id=club_id) }}" method="post" style="display:inline;">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button type="submit" class="btn btn-success">Join {{ club_name }}</button>
-    </form>
-    {% endif %}
-  </nav>
-  <div class="card mb-3">
-    <div class="card-body">
-      <p class="card-text">{{ club.description or 'No description' }}</p>
-      <p class="card-text"><small class="text-muted">Topic: {{ club.topic or 'None' }}</small></p>
-      <p class="card-text"><small class="text-muted">Created by: {{ creator_username }}</small></p>
+  <!-- Club Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h2 class="mb-1">{{ club_name }}</h2>
+          <div class="d-flex align-items-center">
+            {% if club.is_private %}
+              <span class="badge badge-secondary mr-2"><i class="fas fa-lock"></i> Private</span>
+            {% else %}
+              <span class="badge badge-success mr-2"><i class="fas fa-globe"></i> Public</span>
+            {% endif %}
+            {% if club.activity_level %}
+              {% set activity_class = 'success' if club.activity_level == 'very_active' else 'primary' if club.activity_level == 'moderately_active' else 'info' if club.activity_level == 'active' else 'warning' if club.activity_level == 'new' else 'secondary' %}
+              <span class="badge badge-{{ activity_class }} mr-2">
+                {{ club.activity_level.replace('_', ' ').title() }}
+              </span>
+            {% endif %}
+            <small class="text-muted">{{ club.members|length }} member{{ 's' if club.members|length != 1 else '' }}</small>
+          </div>
+        </div>
+        <div>
+          <a href="{{ url_for('nooks_club.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Clubs
+          </a>
+        </div>
+      </div>
     </div>
   </div>
-  {% if is_member %}
-  <form method="post" action="{{ url_for('nooks_club.create_post', club_id=club_id) }}" class="mb-3">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <textarea name="post" class="form-control mb-2" placeholder="Write a post..."></textarea>
-    <button type="submit" class="btn btn-primary">Post</button>
-  </form>
-  {% endif %}
-  <div id="post-list" class="card-list"></div>
-  {% if is_admin %}
-  <div id="manage-admins" class="mt-3">
-    <h3>Manage Admins</h3>
-    <form id="add-admin-form" class="mb-2">
-      <input type="text" id="admin-user-id" class="form-control mb-2" placeholder="Enter username to promote">
-      <button type="submit" class="btn btn-warning">Promote to Admin</button>
-    </form>
-    <div id="admin-list" class="card-list"></div>
+
+  <!-- Club Info Card -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body">
+          <p class="card-text">{{ club.description or 'No description available.' }}</p>
+          
+          <div class="row mt-3">
+            <div class="col-sm-6">
+              {% if club.topic %}
+                <p class="mb-1"><strong>Topic:</strong> {{ club.topic }}</p>
+              {% endif %}
+              {% if club.genre %}
+                <p class="mb-1"><strong>Genre:</strong> {{ club.genre }}</p>
+              {% endif %}
+              {% if club.language %}
+                <p class="mb-1"><strong>Language:</strong> {{ club.language }}</p>
+              {% endif %}
+            </div>
+            <div class="col-sm-6">
+              <p class="mb-1"><strong>Created by:</strong> {{ creator_username }}</p>
+              <p class="mb-1"><strong>Created:</strong> {{ club.created_at.strftime('%B %d, %Y') if club.created_at else 'Unknown' }}</p>
+              {% if club.last_activity %}
+                <p class="mb-1"><strong>Last Activity:</strong> {{ club.last_activity.strftime('%B %d, %Y') if club.last_activity else 'Unknown' }}</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Action Panel -->
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">Quick Actions</h6>
+        </div>
+        <div class="card-body">
+          {% if is_member %}
+            <a href="{{ url_for('nooks_club.club_chat', club_id=club_id) }}" class="btn btn-info btn-block mb-2">
+              <i class="fas fa-comments"></i> Open Chat
+            </a>
+            {% if is_admin %}
+              <button class="btn btn-warning btn-block mb-2" onclick="showManageModal()">
+                <i class="fas fa-cog"></i> Manage Club
+              </button>
+            {% endif %}
+          {% elif has_requested %}
+            <button class="btn btn-secondary btn-block" disabled>
+              <i class="fas fa-clock"></i> Join Request Sent
+            </button>
+            <small class="text-muted">Your request is pending approval.</small>
+          {% elif club.is_private %}
+            <button class="btn btn-outline-success btn-block" onclick="requestToJoin()">
+              <i class="fas fa-paper-plane"></i> Request to Join
+            </button>
+            <small class="text-muted">This is a private club requiring approval.</small>
+          {% else %}
+            <button class="btn btn-success btn-block" onclick="joinClub()">
+              <i class="fas fa-plus"></i> Join Club
+            </button>
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- Current Book Card -->
+      {% if club.current_book %}
+      <div class="card mt-3">
+        <div class="card-header">
+          <h6 class="mb-0"><i class="fas fa-book-open"></i> Currently Reading</h6>
+        </div>
+        <div class="card-body">
+          <h6 class="card-title">{{ club.current_book.title }}</h6>
+          {% if club.current_book.author %}
+            <p class="card-text"><small class="text-muted">by {{ club.current_book.author }}</small></p>
+          {% endif %}
+          {% if club.current_book.description %}
+            <p class="card-text small">{{ club.current_book.description[:100] }}{% if club.current_book.description|length > 100 %}...{% endif %}</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
   </div>
-  {% endif %}
+
+  <!-- Navigation Tabs -->
+  <ul class="nav nav-tabs mb-3" id="clubTabs" role="tablist">
+    <li class="nav-item">
+      <a class="nav-link active" id="discussions-tab" data-toggle="tab" href="#discussions" role="tab">
+        <i class="fas fa-comments"></i> Discussions
+      </a>
+    </li>
+    {% if is_member %}
+    <li class="nav-item">
+      <a class="nav-link" id="members-tab" data-toggle="tab" href="#members" role="tab">
+        <i class="fas fa-users"></i> Members ({{ club.members|length }})
+      </a>
+    </li>
+    {% endif %}
+    {% if club.reading_schedule %}
+    <li class="nav-item">
+      <a class="nav-link" id="schedule-tab" data-toggle="tab" href="#schedule" role="tab">
+        <i class="fas fa-calendar"></i> Reading Schedule
+      </a>
+    </li>
+    {% endif %}
+    <li class="nav-item">
+      <a class="nav-link" id="books-tab" data-toggle="tab" href="#books" role="tab">
+        <i class="fas fa-book"></i> Books & Reading
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="leaderboard-tab" data-toggle="tab" href="#leaderboard" role="tab">
+        <i class="fas fa-trophy"></i> Leaderboard
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" id="achievements-tab" data-toggle="tab" href="#achievements" role="tab">
+        <i class="fas fa-medal"></i> Achievements
+      </a>
+    </li>
+    {% if club.shared_resources %}
+    <li class="nav-item">
+      <a class="nav-link" id="resources-tab" data-toggle="tab" href="#resources" role="tab">
+        <i class="fas fa-link"></i> Resources
+      </a>
+    </li>
+    {% endif %}
+    <li class="nav-item">
+      <a class="nav-link" id="activity-tab" data-toggle="tab" href="#activity" role="tab">
+        <i class="fas fa-stream"></i> Activity Feed
+      </a>
+    </li>
+    {% if is_admin %}
+    <li class="nav-item">
+      <a class="nav-link" id="admin-tab" data-toggle="tab" href="#admin" role="tab">
+        <i class="fas fa-shield-alt"></i> Admin
+      </a>
+    </li>
+    {% endif %}
+  </ul>
+
+  <!-- Tab Content -->
+  <div class="tab-content" id="clubTabsContent">
+    <!-- Discussions Tab -->
+    <div class="tab-pane fade show active" id="discussions" role="tabpanel">
+      {% if is_member %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <form method="post" action="{{ url_for('nooks_club.create_post', club_id=club_id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="form-group">
+              <textarea name="post" class="form-control" rows="3" placeholder="Share your thoughts, ask questions, or start a discussion..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-paper-plane"></i> Post
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+      
+      <div id="post-list">
+        <div class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p class="mt-2">Loading discussions...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Members Tab -->
+    {% if is_member %}
+    <div class="tab-pane fade" id="members" role="tabpanel">
+      <div class="row">
+        {% for member in member_usernames %}
+        <div class="col-md-6 col-lg-4 mb-3">
+          <div class="card">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                  {{ member.username[0].upper() }}
+                </div>
+                <div>
+                  <h6 class="mb-0">{{ member.username }}</h6>
+                  {% if member.is_admin %}
+                    <small class="text-warning"><i class="fas fa-crown"></i> Admin</small>
+                  {% elif member.id == club.creator_id %}
+                    <small class="text-primary"><i class="fas fa-star"></i> Creator</small>
+                  {% else %}
+                    <small class="text-muted">Member</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Reading Schedule Tab -->
+    {% if club.reading_schedule %}
+    <div class="tab-pane fade" id="schedule" role="tabpanel">
+      {% for goal in club.reading_schedule %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <h6 class="card-title">{{ goal.title }}</h6>
+          <p class="card-text">{{ goal.description }}</p>
+          {% if goal.deadline %}
+            <p class="card-text">
+              <small class="text-muted">
+                <i class="fas fa-calendar"></i> Due: {{ goal.deadline.strftime('%B %d, %Y') }}
+              </small>
+            </p>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Books & Reading Tab -->
+    <div class="tab-pane fade" id="books" role="tabpanel">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="fas fa-book-open"></i> Current Book</h6>
+            </div>
+            <div class="card-body">
+              {% if club.current_book %}
+                <h6>{{ club.current_book.title }}</h6>
+                {% if club.current_book.author %}
+                  <p class="text-muted">by {{ club.current_book.author }}</p>
+                {% endif %}
+                {% if is_member %}
+                  <button class="btn btn-primary btn-sm" onclick="updateReadingProgress()">
+                    <i class="fas fa-chart-line"></i> Update Progress
+                  </button>
+                {% endif %}
+              {% else %}
+                <p class="text-muted">No current book selected</p>
+                {% if is_admin %}
+                  <button class="btn btn-outline-primary btn-sm" onclick="selectCurrentBook()">
+                    <i class="fas fa-plus"></i> Select Book
+                  </button>
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+          
+          {% if is_member %}
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="fas fa-lightbulb"></i> Suggest a Book</h6>
+            </div>
+            <div class="card-body">
+              <form id="book-suggestion-form">
+                <div class="form-group">
+                  <input type="text" class="form-control form-control-sm" placeholder="Book Title" name="title" required>
+                </div>
+                <div class="form-group">
+                  <input type="text" class="form-control form-control-sm" placeholder="Author" name="author">
+                </div>
+                <div class="form-group">
+                  <textarea class="form-control form-control-sm" placeholder="Why suggest this book?" name="reason" rows="2"></textarea>
+                </div>
+                <button type="submit" class="btn btn-success btn-sm">
+                  <i class="fas fa-paper-plane"></i> Suggest
+                </button>
+              </form>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="fas fa-vote-yea"></i> Book Suggestions</h6>
+            </div>
+            <div class="card-body">
+              <div id="book-suggestions">
+                <div class="text-center">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-2 small">Loading suggestions...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {% if is_member %}
+          <div class="card">
+            <div class="card-header">
+              <h6 class="mb-0"><i class="fas fa-chart-line"></i> Reading Progress</h6>
+            </div>
+            <div class="card-body">
+              <div id="reading-progress">
+                <div class="text-center">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-2 small">Loading progress...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard Tab -->
+    <div class="tab-pane fade" id="leaderboard" role="tabpanel">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <select id="leaderboard-period" class="form-control">
+            <option value="all_time">All Time</option>
+            <option value="month">This Month</option>
+            <option value="week">This Week</option>
+          </select>
+        </div>
+      </div>
+      
+      <div id="club-leaderboard">
+        <div class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p class="mt-2">Loading leaderboard...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Achievements Tab -->
+    <div class="tab-pane fade" id="achievements" role="tabpanel">
+      <div id="club-achievements">
+        <div class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p class="mt-2">Loading achievements...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity Feed Tab -->
+    <div class="tab-pane fade" id="activity" role="tabpanel">
+      <div id="activity-feed">
+        <div class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p class="mt-2">Loading activity feed...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resources Tab -->
+    {% if club.shared_resources %}
+    <div class="tab-pane fade" id="resources" role="tabpanel">
+      {% for resource in club.shared_resources %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <h6 class="card-title">
+            <a href="{{ resource.url }}" target="_blank" rel="noopener noreferrer">
+              {{ resource.title }}
+              <i class="fas fa-external-link-alt small"></i>
+            </a>
+          </h6>
+          {% if resource.description %}
+            <p class="card-text">{{ resource.description }}</p>
+          {% endif %}
+          <p class="card-text">
+            <small class="text-muted">
+              Shared by {{ get_username_by_id(resource.added_by) or 'Unknown' }} 
+              on {{ resource.added_at.strftime('%B %d, %Y') if resource.added_at else 'Unknown date' }}
+            </small>
+          </p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Admin Tab -->
+    {% if is_admin %}
+    <div class="tab-pane fade" id="admin" role="tabpanel">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="mb-0">Join Requests</h6>
+            </div>
+            <div class="card-body">
+              <div id="join-requests-list">
+                <div class="text-center">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-2 small">Loading requests...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-header">
+              <h6 class="mb-0">Club Analytics</h6>
+            </div>
+            <div class="card-body">
+              <div id="club-analytics">
+                <div class="text-center">
+                  <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-2 small">Loading analytics...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
 </div>
 {% block extra_scripts %}
-{% if is_member %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.1/purify.min.js"></script>
 <script>
-function setupAdminMenuListeners() {
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.admin-menu-btn');
-    if (btn) {
-      e.stopPropagation();
-      const menu = btn.nextElementSibling;
-      if (menu && menu.classList.contains('admin-menu')) {
-        document.querySelectorAll('.admin-menu.show').forEach(openMenu => {
-          if (openMenu !== menu) {
-            openMenu.classList.remove('show');
-          }
-        });
-        menu.classList.toggle('show');
-      }
-    } else {
-      document.querySelectorAll('.admin-menu.show').forEach(menu => {
-        menu.classList.remove('show');
-      });
-    }
-  });
-}
-
 function loadPosts() {
   fetch('{{ url_for("nooks_club.api_get_club_posts", club_id=club_id) }}')
     .then(response => response.json())
     .then(data => {
       const postList = document.getElementById('post-list');
       postList.innerHTML = '';
-      if (data.posts) {
+      
+      if (data.posts && data.posts.length > 0) {
         data.posts.forEach(post => {
           const card = document.createElement('div');
-          card.className = 'card mb-2 position-relative';
+          card.className = 'card mb-3';
+          
+          const timeAgo = new Date(post.created_at).toLocaleDateString();
+          
           card.innerHTML = `
             <div class="card-body">
-              <p class="card-text">${post.content}</p>
-              <p class="card-text"><small class="text-muted">Posted by: ${post.username}</small></p>
-              {% if is_admin %}
-              <div class="admin-actions">
-                <button class="btn btn-sm btn-outline-secondary admin-menu-btn">...</button>
-                <div class="admin-menu">
-                  <button class="btn btn-danger btn-sm" onclick="deletePost('${post._id}')">Delete</button>
+              <div class="d-flex align-items-start">
+                <div class="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                  ${post.username[0].toUpperCase()}
+                </div>
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">${DOMPurify.sanitize(post.username)}</h6>
+                    <small class="text-muted">${timeAgo}</small>
+                  </div>
+                  <p class="card-text">${DOMPurify.sanitize(post.content)}</p>
+                  {% if is_admin %}
+                  <div class="mt-2">
+                    <button class="btn btn-sm btn-outline-danger" onclick="deletePost('${post._id}')">
+                      <i class="fas fa-trash"></i> Delete
+                    </button>
+                  </div>
+                  {% endif %}
                 </div>
               </div>
-              {% endif %}
             </div>
           `;
           postList.appendChild(card);
         });
+      } else {
+        postList.innerHTML = `
+          <div class="card">
+            <div class="card-body text-center">
+              <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+              <h5>No discussions yet</h5>
+              <p class="text-muted">Be the first to start a conversation!</p>
+            </div>
+          </div>
+        `;
       }
     })
-    .catch(error => console.error('Error fetching posts:', error));
+    .catch(error => {
+      console.error('Error fetching posts:', error);
+      document.getElementById('post-list').innerHTML = `
+        <div class="alert alert-danger">
+          Error loading discussions. Please try again later.
+        </div>
+      `;
+    });
 }
+
 function deletePost(postId) {
   if (confirm('Are you sure you want to delete this post?')) {
     fetch('{{ url_for("nooks_club.api_delete_club_post", club_id=club_id, post_id="") }}' + postId, { 
@@ -102,102 +538,411 @@ function deletePost(postId) {
       .then(response => response.json())
       .then(data => {
         if (data.message) {
-          alert('Post deleted successfully');
-          loadPosts();
+          loadPosts(); // Reload posts
         } else {
           alert(data.error || 'Error deleting post');
         }
       })
-      .catch(error => console.error('Error deleting post:', error));
+      .catch(error => {
+        console.error('Error deleting post:', error);
+        alert('Error deleting post. Please try again.');
+      });
   }
 }
+
+{% if not is_member %}
+function joinClub() {
+  if (confirm('Join "{{ club_name }}"?')) {
+    fetch('{{ url_for("nooks_club.api_join_club", club_id=club_id) }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': '{{ csrf_token }}'
+      },
+      credentials: 'include'
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message) {
+          alert(data.message);
+          location.reload(); // Reload page to update UI
+        } else {
+          alert(data.error || 'Error joining club');
+        }
+      })
+      .catch(error => {
+        console.error('Error joining club:', error);
+        alert('Error joining club. Please try again.');
+      });
+  }
+}
+
+function requestToJoin() {
+  if (confirm('Send join request for "{{ club_name }}"?')) {
+    fetch('{{ url_for("nooks_club.api_join_club", club_id=club_id) }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': '{{ csrf_token }}'
+      },
+      credentials: 'include'
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message) {
+          alert(data.message);
+          location.reload(); // Reload page to update UI
+        } else {
+          alert(data.error || 'Error sending join request');
+        }
+      })
+      .catch(error => {
+        console.error('Error sending join request:', error);
+        alert('Error sending join request. Please try again.');
+      });
+  }
+}
+{% endif %}
+
 {% if is_admin %}
-function loadAdmins() {
-  fetch('{{ url_for("nooks_club.api_get_club", club_id=club_id) }}')
+function loadJoinRequests() {
+  fetch('{{ url_for("nooks_club.api_get_join_requests", club_id=club_id) }}')
     .then(response => response.json())
     .then(data => {
-      const adminList = document.getElementById('admin-list');
-      adminList.innerHTML = '';
-      if (data.admin_usernames) {
-        data.admin_usernames.forEach((username, index) => {
-          const adminId = data.admins[index];
-          const card = document.createElement('div');
-          card.className = 'card mb-2 position-relative';
-          card.innerHTML = `
-            <div class="card-body">
-              <p class="card-text">Admin: ${username}</p>
-              <div class="admin-actions">
-                <button class="btn btn-sm btn-outline-secondary admin-menu-btn">...</button>
-                <div class="admin-menu">
-                  <button class="btn btn-danger btn-sm" onclick="removeAdmin('${adminId}')">Remove Admin</button>
-                </div>
+      const requestsList = document.getElementById('join-requests-list');
+      
+      if (data.join_requests && data.join_requests.length > 0) {
+        requestsList.innerHTML = '';
+        data.join_requests.forEach(request => {
+          const requestDiv = document.createElement('div');
+          requestDiv.className = 'border-bottom pb-2 mb-2';
+          requestDiv.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+              <span>${DOMPurify.sanitize(request.username)}</span>
+              <div>
+                <button class="btn btn-sm btn-success mr-1" onclick="approveRequest('${request.user_id}', '${request.username}')">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="rejectRequest('${request.user_id}', '${request.username}')">
+                  <i class="fas fa-times"></i>
+                </button>
               </div>
             </div>
           `;
-          adminList.appendChild(card);
+          requestsList.appendChild(requestDiv);
         });
+      } else {
+        requestsList.innerHTML = '<p class="text-muted small">No pending requests</p>';
       }
     })
-    .catch(error => console.error('Error fetching admins:', error));
+    .catch(error => {
+      console.error('Error fetching join requests:', error);
+      document.getElementById('join-requests-list').innerHTML = '<p class="text-danger small">Error loading requests</p>';
+    });
 }
-function removeAdmin(userId) {
-  if (confirm('Are you sure you want to remove this admin?')) {
-    fetch('{{ url_for("nooks_club.api_remove_club_admin", club_id=club_id, user_id="") }}' + userId, { 
-      method: 'DELETE',
+
+function approveRequest(userId, username) {
+  fetch(`{{ url_for("nooks_club.api_approve_join_request", club_id=club_id, user_id="") }}${userId}`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message) {
+        loadJoinRequests(); // Reload requests
+        location.reload(); // Reload page to update member count
+      } else {
+        alert(data.error || 'Error approving request');
+      }
+    })
+    .catch(error => {
+      console.error('Error approving request:', error);
+      alert('Error approving request. Please try again.');
+    });
+}
+
+function rejectRequest(userId, username) {
+  if (confirm(`Reject join request from ${username}?`)) {
+    fetch(`{{ url_for("nooks_club.api_reject_join_request", club_id=club_id, user_id="") }}${userId}`, {
+      method: 'POST',
       headers: { 'X-CSRFToken': '{{ csrf_token }}' }
     })
       .then(response => response.json())
       .then(data => {
         if (data.message) {
-          alert('Admin removed successfully');
-          loadAdmins();
+          loadJoinRequests(); // Reload requests
         } else {
-          alert(data.error || 'Error removing admin');
+          alert(data.error || 'Error rejecting request');
         }
       })
-      .catch(error => console.error('Error removing admin:', error));
+      .catch(error => {
+        console.error('Error rejecting request:', error);
+        alert('Error rejecting request. Please try again.');
+      });
   }
 }
-document.getElementById('add-admin-form').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const username = document.getElementById('admin-user-id').value;
-  fetch('/api/users/by-username/' + encodeURIComponent(username))
+
+function loadClubAnalytics() {
+  fetch('{{ url_for("nooks_club.api_get_club_analytics", club_id=club_id) }}')
     .then(response => response.json())
     .then(data => {
-      if (data.user_id) {
-        fetch('{{ url_for("nooks_club.api_add_club_admin", club_id=club_id) }}', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}'
-          },
-          body: JSON.stringify({ user_id: data.user_id })
-        })
-          .then(response => response.json())
-          .then(data => {
-            if (data.message) {
-              alert('Admin added successfully');
-              loadAdmins();
-            } else {
-              alert(data.error || 'Error adding admin');
-            }
-          })
-          .catch(error => console.error('Error adding admin:', error));
+      const analyticsDiv = document.getElementById('club-analytics');
+      analyticsDiv.innerHTML = `
+        <div class="row text-center">
+          <div class="col-6">
+            <h4 class="text-primary">${data.member_count}</h4>
+            <small class="text-muted">Members</small>
+          </div>
+          <div class="col-6">
+            <h4 class="text-success">${data.post_count}</h4>
+            <small class="text-muted">Posts</small>
+          </div>
+        </div>
+        <div class="row text-center mt-3">
+          <div class="col-6">
+            <h4 class="text-info">${data.message_count}</h4>
+            <small class="text-muted">Messages</small>
+          </div>
+          <div class="col-6">
+            <span class="badge badge-${data.activity_level === 'very_active' ? 'success' : data.activity_level === 'moderately_active' ? 'primary' : data.activity_level === 'active' ? 'info' : data.activity_level === 'new' ? 'warning' : 'secondary'}">
+              ${data.activity_level ? data.activity_level.replace('_', ' ').toUpperCase() : 'UNKNOWN'}
+            </span>
+            <br><small class="text-muted">Activity</small>
+          </div>
+        </div>
+      `;
+    })
+    .catch(error => {
+      console.error('Error fetching analytics:', error);
+      document.getElementById('club-analytics').innerHTML = '<p class="text-danger small">Error loading analytics</p>';
+    });
+}
+{% endif %}
+
+// Enhanced post creation with categories
+function createEnhancedPost() {
+  const form = document.getElementById('enhanced-post-form');
+  if (!form) return;
+  
+  const formData = new FormData(form);
+  const postData = {
+    content: formData.get('content'),
+    title: formData.get('title') || '',
+    post_type: formData.get('post_type') || 'discussion',
+    category: formData.get('category') || 'general'
+  };
+  
+  fetch('{{ url_for("nooks_club.api_create_club_post", club_id=club_id) }}', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': '{{ csrf_token }}'
+    },
+    body: JSON.stringify(postData)
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.post_id) {
+        form.reset();
+        loadPosts(); // Reload posts
       } else {
-        alert('User not found');
+        alert(data.error || 'Error creating post');
       }
     })
-    .catch(error => console.error('Error fetching user ID:', error));
-});
-{% endif %}
+    .catch(error => {
+      console.error('Error creating post:', error);
+      alert('Error creating post. Please try again.');
+    });
+}
+
+// Load leaderboard
+function loadLeaderboard() {
+  const period = document.getElementById('leaderboard-period').value;
+  
+  fetch(`{{ url_for("nooks_club.api_get_club_leaderboard", club_id=club_id) }}?period=${period}`)
+    .then(response => response.json())
+    .then(data => {
+      const leaderboardDiv = document.getElementById('club-leaderboard');
+      
+      if (data.leaderboard && data.leaderboard.length > 0) {
+        leaderboardDiv.innerHTML = '';
+        data.leaderboard.forEach((entry, index) => {
+          const rankClass = index === 0 ? 'text-warning' : index === 1 ? 'text-secondary' : index === 2 ? 'text-info' : '';
+          const rankIcon = index === 0 ? 'fas fa-crown' : index === 1 ? 'fas fa-medal' : index === 2 ? 'fas fa-award' : 'fas fa-user';
+          
+          const entryDiv = document.createElement('div');
+          entryDiv.className = 'card mb-2';
+          entryDiv.innerHTML = `
+            <div class="card-body py-2">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                  <span class="mr-3 ${rankClass}">
+                    <i class="${rankIcon}"></i> #${entry.rank}
+                  </span>
+                  <div>
+                    <strong>${DOMPurify.sanitize(entry.username)}</strong>
+                    <small class="text-muted d-block">${entry.activity_count} activities</small>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="badge badge-primary">${entry.total_points} pts</span>
+                </div>
+              </div>
+            </div>
+          `;
+          leaderboardDiv.appendChild(entryDiv);
+        });
+      } else {
+        leaderboardDiv.innerHTML = '<p class="text-muted text-center">No leaderboard data available</p>';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading leaderboard:', error);
+      document.getElementById('club-leaderboard').innerHTML = '<p class="text-danger text-center">Error loading leaderboard</p>';
+    });
+}
+
+// Load achievements
+function loadAchievements() {
+  fetch('{{ url_for("nooks_club.api_get_club_achievements", club_id=club_id) }}')
+    .then(response => response.json())
+    .then(data => {
+      const achievementsDiv = document.getElementById('club-achievements');
+      
+      if (data.achievements) {
+        achievementsDiv.innerHTML = `
+          <div class="mb-3">
+            <h6>Your Progress: ${data.earned_count} / ${data.achievements.length} achievements earned</h6>
+            <div class="progress">
+              <div class="progress-bar" style="width: ${(data.earned_count / data.achievements.length) * 100}%"></div>
+            </div>
+          </div>
+        `;
+        
+        const achievementsGrid = document.createElement('div');
+        achievementsGrid.className = 'row';
+        
+        data.achievements.forEach(achievement => {
+          const col = document.createElement('div');
+          col.className = 'col-md-6 col-lg-4 mb-3';
+          
+          const earnedClass = achievement.earned ? 'border-success' : 'border-light';
+          const earnedBadge = achievement.earned ? '<span class="badge badge-success">Earned</span>' : '<span class="badge badge-secondary">Not Earned</span>';
+          
+          col.innerHTML = `
+            <div class="card ${earnedClass}">
+              <div class="card-body text-center">
+                <i class="${achievement.icon} fa-2x text-${achievement.badge_color} mb-2"></i>
+                <h6 class="card-title">${achievement.name}</h6>
+                <p class="card-text small">${achievement.description}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                  ${earnedBadge}
+                  <span class="badge badge-outline-primary">${achievement.points} pts</span>
+                </div>
+                ${achievement.earned ? `<small class="text-muted">Earned: ${new Date(achievement.earned_at).toLocaleDateString()}</small>` : ''}
+              </div>
+            </div>
+          `;
+          
+          achievementsGrid.appendChild(col);
+        });
+        
+        achievementsDiv.appendChild(achievementsGrid);
+      } else {
+        achievementsDiv.innerHTML = '<p class="text-muted text-center">No achievements available</p>';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading achievements:', error);
+      document.getElementById('club-achievements').innerHTML = '<p class="text-danger text-center">Error loading achievements</p>';
+    });
+}
+
+// Load activity feed
+function loadActivityFeed() {
+  fetch('{{ url_for("nooks_club.api_get_club_activity_feed", club_id=club_id) }}')
+    .then(response => response.json())
+    .then(data => {
+      const feedDiv = document.getElementById('activity-feed');
+      
+      if (data.activities && data.activities.length > 0) {
+        feedDiv.innerHTML = '';
+        data.activities.forEach(activity => {
+          const activityDiv = document.createElement('div');
+          activityDiv.className = 'card mb-2';
+          
+          let activityText = '';
+          let activityIcon = 'fas fa-circle';
+          
+          switch(activity.activity_type) {
+            case 'member_joined':
+              activityText = 'joined the club';
+              activityIcon = 'fas fa-user-plus text-success';
+              break;
+            case 'post_created':
+              activityText = `created a new post: "${activity.activity_data.post_title || 'Untitled'}"`;
+              activityIcon = 'fas fa-pen text-primary';
+              break;
+            case 'comment_added':
+              activityText = 'added a comment';
+              activityIcon = 'fas fa-comment text-info';
+              break;
+            case 'book_selected':
+              activityText = `selected "${activity.activity_data.book_title}" as the next book`;
+              activityIcon = 'fas fa-book text-warning';
+              break;
+            case 'achievement_earned':
+              activityText = `earned the "${activity.activity_data.achievement_name}" achievement`;
+              activityIcon = 'fas fa-trophy text-warning';
+              break;
+            default:
+              activityText = activity.activity_data.action || 'performed an action';
+          }
+          
+          activityDiv.innerHTML = `
+            <div class="card-body py-2">
+              <div class="d-flex align-items-center">
+                <i class="${activityIcon} mr-2"></i>
+                <div class="flex-grow-1">
+                  <strong>${DOMPurify.sanitize(activity.username)}</strong> ${activityText}
+                </div>
+                <small class="text-muted">${new Date(activity.created_at).toLocaleDateString()}</small>
+              </div>
+            </div>
+          `;
+          
+          feedDiv.appendChild(activityDiv);
+        });
+      } else {
+        feedDiv.innerHTML = '<p class="text-muted text-center">No recent activity</p>';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading activity feed:', error);
+      document.getElementById('activity-feed').innerHTML = '<p class="text-danger text-center">Error loading activity feed</p>';
+    });
+}
+
+// Initialize page
 document.addEventListener('DOMContentLoaded', () => {
   loadPosts();
+  
+  // Load data when tabs are shown
+  document.getElementById('leaderboard-tab').addEventListener('shown.bs.tab', loadLeaderboard);
+  document.getElementById('achievements-tab').addEventListener('shown.bs.tab', loadAchievements);
+  document.getElementById('activity-tab').addEventListener('shown.bs.tab', loadActivityFeed);
+  
+  // Leaderboard period change
+  document.getElementById('leaderboard-period').addEventListener('change', loadLeaderboard);
+  
   {% if is_admin %}
-  loadAdmins();
+  // Load admin data when admin tab is shown
+  document.getElementById('admin-tab').addEventListener('shown.bs.tab', () => {
+    loadJoinRequests();
+    loadClubAnalytics();
+  });
   {% endif %}
-  setupAdminMenuListeners();
 });
 </script>
-{% endif %}
 {% endblock %}
 {% endblock %}

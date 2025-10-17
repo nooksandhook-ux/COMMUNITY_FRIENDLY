@@ -1,0 +1,34 @@
+{% macro user_avatar(user, size='40', class='rounded-circle') %}
+    {% if user.profile and user.profile.avatar_url %}
+        <img src="{{ user.profile.avatar_url }}" 
+             alt="{{ user.username }}'s avatar" 
+             class="{{ class }}" 
+             style="width: {{ size }}px; height: {{ size }}px; object-fit: cover;">
+    {% else %}
+        {% set avatar = user.preferences.avatar or {'style': 'avataaars', 'options': {'hair': ['short01'], 'backgroundColor': ['#ffffff'], 'flip': False}} %}
+        {% set avatar_url = 'https://api.dicebear.com/9.x/' + avatar.style + '/svg?seed=' + user.username %}
+        {% for key, value in avatar.options.items() %}
+            {% if key != 'flip' %}
+                {% set avatar_url = avatar_url + '&' + key + '=' + (value[0] if value else '') %}
+            {% else %}
+                {% set avatar_url = avatar_url + '&flip=' + (value|string).lower() %}
+            {% endif %}
+        {% endfor %}
+        <img src="{{ avatar_url }}" 
+             alt="{{ user.username }}'s generated avatar" 
+             class="{{ class }}" 
+             style="width: {{ size }}px; height: {{ size }}px;">
+    {% endif %}
+{% endmacro %}
+
+{% macro user_avatar_by_id(user_id, username, size='40', class='rounded-circle') %}
+    {% set user_data = get_user_by_id(user_id) %}
+    {% if user_data %}
+        {{ user_avatar(user_data, size, class) }}
+    {% else %}
+        <div class="bg-secondary {{ class }} d-flex align-items-center justify-content-center" 
+             style="width: {{ size }}px; height: {{ size }}px;">
+            <i class="fas fa-user text-white" style="font-size: {{ (size|int * 0.4)|int }}px;"></i>
+        </div>
+    {% endif %}
+{% endmacro %}

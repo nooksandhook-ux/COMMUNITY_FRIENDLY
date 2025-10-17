@@ -2,35 +2,158 @@
 {% block content %}
 {% if current_user.is_authenticated %}
 <div class="container">
-  <h2>Nooks Clubs</h2>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Nooks Clubs</h2>
+    <div>
+      <a href="{{ url_for('nooks_club.join_with_code') }}" class="btn btn-success mr-2">
+        <i class="fas fa-key"></i> Join with Code
+      </a>
+      <a href="{{ url_for('nooks_club.create_club') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Create Club
+      </a>
+    </div>
+  </div>
+
+  <!-- Navigation Cards -->
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="fas fa-globe fa-2x text-primary mb-2"></i>
+          <h5 class="card-title">All Clubs</h5>
+          <p class="card-text">Browse all available clubs</p>
+          <button class="btn btn-outline-primary" onclick="setActiveTab('all')">View</button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="fas fa-users fa-2x text-success mb-2"></i>
+          <h5 class="card-title">My Clubs</h5>
+          <p class="card-text">Clubs you have joined</p>
+          <button class="btn btn-outline-success" onclick="setActiveTab('my')">View</button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center h-100">
+        <div class="card-body">
+          <i class="fas fa-crown fa-2x text-warning mb-2"></i>
+          <h5 class="card-title">Created Clubs</h5>
+          <p class="card-text">Clubs you created</p>
+          <button class="btn btn-outline-warning" onclick="setActiveTab('created')">View</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search and Filter Section -->
+  <div class="card mb-4" id="search-filters" style="display: none;">
+    <div class="card-header">
+      <h5 class="mb-0">
+        <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#filterCollapse">
+          <i class="fas fa-search"></i> Search & Filter Clubs
+        </button>
+      </h5>
+    </div>
+    <div id="filterCollapse" class="collapse">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="search-input">Search</label>
+              <input type="text" id="search-input" class="form-control" placeholder="Search by name, description, topic, or genre...">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="sort-select">Sort By</label>
+              <select id="sort-select" class="form-control">
+                <option value="created_at:-1">Most Recent</option>
+                <option value="member_count:-1">Most Members</option>
+                <option value="activity:-1">Most Active</option>
+                <option value="name:1">Alphabetical</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="genre-filter">Genre</label>
+              <select id="genre-filter" class="form-control">
+                <option value="">All Genres</option>
+                <option value="Fantasy">Fantasy</option>
+                <option value="Sci-Fi">Sci-Fi</option>
+                <option value="Romance">Romance</option>
+                <option value="Mystery">Mystery</option>
+                <option value="History">History</option>
+                <option value="Biography">Biography</option>
+                <option value="Self-Help">Self-Help</option>
+                <option value="Fiction">Fiction</option>
+                <option value="Non-Fiction">Non-Fiction</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="activity-filter">Activity Level</label>
+              <select id="activity-filter" class="form-control">
+                <option value="">All Activity Levels</option>
+                <option value="very_active">Very Active</option>
+                <option value="moderately_active">Moderately Active</option>
+                <option value="active">Active</option>
+                <option value="new">New</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="size-filter">Club Size</label>
+              <select id="size-filter" class="form-control">
+                <option value="">All Sizes</option>
+                <option value="small">Small (1-10 members)</option>
+                <option value="medium">Medium (11-50 members)</option>
+                <option value="large">Large (50+ members)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label for="privacy-filter">Privacy</label>
+              <select id="privacy-filter" class="form-control">
+                <option value="">All Clubs</option>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+            <button class="btn btn-secondary ml-2" onclick="clearFilters()">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Tab Indicator -->
   <div class="mb-3">
-    <a href="{{ url_for('nooks_club.create_club') }}" class="btn btn-primary">Create Club</a>
+    <span id="active-tab-indicator" class="badge badge-primary"></span>
+    <span id="club-count" class="text-muted ml-2"></span>
   </div>
-  <div class="card-deck mb-3">
-    <div class="card text-center">
-      <div class="card-body">
-        <h5 class="card-title">All Clubs</h5>
-        <p class="card-text">Browse all available clubs</p>
-        <button class="btn btn-outline-primary" onclick="loadClubs('all')">View</button>
+
+  <!-- Club List -->
+  <div id="club-list" class="row">
+    <div class="col-12 text-center">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
       </div>
+      <p class="mt-2">Loading clubs...</p>
     </div>
-    <div class="card text-center">
-      <div class="card-body">
-        <h5 class="card-title">My Clubs</h5>
-        <p class="card-text">Clubs you have joined</p>
-        <a href="{{ url_for('nooks_club.my_clubs') }}" class="btn btn-outline-primary">View</a>
-      </div>
-    </div>
-    <div class="card text-center">
-      <div class="card-body">
-        <h5 class="card-title">Created Clubs</h5>
-        <p class="card-text">Clubs you created</p>
-        <a href="{{ url_for('nooks_club.created_clubs') }}" class="btn btn-outline-primary">View</a>
-      </div>
-    </div>
-  </div>
-  <div id="club-list" class="card-list">
-    <p>Loading clubs...</p>
   </div>
 </div>
 {% else %}
@@ -45,15 +168,80 @@
 {% if current_user.is_authenticated %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.1/purify.min.js"></script>
 <script>
-function loadClubs(type) {
-  console.log('loadClubs called with type:', type);
-  const clubList = document.getElementById('club-list');
-  clubList.innerHTML = '<p>Loading clubs...</p>';
+let currentTab = 'all';
+let currentFilters = {};
 
-  let url = type === 'all' ? '{{ url_for("nooks_club.api_get_clubs") }}' : 
-            type === 'my' ? '{{ url_for("nooks_club.api_my_clubs") }}' : 
-            '{{ url_for("nooks_club.api_created_clubs") }}';
-  console.log('Fetching URL:', url);
+function setActiveTab(tab) {
+  currentTab = tab;
+  
+  // Update tab indicator
+  const indicator = document.getElementById('active-tab-indicator');
+  const searchFilters = document.getElementById('search-filters');
+  
+  switch(tab) {
+    case 'all':
+      indicator.textContent = 'Browsing All Clubs';
+      indicator.className = 'badge badge-primary';
+      searchFilters.style.display = 'block';
+      break;
+    case 'my':
+      indicator.textContent = 'My Clubs';
+      indicator.className = 'badge badge-success';
+      searchFilters.style.display = 'none';
+      break;
+    case 'created':
+      indicator.textContent = 'Created by Me';
+      indicator.className = 'badge badge-warning';
+      searchFilters.style.display = 'none';
+      break;
+  }
+  
+  loadClubs();
+}
+
+function loadClubs() {
+  const clubList = document.getElementById('club-list');
+  const countElement = document.getElementById('club-count');
+  
+  clubList.innerHTML = `
+    <div class="col-12 text-center">
+      <div class="spinner-border" role="status">
+        <span class="sr-only">Loading...</span>
+      </div>
+      <p class="mt-2">Loading clubs...</p>
+    </div>
+  `;
+
+  let url;
+  let queryParams = new URLSearchParams();
+  
+  // Set base URL based on tab
+  switch(currentTab) {
+    case 'all':
+      url = '{{ url_for("nooks_club.api_get_clubs") }}';
+      // Add filters for 'all' tab
+      if (currentFilters.search) queryParams.append('search', currentFilters.search);
+      if (currentFilters.genre) queryParams.append('genre', currentFilters.genre);
+      if (currentFilters.activity_level) queryParams.append('activity_level', currentFilters.activity_level);
+      if (currentFilters.size) queryParams.append('size', currentFilters.size);
+      if (currentFilters.privacy) queryParams.append('privacy', currentFilters.privacy);
+      if (currentFilters.sort_by) {
+        const [field, order] = currentFilters.sort_by.split(':');
+        queryParams.append('sort_by', field);
+        queryParams.append('sort_order', order);
+      }
+      break;
+    case 'my':
+      url = '{{ url_for("nooks_club.api_my_clubs") }}';
+      break;
+    case 'created':
+      url = '{{ url_for("nooks_club.api_created_clubs") }}';
+      break;
+  }
+  
+  if (queryParams.toString()) {
+    url += '?' + queryParams.toString();
+  }
 
   fetch(url, {
     method: 'GET',
@@ -64,59 +252,246 @@ function loadClubs(type) {
     credentials: 'include'
   })
     .then(response => {
-      console.log('Response status:', response.status);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       return response.json();
     })
     .then(data => {
-      console.log('API response:', data);
       clubList.innerHTML = '';
+      
       if (data.clubs && Array.isArray(data.clubs)) {
+        countElement.textContent = `(${data.clubs.length} clubs)`;
+        
         if (data.clubs.length === 0) {
-          clubList.innerHTML = '<p>No clubs available.</p>';
-          return;
-        }
-        data.clubs.forEach(club => {
-          console.log('Processing club:', club);
-          const isMember = club.members.includes('{{ current_user.id }}');
-          const isAdmin = club.is_admin;
-          const card = document.createElement('div');
-          card.className = 'card mb-3';
-          card.innerHTML = `
-            <div class="card-body">
-              <h5 class="card-title">${DOMPurify.sanitize(club.name)}</h5>
-              <p class="card-text">${DOMPurify.sanitize(club.description || 'No description')}</p>
-              <p class="card-text"><small class="text-muted">Topic: ${DOMPurify.sanitize(club.topic || 'None')}</small></p>
-              <p class="card-text"><small class="text-muted">Created by: ${DOMPurify.sanitize(club.creator_username)}</small></p>
-              <a href="{{ url_for('nooks_club.view_club', club_id='') }}${club._id}" class="btn btn-info">View</a>
-              ${isMember ? '' : `
-                <form action="{{ url_for('nooks_club.join_club', club_id='') }}${club._id}" method="post" style="display:inline;">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                  <button type="submit" class="btn btn-success">Join</button>
-                </form>
-              `}
-              ${isAdmin ? `<a href="{{ url_for('nooks_club.view_club', club_id='') }}${club._id}#manage" class="btn btn-warning">Manage</a>` : ''}
+          clubList.innerHTML = `
+            <div class="col-12 text-center">
+              <div class="card">
+                <div class="card-body">
+                  <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                  <h5>No clubs found</h5>
+                  <p class="text-muted">Try adjusting your search criteria or create a new club!</p>
+                </div>
+              </div>
             </div>
           `;
-          clubList.appendChild(card);
+          return;
+        }
+        
+        data.clubs.forEach(club => {
+          const clubCard = createClubCard(club);
+          clubList.appendChild(clubCard);
         });
       } else {
-        console.error('Invalid response format:', data);
-        clubList.innerHTML = '<p class="text-danger">Error: Invalid data format from server.</p>';
+        clubList.innerHTML = `
+          <div class="col-12">
+            <div class="alert alert-danger">Error: Invalid data format from server.</div>
+          </div>
+        `;
       }
     })
     .catch(error => {
       console.error('Error fetching clubs:', error);
-      clubList.innerHTML = '<p class="text-danger">Error loading clubs. Please try again later.</p>';
+      clubList.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-danger">Error loading clubs. Please try again later.</div>
+        </div>
+      `;
     });
 }
 
-// Load clubs automatically on page load
+function createClubCard(club) {
+  const col = document.createElement('div');
+  col.className = 'col-md-6 col-lg-4 mb-4';
+  
+  const activityBadge = getActivityBadge(club.activity_level);
+  const privacyBadge = club.is_private ? '<span class="badge badge-secondary">Private</span>' : '<span class="badge badge-success">Public</span>';
+  
+  let actionButtons = '';
+  if (club.is_member) {
+    actionButtons = `
+      <a href="{{ url_for('nooks_club.view_club', club_id='') }}${club._id}" class="btn btn-primary btn-sm">
+        <i class="fas fa-eye"></i> View
+      </a>
+    `;
+    if (club.is_admin) {
+      actionButtons += `
+        <a href="{{ url_for('nooks_club.view_club', club_id='') }}${club._id}#manage" class="btn btn-warning btn-sm ml-1">
+          <i class="fas fa-cog"></i> Manage
+        </a>
+      `;
+    }
+  } else {
+    actionButtons = `
+      <a href="{{ url_for('nooks_club.view_club', club_id='') }}${club._id}" class="btn btn-info btn-sm">
+        <i class="fas fa-eye"></i> View
+      </a>
+    `;
+    
+    if (club.can_join) {
+      actionButtons += `
+        <button class="btn btn-success btn-sm ml-1" onclick="joinClub('${club._id}', '${club.name}')">
+          <i class="fas fa-plus"></i> Join
+        </button>
+      `;
+    } else if (club.can_request && !club.has_requested) {
+      actionButtons += `
+        <button class="btn btn-outline-success btn-sm ml-1" onclick="requestToJoin('${club._id}', '${club.name}')">
+          <i class="fas fa-paper-plane"></i> Request
+        </button>
+      `;
+    } else if (club.has_requested) {
+      actionButtons += `
+        <button class="btn btn-secondary btn-sm ml-1" disabled>
+          <i class="fas fa-clock"></i> Requested
+        </button>
+      `;
+    }
+  }
+  
+  col.innerHTML = `
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h5 class="card-title mb-0">${DOMPurify.sanitize(club.name)}</h5>
+          <div>
+            ${privacyBadge}
+            ${activityBadge}
+          </div>
+        </div>
+        
+        <p class="card-text text-muted small mb-2">
+          ${DOMPurify.sanitize(club.description || 'No description')}
+        </p>
+        
+        <div class="mb-2">
+          ${club.topic ? `<span class="badge badge-light mr-1"><i class="fas fa-tag"></i> ${DOMPurify.sanitize(club.topic)}</span>` : ''}
+          ${club.genre ? `<span class="badge badge-light mr-1"><i class="fas fa-book"></i> ${DOMPurify.sanitize(club.genre)}</span>` : ''}
+        </div>
+        
+        <div class="small text-muted mb-3">
+          <div><i class="fas fa-users"></i> ${club.member_count} member${club.member_count !== 1 ? 's' : ''}</div>
+          <div><i class="fas fa-user"></i> Created by ${DOMPurify.sanitize(club.creator_username)}</div>
+          <div><i class="fas fa-clock"></i> ${club.last_activity_text}</div>
+        </div>
+      </div>
+      
+      <div class="card-footer bg-transparent">
+        ${actionButtons}
+      </div>
+    </div>
+  `;
+  
+  return col;
+}
+
+function getActivityBadge(activityLevel) {
+  switch(activityLevel) {
+    case 'very_active':
+      return '<span class="badge badge-success">Very Active</span>';
+    case 'moderately_active':
+      return '<span class="badge badge-primary">Active</span>';
+    case 'active':
+      return '<span class="badge badge-info">Active</span>';
+    case 'new':
+      return '<span class="badge badge-warning">New</span>';
+    default:
+      return '<span class="badge badge-secondary">Inactive</span>';
+  }
+}
+
+function joinClub(clubId, clubName) {
+  if (!confirm(`Join "${clubName}"?`)) return;
+  
+  fetch(`{{ url_for("nooks_club.api_join_club", club_id="") }}${clubId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': '{{ csrf_token }}'
+    },
+    credentials: 'include'
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message) {
+        alert(data.message);
+        loadClubs(); // Reload to update UI
+      } else {
+        alert(data.error || 'Error joining club');
+      }
+    })
+    .catch(error => {
+      console.error('Error joining club:', error);
+      alert('Error joining club. Please try again.');
+    });
+}
+
+function requestToJoin(clubId, clubName) {
+  if (!confirm(`Send join request for "${clubName}"?`)) return;
+  
+  fetch(`{{ url_for("nooks_club.api_join_club", club_id="") }}${clubId}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': '{{ csrf_token }}'
+    },
+    credentials: 'include'
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message) {
+        alert(data.message);
+        loadClubs(); // Reload to update UI
+      } else {
+        alert(data.error || 'Error sending join request');
+      }
+    })
+    .catch(error => {
+      console.error('Error sending join request:', error);
+      alert('Error sending join request. Please try again.');
+    });
+}
+
+function applyFilters() {
+  currentFilters = {
+    search: document.getElementById('search-input').value.trim(),
+    genre: document.getElementById('genre-filter').value,
+    activity_level: document.getElementById('activity-filter').value,
+    size: document.getElementById('size-filter').value,
+    privacy: document.getElementById('privacy-filter').value,
+    sort_by: document.getElementById('sort-select').value
+  };
+  
+  loadClubs();
+}
+
+function clearFilters() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('genre-filter').value = '';
+  document.getElementById('activity-filter').value = '';
+  document.getElementById('size-filter').value = '';
+  document.getElementById('privacy-filter').value = '';
+  document.getElementById('sort-select').value = 'created_at:-1';
+  
+  currentFilters = {};
+  loadClubs();
+}
+
+// Event listeners
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOMContentLoaded event fired');
-  loadClubs('all');
+  setActiveTab('all');
+  
+  // Add search on enter key
+  document.getElementById('search-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      applyFilters();
+    }
+  });
+  
+  // Auto-apply filters on select change
+  ['genre-filter', 'activity-filter', 'size-filter', 'privacy-filter', 'sort-select'].forEach(id => {
+    document.getElementById(id).addEventListener('change', applyFilters);
+  });
 });
 </script>
 {% endif %}
