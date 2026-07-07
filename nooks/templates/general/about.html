@@ -1,29 +1,83 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="about py-5">
+<style>
+    /* Prevent title text-breaking and scale typography smoothly using fluid clamp bounds */
+    .dynamic-main-title {
+        font-size: clamp(1.8rem, 4vw, 3.5rem);
+        word-wrap: break-word;
+    }
+    
+    .dynamic-section-title {
+        font-size: clamp(1.35rem, 3vw, 2rem);
+        word-wrap: break-word;
+    }
+
+    /* Force button labels and layout indicators into a singular scalable line */
+    .btn-responsive-scale {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: clamp(0.85rem, 1.2vw, 1.1rem) !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
+    }
+
+    /* Brand Accent Highlights */
+    .brand-gold-text {
+        color: #C5A850 !important;
+    }
+
+    .brand-slate-text {
+        color: #2B4C7E !important;
+    }
+
+    @media (max-width: 576px) {
+        .btn-responsive-scale {
+            width: 100%;
+        }
+    }
+</style>
+
+<section class="about py-5 bg-light rounded shadow-sm mb-4">
     <div class="container">
-        <h1 class="text-primary">
-            <i class="bi bi-info-circle me-2"></i>About Nooks
+        <h1 class="dynamic-main-title text-primary fw-bold mb-3">
+            <i class="bi bi-info-circle me-2 brand-gold-text"></i>About FiCore Academy
         </h1>
-        <p class="lead">Nooks is a gamified platform designed to empower Nigerian readers by combining reading tracking with productivity tools and rewards.</p>
+        <p class="lead text-muted mb-4">FiCore Academy is a framework-first professional development and exam pacing platform engineered to build high-yield technical competency and classroom command without academic jargon.</p>
         
-        <h2>Our Mission</h2>
-        <p>To bridge the gap between reading for personal growth and practical daily needs, offering Nigerian users a unique way to earn small financial rewards while building consistent reading and productivity habits.</p>
+        <hr class="my-4 opacity-10">
+
+        <h2 class="dynamic-section-title fw-bold text-primary mb-3">Our Mission</h2>
+        <p class="text-muted mb-4">To bridge the gap between abstract academic syllabus goals and competitive corporate application, enabling students and finance professionals to crush institutional exams and scale their professional mobility with confident execution profiles.</p>
         
-        <h2>Our Vision</h2>
-        <p>To create a vibrant community of readers and doers who transform their lives through knowledge and action, supported by a sustainable, rewarding platform.</p>
+        <h2 class="dynamic-section-title fw-bold text-primary mb-3">Our Vision</h2>
+        <p class="text-muted mb-4">To deploy an elite ecosystem of technical talent and structured cohorts who translate corporate knowledge directly into institutional financial dominance, backed by real-world pacing frameworks and data transparency metrics.</p>
         
-        <h2>Why Nooks?</h2>
-        <ul class="list-unstyled">
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Track your reading progress with an intuitive interface.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Boost productivity with customizable Pomodoro timers.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Earn ₦10 for every verified quote from non-fiction books.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Enjoy a mobile-first, offline-capable experience with our Progressive Web App.</li>
+        <h2 class="dynamic-section-title fw-bold text-primary mb-3">Why FiCore Academy?</h2>
+        <ul class="list-unstyled g-3">
+            <li class="mb-3 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Syllabus Framework Vault:</strong> Intuitively catalog and track your baseline milestone coverage across strict institutional diets.</span>
+            </li>
+            <li class="mb-3 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>High-Execution Pacing Engine:</strong> Train your problem-solving speed against real-world exam conditions using integrated Pomodoro timelines.</span>
+            </li>
+            <li class="mb-3 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Transparency Infrastructure:</strong> Track verified competence milestones and community scaling benchmarks in real-time.</span>
+            </li>
+            <li class="mb-3 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>PWA Mobility Matrix:</strong> Fully mobile-responsive layout tailored for zero-latency, cross-device offline performance.</span>
+            </li>
         </ul>
         
-        <div class="text-center mt-4">
-            <a href="{{ url_for('general.contact') }}" class="btn btn-primary">
-                <i class="bi bi-envelope me-2"></i>Contact Us
+        <div class="text-center mt-5">
+            <a href="{{ url_for('general.contact') }}" class="btn btn-primary btn-lg px-5 py-3 btn-responsive-scale shadow">
+                <i class="bi bi-envelope me-2"></i><span>Contact Our Team</span>
             </a>
         </div>
     </div>
