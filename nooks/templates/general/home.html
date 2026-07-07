@@ -3,12 +3,69 @@
 {% block title %}Home - FiCore Academy{% endblock %}
 
 {% block content %}
+<style>
+    /* Prevent title text-breaking and scale typography smoothly using fluid clamp bounds */
+    .dynamic-main-title {
+        font-size: clamp(1.8rem, 4vw, 3.5rem);
+        word-wrap: break-word;
+    }
+    
+    .dynamic-card-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: clamp(1.1rem, 2vw, 1.75rem);
+        width: 100%;
+    }
+
+    /* Force button labels and layout indicators into a singular scalable line */
+    .btn-responsive-scale {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: clamp(0.8rem, 1.2vw, 1.1rem) !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* Fix card boundaries and ensure interior text truncates elegantly instead of breaking containers */
+    .card-text-clamp {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 3rem; /* Locked vertical alignment footprint */
+    }
+
+    .tagline-text-clamp {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: clamp(0.75rem, 1vw, 0.9rem);
+    }
+
+    /* Target padding and spacing for high density viewing matrices */
+    @media (max-width: 576px) {
+        .card-body {
+            padding: 1.5rem !important;
+        }
+        .card-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+</style>
+
 {% if current_user.is_authenticated %}
 <div class="row">
     <div class="col-12">
         <div class="text-center mb-5">
-            <h1 class="display-4 fw-bold text-primary">Welcome to FiCore Academy</h1>
-            <p class="lead text-muted">The Exam Pacing & Professional Mastery Platform</p>
+            <h1 class="dynamic-main-title fw-bold text-primary">Welcome to FiCore Academy</h1>
+            <p class="lead text-muted px-2">The Exam Pacing & Professional Mastery Platform</p>
         </div>
     </div>
 </div>
@@ -16,20 +73,22 @@
 <div class="cards-container">
     <div class="row g-3">
         <!-- Nook Card -->
-        <div class="col-md-6 col-lg-3">
+        <div class="col-12 col-md-6 col-xl-3">
             <div class="card h-100 shadow-sm border-0 nook-card">
-                <div class="card-body text-center p-5">
-                    <div class="mb-4">
-                        <i class="bi bi-book display-1 text-success"></i>
+                <div class="card-body text-center p-4 p-lg-5 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="mb-4">
+                            <i class="bi bi-book display-3 text-success"></i>
+                        </div>
+                        <h3 class="dynamic-card-title fw-bold text-success" title="Knowledge Vault">Knowledge Vault</h3>
+                        <p class="card-text text-muted mb-4 fw-bold card-text-clamp">Track your milestone coverage across courses and syllabi.</p>
                     </div>
-                    <h3 class="card-title fw-bold text-success">Knowledge Vault</h3>
-                    <p class="card-text text-muted mb-2 fw-bold">Track your milestone coverage across courses and syllabi.</p>
-                    <div class="card-buttons">
-                        <a href="{{ url_for('nook.index') }}" class="btn btn-success btn-lg">
-                            <span><i class="bi bi-book-half me-2"></i>Study Module</span>
+                    <div class="card-buttons d-grid gap-2">
+                        <a href="{{ url_for('nook.index') }}" class="btn btn-success btn-lg btn-responsive-scale">
+                            <i class="bi bi-book-half me-2"></i><span>Study Module</span>
                         </a>
-                        <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success" id="nook-add-book">
-                            <span><i class="bi bi-plus-circle me-2"></i>Add Course</span>
+                        <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success btn-responsive-scale" id="nook-add-book">
+                            <i class="bi bi-plus-circle me-2"></i><span>Add Course</span>
                         </a>
                     </div>
                 </div>
@@ -37,20 +96,22 @@
         </div>
 
         <!-- Hook Card -->
-        <div class="col-md-6 col-lg-3">
+        <div class="col-12 col-md-6 col-xl-3">
             <div class="card h-100 shadow-sm border-0 hook-card">
-                <div class="card-body text-center p-5">
-                    <div class="mb-4">
-                        <i class="bi bi-stopwatch display-1 text-info"></i>
+                <div class="card-body text-center p-4 p-lg-5 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="mb-4">
+                            <i class="bi bi-stopwatch display-3 text-info"></i>
+                        </div>
+                        <h3 class="dynamic-card-title fw-bold text-info" title="Pacing Engine">Pacing Engine</h3>
+                        <p class="card-text text-muted mb-4 fw-bold card-text-clamp">Train your execution speed against real-world and exam timelines.</p>
                     </div>
-                    <h3 class="card-title fw-bold text-info">Pacing Engine</h3>
-                    <p class="card-text text-muted mb-2 fw-bold">Train your execution speed against real-world and exam timelines.</p>
-                    <div class="card-buttons">
-                        <a href="{{ url_for('hook.timer') }}" class="btn btn-info btn-lg">
-                            <span><i class="bi bi-play-circle me-2"></i>Start Timed Session</span>
+                    <div class="card-buttons d-grid gap-2">
+                        <a href="{{ url_for('hook.timer') }}" class="btn btn-info btn-lg btn-responsive-scale">
+                            <i class="bi bi-play-circle me-2"></i><span>Start Timed Session</span>
                         </a>
-                        <a href="{{ url_for('hook.history') }}" class="btn btn-outline-info">
-                            <span><i class="bi bi-clock-history me-2"></i>View History</span>
+                        <a href="{{ url_for('hook.history') }}" class="btn btn-outline-info btn-responsive-scale">
+                            <i class="bi bi-clock-history me-2"></i><span>View History</span>
                         </a>
                     </div>
                 </div>
@@ -58,20 +119,22 @@
         </div>
 
         <!-- Nooks Club Card -->
-        <div class="col-md-6 col-lg-3">
+        <div class="col-12 col-md-6 col-xl-3">
             <div class="card h-100 shadow-sm border-0 nooks-club-card">
-                <div class="card-body text-center p-5">
-                    <div class="mb-4">
-                        <i class="bi bi-people display-1 text-primary"></i>
+                <div class="card-body text-center p-4 p-lg-5 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="mb-4">
+                            <i class="bi bi-people display-3 text-primary"></i>
+                        </div>
+                        <h3 class="dynamic-card-title fw-bold text-primary" title="Learning Cohorts">Learning Cohorts</h3>
+                        <p class="card-text text-muted mb-4 fw-bold card-text-clamp">Sync up with peers studying the same specialization or diet.</p>
                     </div>
-                    <h3 class="card-title fw-bold text-primary">Learning Cohorts</h3>
-                    <p class="card-text text-muted mb-2 fw-bold">Sync up with peers studying the same specialization or diet.</p>
-                    <div class="card-buttons">
-                        <a href="{{ url_for('nooks_club.index') }}" class="btn btn-primary btn-lg">
-                            <span><i class="bi bi-people-fill me-2"></i>Join Cohorts</span>
+                    <div class="card-buttons d-grid gap-2">
+                        <a href="{{ url_for('nooks_club.index') }}" class="btn btn-primary btn-lg btn-responsive-scale">
+                            <i class="bi bi-people-fill me-2"></i><span>Join Cohorts</span>
                         </a>
-                        <a href="{{ url_for('nooks_club.create_club') }}" class="btn btn-outline-primary">
-                            <span><i class="bi bi-plus-circle me-2"></i>Create/View Cohorts</span>
+                        <a href="{{ url_for('nooks_club.create_club') }}" class="btn btn-outline-primary btn-responsive-scale">
+                            <i class="bi bi-plus-circle me-2"></i><span>Create/View Cohorts</span>
                         </a>
                     </div>
                 </div>
@@ -79,20 +142,22 @@
         </div>
 
         <!-- Mini Modules Card -->
-        <div class="col-md-6 col-lg-3">
+        <div class="col-12 col-md-6 col-xl-3">
             <div class="card h-100 shadow-sm border-0 mini-modules-card">
-                <div class="card-body text-center p-5">
-                    <div class="mb-4">
-                        <i class="bi bi-lightbulb display-1 text-warning"></i>
+                <div class="card-body text-center p-4 p-lg-5 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="mb-4">
+                            <i class="bi bi-lightbulb display-3 text-warning"></i>
+                        </div>
+                        <h3 class="dynamic-card-title fw-bold text-warning" title="Core Triggers">Core Triggers</h3>
+                        <p class="card-text text-muted mb-4 fw-bold card-text-clamp">Daily flash-cards and quick-fire knowledge quizzes.</p>
                     </div>
-                    <h3 class="card-title fw-bold text-warning">Core Triggers</h3>
-                    <p class="card-text text-muted mb-2 fw-bold">Daily flash-cards and quick-fire knowledge quizzes.</p>
-                    <div class="card-buttons">
-                        <a href="{{ url_for('mini_modules.index') }}" class="btn btn-warning btn-lg text-white">
-                            <span><i class="bi bi-lightning-charge me-2"></i>Syllabus Quick-Fire</span>
+                    <div class="card-buttons d-grid gap-2">
+                        <a href="{{ url_for('mini_modules.index') }}" class="btn btn-warning btn-lg text-white btn-responsive-scale">
+                            <i class="bi bi-lightning-charge me-2"></i><span>Syllabus Quick-Fire</span>
                         </a>
-                        <a href="{{ url_for('mini_modules.quiz') }}" class="btn btn-outline-warning">
-                            <span><i class="bi bi-question-circle me-2"></i>Daily Quiz</span>
+                        <a href="{{ url_for('mini_modules.quiz') }}" class="btn btn-outline-warning btn-responsive-scale">
+                            <i class="bi bi-question-circle me-2"></i><span>Daily Quiz</span>
                         </a>
                     </div>
                 </div>
@@ -102,35 +167,35 @@
 </div>
 
 <!-- Taglines Section -->
-<div class="taglines-section">
+<div class="taglines-section mt-5">
     <div class="row g-3">
-        <div class="col-md-6 col-lg-3">
-            <div class="tagline-item text-center">
-                <small class="text-muted">
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="tagline-item text-center p-2 border rounded bg-light">
+                <small class="text-muted tagline-text-clamp d-block" title="Track dynamic progress and core data parameters">
                     <i class="bi bi-book text-warning me-1"></i>
                     Track dynamic progress and core data parameters
                 </small>
             </div>
         </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="tagline-item text-center">
-                <small class="text-muted">
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="tagline-item text-center p-2 border rounded bg-light">
+                <small class="text-muted tagline-text-clamp d-block" title="Reach execution benchmarks and build streaks">
                     <i class="bi bi-trophy-fill text-warning me-1"></i>
                     Reach execution benchmarks and build streaks
                 </small>
             </div>
         </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="tagline-item text-center">
-                <small class="text-muted">
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="tagline-item text-center p-2 border rounded bg-light">
+                <small class="text-muted tagline-text-clamp d-block" title="Group modules, structured forums, and shared goals">
                     <i class="bi bi-chat-dots text-info me-1"></i>
                     Group modules, structured forums, and shared goals
                 </small>
             </div>
         </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="tagline-item text-center">
-                <small class="text-muted">
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="tagline-item text-center p-2 border rounded bg-light">
+                <small class="text-muted tagline-text-clamp d-block" title="Earn milestones and status for professional coverage">
                     <i class="bi bi-award text-success me-1"></i>
                     Earn milestones and status for professional coverage
                 </small>
@@ -140,103 +205,105 @@
 </div>
 
 <!-- Recent Activity -->
-<div class="row mt-4 quick-actions-section">
+<div class="row mt-5 quick-actions-section">
     <div class="col-12">
         <h3 class="mb-3">Quick Actions</h3>
         <div class="row g-3">
-            <div class="col-md-4">
-                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary quick-actions w-100">
-                    <span><i class="bi bi-graph-up me-2"></i>View Dashboard</span>
+            <div class="col-12 col-md-4">
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary quick-actions w-100 btn-responsive-scale py-3">
+                    <i class="bi bi-graph-up me-2"></i><span>View Dashboard</span>
                 </a>
             </div>
-            <div class="col-md-4">
-                <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success quick-actions w-100" id="quick-add-book">
-                    <span><i class="bi bi-plus-circle me-2"></i>Add New Course</span>
+            <div class="col-12 col-md-4">
+                <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success quick-actions w-100 btn-responsive-scale py-3" id="quick-add-book">
+                    <i class="bi bi-plus-circle me-2"></i><span>Add New Course</span>
                 </a>
             </div>
-            <div class="col-md-4">
-                <a href="{{ url_for('hook.timer') }}" class="btn btn-outline-info quick-actions w-100">
-                    <span><i class="bi bi-play-circle me-2"></i>Start Timed Session</span>
+            <div class="col-12 col-md-4">
+                <a href="{{ url_for('hook.timer') }}" class="btn btn-outline-info quick-actions w-100 btn-responsive-scale py-3">
+                    <i class="bi bi-play-circle me-2"></i><span>Start Timed Session</span>
                 </a>
             </div>
         </div>
+        
         <!-- More Accordion -->
         <div class="accordion mt-4" id="moreAccordion">
-            <div class="accordion-item">
+            <div class="accordion-item border-0 shadow-sm">
                 <h2 class="accordion-header" id="moreHeading">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#moreCollapse" aria-expanded="false" aria-controls="moreCollapse">
+                    <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#moreCollapse" aria-expanded="false" aria-controls="moreCollapse">
                         More Options
                     </button>
                 </h2>
                 <div id="moreCollapse" class="accordion-collapse collapse" aria-labelledby="moreHeading" data-bs-parent="#moreAccordion">
-                    <div class="accordion-body">
+                    <div class="accordion-body p-4">
                         <!-- Transparency Dashboard Section -->
-                        <div class="row mt-4">
+                        <div class="row">
                             <div class="col-12">
-                                <h3 class="mb-3">Transparency Dashboard</h3>
-                                <p class="text-center text-muted mb-4">
+                                <h3 class="mb-3 text-center text-md-start">Transparency Dashboard</h3>
+                                <p class="text-center text-md-start text-muted mb-4">
                                     See how corporate backing and platform engagement impact FiCore Academy's operational ecosystem.
                                 </p>
                                 {% if error %}
                                     <div class="alert alert-danger">{{ error }}</div>
                                 {% else %}
                                     <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <div class="card h-100 shadow-sm border-0">
+                                        <div class="col-12 col-md-4">
+                                            <div class="card h-100 border bg-light">
                                                 <div class="card-body text-center">
-                                                    <h5 class="card-title">Sponsorship Funding</h5>
-                                                    <p class="card-text display-4">₦{{ total_donations | default(0) | int }}</p>
-                                                    <p class="text-muted">{{ donation_count | default(0) }} allocation streams</p>
+                                                    <h5 class="card-title text-muted text-truncate">Sponsorship Funding</h5>
+                                                    <p class="card-text display-6 fw-bold text-dark text-truncate">₦{{ total_donations | default(0) | int }}</p>
+                                                    <p class="text-muted small mb-0 text-truncate">{{ donation_count | default(0) }} allocation streams</p>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="card h-100 shadow-sm border-0">
+                                        <div class="col-12 col-md-4">
+                                            <div class="card h-100 border bg-light">
                                                 <div class="card-body text-center">
-                                                    <h5 class="card-title">Verified Achievements</h5>
-                                                    <p class="card-text display-4">{{ verified_quotes | default(0) }}</p>
-                                                    <p class="text-muted">Core competence milestones hit</p>
+                                                    <h5 class="card-title text-muted text-truncate">Verified Achievements</h5>
+                                                    <p class="card-text display-6 fw-bold text-dark text-truncate">{{ verified_quotes | default(0) }}</p>
+                                                    <p class="text-muted small mb-0 text-truncate">Core competence milestones hit</p>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="card h-100 shadow-sm border-0">
+                                        <div class="col-12 col-md-4">
+                                            <div class="card h-100 border bg-light">
                                                 <div class="card-body text-center">
-                                                    <h5 class="card-title">Active Professionals</h5>
-                                                    <p class="card-text display-4">{{ active_users | default(0) }}</p>
-                                                    <p class="text-muted">Last 30 days</p>
+                                                    <h5 class="card-title text-muted text-truncate">Active Professionals</h5>
+                                                    <p class="card-text display-6 fw-bold text-dark text-truncate">{{ active_users | default(0) }}</p>
+                                                    <p class="text-muted small mb-0 text-truncate">Last 30 days</p>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="row mt-4">
                                         <div class="col-12">
-                                            <div class="card shadow-sm border-0">
-                                                <div class="card-body">
-                                                    <h5 class="card-title">Platform Scaling by Category</h5>
-                                                    <canvas id="tierChart" height="100"></canvas>
+                                            <div class="card border">
+                                                <div class="card-body p-2 p-md-3" style="position: relative; width:100%; overflow-x: auto;">
+                                                    <h5 class="card-title mb-3">Platform Scaling by Category</h5>
+                                                    <canvas id="tierChart" height="120" style="min-width: 250px;"></canvas>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="text-center mt-4">
-                                        <a href="{{ url_for('analytics.export_report') }}" class="btn btn-primary">Download Impact Report</a>
+                                        <a href="{{ url_for('analytics.export_report') }}" class="btn btn-primary px-4">Download Impact Report</a>
                                     </div>
                                 {% endif %}
                             </div>
                         </div>
+                        
                         <!-- Testimonials Section -->
-                        <div class="row mt-4">
+                        <div class="row mt-5">
                             <div class="col-12">
-                                <h3 class="mb-3">What Our Community Says</h3>
+                                <h3 class="mb-3 text-center text-md-start">What Our Community Says</h3>
                                 <div class="row g-3">
                                     {% for testimonial in testimonials | default([]) %}
-                                    <div class="col-md-4">
-                                        <div class="card h-100 shadow-sm border-0">
-                                            <div class="card-body">
-                                                <p class="card-text">"{{ testimonial.content | truncate(150) | default('No content available') }}"</p>
-                                                <p class="card-text text-muted">
-                                                    <small>
+                                    <div class="col-12 col-md-4">
+                                        <div class="card h-100 border">
+                                            <div class="card-body d-flex flex-column justify-content-between">
+                                                <p class="card-text fst-italic">"{{ testimonial.content | truncate(150) | default('No content available') }}"</p>
+                                                <p class="card-text text-muted mb-0 mt-2">
+                                                    <small class="d-block text-truncate">
                                                         <i class="bi bi-person-circle me-1"></i>
                                                         {{ testimonial.user_id | get_username | default('Anonymous') }} on {{ testimonial.approved_at | datetimeformat | default('Unknown date') }}
                                                     </small>
@@ -245,8 +312,8 @@
                                         </div>
                                     </div>
                                     {% else %}
-                                    <div class="col-12">
-                                        <p class="text-muted">No testimonials available. Be the first to <a href="{{ url_for('testimonials.submit_testimonial') }}">share your journey</a>!</p>
+                                    <div class="col-12 text-center py-3">
+                                        <p class="text-muted mb-0">No testimonials available. Be the first to <a href="{{ url_for('testimonials.submit_testimonial') }}">share your journey</a>!</p>
                                     </div>
                                     {% endfor %}
                                 </div>
@@ -259,12 +326,14 @@
     </div>
 </div>
 {% else %}
-<div class="row">
+<div class="row min-vh-50 d-flex align-items-center justify-content-center py-5">
     <div class="col-12 text-center">
-        <h1 class="display-4 fw-bold text-primary">Welcome to FiCore Academy</h1>
-        <p class="lead text-muted">Please log in to access your dashboard and pacing matrix.</p>
-        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Login</a>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg">Register</a>
+        <h1 class="dynamic-main-title fw-bold text-primary">Welcome to FiCore Academy</h1>
+        <p class="lead text-muted mb-4 px-3">Please log in to access your dashboard and pacing matrix.</p>
+        <div class="d-sm-inline-block d-grid gap-2 px-4">
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-5 me-sm-2">Login</a>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg px-5">Register</a>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -273,7 +342,6 @@
 {% block extra_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-// Debounce function to limit click frequency
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -286,10 +354,10 @@ function debounce(func, wait) {
     };
 }
 
-// Handle clicks on "Add a Book" links with debouncing
 function handleAddBookClick(event, linkId) {
     event.preventDefault();
     const button = document.getElementById(linkId);
+    if (!button) return;
     console.log(`Clicked Add Course Module: ${linkId}`);
     button.classList.add('disabled');
     button.style.pointerEvents = 'none';
@@ -297,7 +365,7 @@ function handleAddBookClick(event, linkId) {
     setTimeout(() => {
         button.classList.remove('disabled');
         button.style.pointerEvents = 'auto';
-    }, 2000); // Re-enable after 2 seconds
+    }, 2000);
 }
 
 document.getElementById('nook-add-book')?.addEventListener('click', debounce((event) => {
@@ -308,7 +376,6 @@ document.getElementById('quick-add-book')?.addEventListener('click', debounce((e
     handleAddBookClick(event, 'quick-add-book');
 }, 1000));
 
-// Chart.js for Donation Breakdown
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('tierChart')?.getContext('2d');
     if (ctx) {
@@ -330,6 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'bar',
             data: tierData,
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -349,7 +418,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Log frontend errors
 window.onerror = function(message, source, lineno, colno, error) {
     console.error(`Frontend error: ${message} at ${source}:${lineno}:${colno}`);
     fetch('/log_error', {
@@ -360,5 +428,3 @@ window.onerror = function(message, source, lineno, colno, error) {
 };
 </script>
 {% endblock %}
-
-```
