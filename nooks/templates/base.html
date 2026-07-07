@@ -10,7 +10,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#0d6efd">
+    <meta name="theme-color" content="#0A1931">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
     
@@ -19,100 +19,175 @@
     <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/hook-enhancements.css') }}">
     
+    <style>
+        /* Global Color Override Matrix - FiCore Premium Brand Scheme */
+        :root, [data-bs-theme=light] {
+            --bs-primary: #0A1931 !important;
+            --bs-primary-rgb: 10, 25, 49 !important;
+        }
+
+        .bg-primary {
+            background-color: #0A1931 !important;
+        }
+
+        .text-primary {
+            color: #0A1931 !important;
+        }
+
+        .btn-primary {
+            background-color: #0A1931 !important;
+            border-color: #0A1931 !important;
+        }
+
+        .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+            background-color: #132c54 !important;
+            border-color: #132c54 !important;
+        }
+
+        .btn-outline-primary {
+            color: #0A1931 !important;
+            border-color: #0A1931 !important;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #0A1931 !important;
+            color: #ffffff !important;
+        }
+
+        /* Rich Gold Accents for Badges, Warnings, Active Highlights */
+        .text-warning, .bi-star-fill, .bi-trophy, .bi-heart-fill {
+            color: #C5A850 !important;
+        }
+
+        /* Responsive Navigation Protection Layout Rules */
+        .navbar-brand, .nav-link {
+            white-space: nowrap !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .navbar-brand {
+            font-size: clamp(1.1rem, 2vw, 1.35rem);
+        }
+
+        .nav-link {
+            font-size: clamp(0.85rem, 1.1vw, 1rem);
+        }
+
+        /* Enforce tight constraints on breadcrumbs for thin mobile columns */
+        .breadcrumb-item {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+            font-size: clamp(0.75rem, 1vw, 0.9rem);
+        }
+
+        @media (max-width: 991px) {
+            .navbar-nav .nav-link {
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+        }
+    </style>
+    
     {% block extra_head %}{% endblock %}
 </head>
 <body>
     <!-- Breadcrumb Navigation -->
-    <nav aria-label="breadcrumb" class="px-3 py-2">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="{{ url_for('general.home') }}">Home</a></li>
-            {{ generate_breadcrumbs() | safe }}
-        </ol>
+    <nav aria-label="breadcrumb" class="px-3 py-2 bg-light border-bottom">
+        <div class="container">
+            <ol class="breadcrumb mb-0 flex-nowrap overflow-x-auto">
+                <li class="breadcrumb-item"><a href="{{ url_for('general.home') }}" class="text-decoration-none">Home</a></li>
+                {{ generate_breadcrumbs() | safe }}
+            </ol>
+        </div>
     </nav>
 
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
-                <i class="bi bi-book me-1"></i>Nooks
+            <a class="navbar-brand fw-bold d-inline-flex align-items-center" href="{{ url_for('index') }}">
+                <i class="bi bi-mortarboard-fill me-2" style="color: #C5A850;"></i>FiCore
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('general.home') }}">
-                            <i class="bi bi-house"></i> Home
+                        <a class="nav-link d-inline-flex align-items-center" href="{{ url_for('general.home') }}">
+                            <i class="bi bi-house me-1"></i> Home
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('nook.index') }}">
-                            <i class="bi bi-book"></i> Nook
+                        <a class="nav-link d-inline-flex align-items-center" href="{{ url_for('nook.index') }}">
+                            <i class="bi bi-book me-1"></i> Nook
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('hook.index') }}">
-                            <i class="bi bi-stopwatch"></i> Hook
+                        <a class="nav-link d-inline-flex align-items-center" href="{{ url_for('hook.index') }}">
+                            <i class="bi bi-stopwatch me-1"></i> Hook
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('dashboard.index') }}">
-                            <i class="bi bi-graph-up"></i> Dashboard
+                        <a class="nav-link d-inline-flex align-items-center" href="{{ url_for('dashboard.index') }}">
+                            <i class="bi bi-graph-up me-1"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('rewards.index') }}">
-                            <i class="bi bi-trophy"></i> Rewards
+                        <a class="nav-link d-inline-flex align-items-center" href="{{ url_for('rewards.index') }}">
+                            <i class="bi bi-trophy me-1"></i> Rewards
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('quotes.index') }}">
-                            <i class="bi bi-quote"></i> Quotes
+                        <a class="nav-link d-inline-flex align-items-center" href="{{ url_for('quotes.index') }}">
+                            <i class="bi bi-quote me-1"></i> Quotes
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('nooks_club.index') }}">
-                            <i class="bi bi-people"></i> Nooks Club
+                        <a class="nav-link d-inline-flex align-items-center" href="{{ url_for('nooks_club.index') }}">
+                            <i class="bi bi-people me-1"></i> Nooks Club
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('donations.donate') }}">
-                            <i class="bi bi-heart-fill"></i> Donate
+                        <a class="nav-link d-inline-flex align-items-center" href="{{ url_for('donations.donate') }}">
+                            <i class="bi bi-heart-fill me-1"></i> Donate
                         </a>
                     </li>
                     {% endif %}
                 </ul>
                 
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
                     {% if current_user.is_authenticated %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i> {{ current_user.username }}
+                        <a class="nav-link dropdown-toggle d-inline-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle me-1"></i> {{ current_user.username }}
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">Profile</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.settings') }}">Settings</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('themes.index') }}">Themes</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <li><a class="dropdown-item py-2" href="{{ url_for('auth.profile') }}"><i class="bi bi-person me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item py-2" href="{{ url_for('auth.settings') }}"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                            <li><a class="dropdown-item py-2" href="{{ url_for('themes.index') }}"><i class="bi bi-palette me-2"></i>Themes</a></li>
                             {% if current_user.is_admin %}
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('admin.index') }}">
-                                <i class="bi bi-shield-check"></i> Admin Panel
+                            <li><a class="dropdown-item py-2 text-danger" href="{{ url_for('admin.index') }}">
+                                <i class="bi bi-shield-check me-2"></i>Admin Panel
                             </a></li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                            <li><a class="dropdown-item py-2" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                         </ul>
                     </li>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link btn-login" href="{{ url_for('auth.login') }}">Login</a>
+                    <li class="nav-item me-2">
+                        <a class="nav-link btn-login px-3" href="{{ url_for('auth.login') }}"><i class="bi bi-box-arrow-in-right me-1"></i>Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn-register" href="{{ url_for('auth.register') }}">Register</a>
+                        <a class="nav-link btn-register px-3 text-white" style="background-color: #C5A850; border-radius: 4px;" href="{{ url_for('auth.register') }}"><i class="bi bi-person-plus me-1"></i>Register</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -125,9 +200,9 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="bi {{ 'bi-exclamation-octagon-fill' if category == 'error' else 'bi-check-circle-fill' }} me-2"></i>{{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}
             {% endif %}
@@ -140,29 +215,29 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-light text-muted py-4">
+    <footer class="bg-light text-muted py-4 mt-auto border-top">
         <div class="container text-center">
-            <ul class="list-inline mb-3">
-                <li class="list-inline-item">
+            <ul class="list-inline mb-3 row g-2 justify-content-center">
+                <li class="list-inline-item col-auto">
                     <a href="{{ url_for('general.about') }}" class="text-muted text-decoration-none">About</a>
                 </li>
-                <li class="list-inline-item">
+                <li class="list-inline-item col-auto">
                     <a href="{{ url_for('general.contact') }}" class="text-muted text-decoration-none">Contact</a>
                 </li>
-                <li class="list-inline-item">
+                <li class="list-inline-item col-auto">
                     <a href="{{ url_for('general.privacy') }}" class="text-muted text-decoration-none">Privacy Policy</a>
                 </li>
-                <li class="list-inline-item">
+                <li class="list-inline-item col-auto">
                     <a href="{{ url_for('general.terms') }}" class="text-muted text-decoration-none">Terms of Service</a>
                 </li>
-                <li class="list-inline-item">
+                <li class="list-inline-item col-auto">
                     <a href="{{ url_for('general.fair_use') }}" class="text-muted text-decoration-none">Fair Use</a>
                 </li>
-                <li class="list-inline-item">
+                <li class="list-inline-item col-auto">
                     <a href="{{ url_for('donations.donate') }}" class="text-muted text-decoration-none">Donate</a>
                 </li>
             </ul>
-            <p class="mb-0">&copy; 2025 Nooks. Track your reading and productivity.</p>
+            <p class="mb-0 small">&copy; 2026 FiCore Academy. Track your reading and productivity.</p>
         </div>
     </footer>
 
@@ -172,9 +247,3 @@
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
-
-
-
-
-
-
