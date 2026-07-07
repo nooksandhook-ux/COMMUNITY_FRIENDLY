@@ -1,14 +1,19 @@
+Here is the complete, updated home page template file.
+
+Every HTML component, Jinja template conditional (`{% if ... %}`), button router attribute (`href="{{ url_for(...) }}"`), and underlying Javascript logic block has been preserved completely intact. Only the user-facing text strings, headers, and card taglines have been professionally re-mapped to align with the **FiCore Academy** identity.
+
+```html
 {% extends "base.html" %}
 
-{% block title %}Home - Nooks{% endblock %}
+{% block title %}Home - FiCore Academy{% endblock %}
 
 {% block content %}
 {% if current_user.is_authenticated %}
 <div class="row">
     <div class="col-12">
         <div class="text-center mb-5">
-            <h1 class="display-4 fw-bold text-primary">Welcome to Nooks!</h1>
-            <p class="lead text-muted">Your personal productivity partner</p>
+            <h1 class="display-4 fw-bold text-primary">Welcome to FiCore Academy</h1>
+            <p class="lead text-muted">The Exam Pacing & Professional Mastery Platform</p>
         </div>
     </div>
 </div>
@@ -22,14 +27,14 @@
                     <div class="mb-4">
                         <i class="bi bi-book display-1 text-success"></i>
                     </div>
-                    <h3 class="card-title fw-bold text-success">Nook</h3>
-                    <p class="card-text text-muted mb-2 fw-bold">Fuel your mind, one page at a time.</p>
+                    <h3 class="card-title fw-bold text-success">Knowledge Vault</h3>
+                    <p class="card-text text-muted mb-2 fw-bold">Track your milestone coverage across courses and syllabi.</p>
                     <div class="card-buttons">
                         <a href="{{ url_for('nook.index') }}" class="btn btn-success btn-lg">
-                            <span><i class="bi bi-book-half me-2"></i>Start Reading</span>
+                            <span><i class="bi bi-book-half me-2"></i>Study Module</span>
                         </a>
                         <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success" id="nook-add-book">
-                            <span><i class="bi bi-plus-circle me-2"></i>Add a Book</span>
+                            <span><i class="bi bi-plus-circle me-2"></i>Add Course</span>
                         </a>
                     </div>
                 </div>
@@ -43,14 +48,14 @@
                     <div class="mb-4">
                         <i class="bi bi-stopwatch display-1 text-info"></i>
                     </div>
-                    <h3 class="card-title fw-bold text-info">Hook</h3>
-                    <p class="card-text text-muted mb-2 fw-bold">Focus better, finish faster.</p>
+                    <h3 class="card-title fw-bold text-info">Pacing Engine</h3>
+                    <p class="card-text text-muted mb-2 fw-bold">Train your execution speed against real-world and exam timelines.</p>
                     <div class="card-buttons">
                         <a href="{{ url_for('hook.timer') }}" class="btn btn-info btn-lg">
-                            <span><i class="bi bi-play-circle me-2"></i>Start Timer</span>
+                            <span><i class="bi bi-play-circle me-2"></i>Start Timed Session</span>
                         </a>
                         <a href="{{ url_for('hook.history') }}" class="btn btn-outline-info">
-                            <span><i class="bi bi-clock-history me-2"></i>View Your History</span>
+                            <span><i class="bi bi-clock-history me-2"></i>View History</span>
                         </a>
                     </div>
                 </div>
@@ -64,14 +69,14 @@
                     <div class="mb-4">
                         <i class="bi bi-people display-1 text-primary"></i>
                     </div>
-                    <h3 class="card-title fw-bold text-primary">Nooks Club</h3>
-                    <p class="card-text text-muted mb-2 fw-bold">Read together. Grow together.</p>
+                    <h3 class="card-title fw-bold text-primary">Learning Cohorts</h3>
+                    <p class="card-text text-muted mb-2 fw-bold">Sync up with peers studying the same specialization or diet.</p>
                     <div class="card-buttons">
                         <a href="{{ url_for('nooks_club.index') }}" class="btn btn-primary btn-lg">
-                            <span><i class="bi bi-people-fill me-2"></i>Join Readers</span>
+                            <span><i class="bi bi-people-fill me-2"></i>Join Cohorts</span>
                         </a>
                         <a href="{{ url_for('nooks_club.create_club') }}" class="btn btn-outline-primary">
-                            <span><i class="bi bi-plus-circle me-2"></i>Create/View Clubs</span>
+                            <span><i class="bi bi-plus-circle me-2"></i>Create/View Cohorts</span>
                         </a>
                     </div>
                 </div>
@@ -85,11 +90,11 @@
                     <div class="mb-4">
                         <i class="bi bi-lightbulb display-1 text-warning"></i>
                     </div>
-                    <h3 class="card-title fw-bold text-warning">Mini Modules</h3>
-                    <p class="card-text text-muted mb-2 fw-bold">Learn smarter.</p>
+                    <h3 class="card-title fw-bold text-warning">Core Triggers</h3>
+                    <p class="card-text text-muted mb-2 fw-bold">Daily flash-cards and quick-fire knowledge quizzes.</p>
                     <div class="card-buttons">
                         <a href="{{ url_for('mini_modules.index') }}" class="btn btn-warning btn-lg text-white">
-                            <span><i class="bi bi-lightning-charge me-2"></i>Test Brains</span>
+                            <span><i class="bi bi-lightning-charge me-2"></i>Syllabus Quick-Fire</span>
                         </a>
                         <a href="{{ url_for('mini_modules.quiz') }}" class="btn btn-outline-warning">
                             <span><i class="bi bi-question-circle me-2"></i>Daily Quiz</span>
@@ -108,7 +113,7 @@
             <div class="tagline-item text-center">
                 <small class="text-muted">
                     <i class="bi bi-book text-warning me-1"></i>
-                    Track progress, quotes, and takeaways
+                    Track dynamic progress and core data parameters
                 </small>
             </div>
         </div>
@@ -116,7 +121,7 @@
             <div class="tagline-item text-center">
                 <small class="text-muted">
                     <i class="bi bi-trophy-fill text-warning me-1"></i>
-                    Earn points and build streaks
+                    Reach execution benchmarks and build streaks
                 </small>
             </div>
         </div>
@@ -124,7 +129,7 @@
             <div class="tagline-item text-center">
                 <small class="text-muted">
                     <i class="bi bi-chat-dots text-info me-1"></i>
-                    Group reading, chat, and shared goals
+                    Group modules, structured forums, and shared goals
                 </small>
             </div>
         </div>
@@ -132,7 +137,7 @@
             <div class="tagline-item text-center">
                 <small class="text-muted">
                     <i class="bi bi-award text-success me-1"></i>
-                    Earn badges and points for participation
+                    Earn milestones and status for professional coverage
                 </small>
             </div>
         </div>
@@ -151,12 +156,12 @@
             </div>
             <div class="col-md-4">
                 <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success quick-actions w-100" id="quick-add-book">
-                    <span><i class="bi bi-plus-circle me-2"></i>Add New Book</span>
+                    <span><i class="bi bi-plus-circle me-2"></i>Add New Course</span>
                 </a>
             </div>
             <div class="col-md-4">
                 <a href="{{ url_for('hook.timer') }}" class="btn btn-outline-info quick-actions w-100">
-                    <span><i class="bi bi-play-circle me-2"></i>Start Focus Session</span>
+                    <span><i class="bi bi-play-circle me-2"></i>Start Timed Session</span>
                 </a>
             </div>
         </div>
@@ -165,7 +170,7 @@
             <div class="accordion-item">
                 <h2 class="accordion-header" id="moreHeading">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#moreCollapse" aria-expanded="false" aria-controls="moreCollapse">
-                        More
+                        More Options
                     </button>
                 </h2>
                 <div id="moreCollapse" class="accordion-collapse collapse" aria-labelledby="moreHeading" data-bs-parent="#moreAccordion">
@@ -175,7 +180,7 @@
                             <div class="col-12">
                                 <h3 class="mb-3">Transparency Dashboard</h3>
                                 <p class="text-center text-muted mb-4">
-                                    See how your support impacts Nooks' mission to promote literacy and productivity.
+                                    See how corporate backing and platform engagement impact FiCore Academy's operational ecosystem.
                                 </p>
                                 {% if error %}
                                     <div class="alert alert-danger">{{ error }}</div>
@@ -184,25 +189,25 @@
                                         <div class="col-md-4">
                                             <div class="card h-100 shadow-sm border-0">
                                                 <div class="card-body text-center">
-                                                    <h5 class="card-title">Total Donations</h5>
+                                                    <h5 class="card-title">Sponsorship Funding</h5>
                                                     <p class="card-text display-4">₦{{ total_donations | default(0) | int }}</p>
-                                                    <p class="text-muted">{{ donation_count | default(0) }} contributions</p>
+                                                    <p class="text-muted">{{ donation_count | default(0) }} allocation streams</p>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <div class="card h-100 shadow-sm border-0">
                                                 <div class="card-body text-center">
-                                                    <h5 class="card-title">Verified Quotes</h5>
+                                                    <h5 class="card-title">Verified Achievements</h5>
                                                     <p class="card-text display-4">{{ verified_quotes | default(0) }}</p>
-                                                    <p class="text-muted">Inspirational insights shared</p>
+                                                    <p class="text-muted">Core competence milestones hit</p>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <div class="card h-100 shadow-sm border-0">
                                                 <div class="card-body text-center">
-                                                    <h5 class="card-title">Active Users</h5>
+                                                    <h5 class="card-title">Active Professionals</h5>
                                                     <p class="card-text display-4">{{ active_users | default(0) }}</p>
                                                     <p class="text-muted">Last 30 days</p>
                                                 </div>
@@ -213,7 +218,7 @@
                                         <div class="col-12">
                                             <div class="card shadow-sm border-0">
                                                 <div class="card-body">
-                                                    <h5 class="card-title">Donation Breakdown by Tier</h5>
+                                                    <h5 class="card-title">Platform Scaling by Category</h5>
                                                     <canvas id="tierChart" height="100"></canvas>
                                                 </div>
                                             </div>
@@ -246,7 +251,7 @@
                                     </div>
                                     {% else %}
                                     <div class="col-12">
-                                        <p class="text-muted">No testimonials available. Be the first to <a href="{{ url_for('testimonials.submit_testimonial') }}">share your story</a>!</p>
+                                        <p class="text-muted">No testimonials available. Be the first to <a href="{{ url_for('testimonials.submit_testimonial') }}">share your journey</a>!</p>
                                     </div>
                                     {% endfor %}
                                 </div>
@@ -261,8 +266,8 @@
 {% else %}
 <div class="row">
     <div class="col-12 text-center">
-        <h1 class="display-4 fw-bold text-primary">Welcome to Nook & Hook</h1>
-        <p class="lead text-muted">Please log in to access your personalized dashboard.</p>
+        <h1 class="display-4 fw-bold text-primary">Welcome to FiCore Academy</h1>
+        <p class="lead text-muted">Please log in to access your dashboard and pacing matrix.</p>
         <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Login</a>
         <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg">Register</a>
     </div>
@@ -290,7 +295,7 @@ function debounce(func, wait) {
 function handleAddBookClick(event, linkId) {
     event.preventDefault();
     const button = document.getElementById(linkId);
-    console.log(`Clicked Add a Book: ${linkId}`);
+    console.log(`Clicked Add Course Module: ${linkId}`);
     button.classList.add('disabled');
     button.style.pointerEvents = 'none';
     window.location.href = button.href;
@@ -315,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const tierData = {
             labels: ['Bronze', 'Silver', 'Gold'],
             datasets: [{
-                label: 'Donation Amounts (NGN)',
+                label: 'Sponsorship Volume (NGN)',
                 data: [
                     {{ tier_data.bronze.total | default(0) }},
                     {{ tier_data.silver.total | default(0) }},
@@ -360,3 +365,5 @@ window.onerror = function(message, source, lineno, colno, error) {
 };
 </script>
 {% endblock %}
+
+```
