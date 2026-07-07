@@ -1,44 +1,89 @@
 {% extends "base.html" %}
+
+{% block title %}Terms of Service - FiCore Academy{% endblock %}
+
 {% block content %}
-<section class="terms py-5">
+<style>
+    /* Prevent title text-breaking and scale typography smoothly using fluid clamp bounds */
+    .dynamic-main-title {
+        font-size: clamp(1.8rem, 4vw, 3.5rem);
+        word-wrap: break-word;
+    }
+    
+    .dynamic-section-title {
+        font-size: clamp(1.35rem, 3vw, 2rem);
+        word-wrap: break-word;
+    }
+
+    /* Brand Accent Highlights */
+    .brand-gold-text {
+        color: #C5A850 !important;
+    }
+</style>
+
+<section class="terms py-5 bg-white rounded shadow-sm my-4 border p-4 p-md-5">
     <div class="container">
-        <h1 class="text-primary">
+        <h1 class="dynamic-main-title text-primary fw-bold mb-2">
             <i class="bi bi-file-earmark-text me-2"></i>Terms of Service
         </h1>
-        <p>Effective Date: September 6, 2025</p>
+        <p class="text-muted small mb-4">Effective Date: July 7, 2026</p>
         
-        <h2>Acceptance of Terms</h2>
-        <p>By using Nooks, you agree to these Terms of Service and our Privacy Policy.</p>
+        <hr class="my-4 opacity-10">
+
+        <h2 class="dynamic-section-title fw-bold text-primary mb-3">1. Acceptance of Terms</h2>
+        <p class="text-muted">By authenticating an account or interfacing with the core engines of FiCore Academy, you explicitly agree to enter into compliance with these Terms of Service and our linked Privacy Policy. If you do not accept these operational parameters, you are restricted from utilizing the platform.</p>
         
-        <h2>Use of the Platform</h2>
+        <h2 class="dynamic-section-title fw-bold text-primary mt-4 mb-3">2. Use of the Platform & Allocation Rules</h2>
         <ul class="list-unstyled">
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>You must register an account to access most features, including the reading tracker and productivity timer.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>You are responsible for maintaining the confidentiality of your account credentials.</li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Profile Integrity:</strong> You must register a verified institutional profile to access advanced metrics, study framework modules, and active Pacing Engine session parameters.</span>
+            </li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Credential Accountability:</strong> Users retain absolute responsibility for protecting their session authentications and dashboard entry configurations.</span>
+            </li>
         </ul>
         
-        <h2>Quote-Based Reward System</h2>
+        <h2 class="dynamic-section-title fw-bold text-primary mt-4 mb-3">3. Milestone & Verification Framework</h2>
         <ul class="list-unstyled">
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Users can submit verbatim quotes from non-fiction books to earn ₦10 per verified quote.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Quotes must be accurate, include the correct page number, and pass admin verification.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>NOOKSBRIDGE LTD/GTE reserves the right to reject quotes that do not meet our standards or appear fraudulent.</li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Competency Logging:</strong> Professional competence milestones, high-yield syllabus data entries, and performance velocity parameters must represent authentic user interactions.</span>
+            </li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Audit Discretion:</strong> FiCore Academy holds un-restricted jurisdiction to flag, audit, or invalidate progress milestones that trigger baseline anti-gaming metrics or present signs of artificial velocity boosting.</span>
+            </li>
         </ul>
         
-        <h2>Content Uploads</h2>
+        <h2 class="dynamic-section-title fw-bold text-primary mt-4 mb-3">4. Custom Sandbox & Resource Imports</h2>
         <ul class="list-unstyled">
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Uploaded books are accessible only by the uploading user and authorized admin accounts for verification purposes.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Uploads are strictly for personal study and quote verification. Sharing or downloading of uploaded files is prohibited.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Users are responsible for ensuring they have the legal right to upload any content they submit.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>All uploads are encrypted in storage, and access is logged to track uploads and quote submissions.</li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Siloed Access:</strong> Any custom training tracks, exam references, or institutional datasets imported into your personal account sandbox are accessible solely by your profile and accredited administrators for system validation.</span>
+            </li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Copyright Compliance:</strong> Users warrant that they possess valid legal title, permissions, or license parameters for any corporate curriculum or training resources uploaded into their active workspaces.</span>
+            </li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Security Isolation:</strong> All workspace datasets are fully encrypted in storage and have their transaction telemetry logged to ensure institutional transparency and platform durability.</span>
+            </li>
         </ul>
         
-        <h2>User Conduct</h2>
-        <p>You agree not to use the platform for unlawful purposes, to submit false or misleading information, or to upload content that violates copyright or intellectual property laws.</p>
+        <h2 class="dynamic-section-title fw-bold text-primary mt-4 mb-3">5. User Conduct Matrix</h2>
+        <p class="text-muted">You are strictly barred from deploying scripts to artificially advance timers, injecting false diagnostic information, manipulating transparency dashboards, or utilizing platform sandboxes to host or redistribute unlicensed intellectual property.</p>
         
-        <h2>Termination</h2>
-        <p>We may suspend or terminate your account for violations of these terms, fraudulent activity, or unauthorized sharing of uploaded content.</p>
+        <h2 class="dynamic-section-title fw-bold text-primary mt-4 mb-3">6. Profile Termination</h2>
+        <p class="text-muted">FiCore Academy reserves the strategic right to freeze, suspend, or permanently strip access privileges from any user profile found violating these terms, executing unauthorized framework scraping, or compromising platform integrity metrics.</p>
         
-        <h2>Contact Us</h2>
-        <p>For questions about these Terms of Service, please email us at <a href="mailto:nooksandhook@gmail.com">nooksandhook@gmail.com</a>.</p>
+        <div class="text-center mt-5">
+            <a href="https://wa.me/+2348133128979" class="btn btn-primary btn-lg px-5 py-3 shadow" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-whatsapp me-2 brand-gold-text"></i><span>Contact Compliance & Support</span>
+            </a>
+        </div>
     </div>
 </section>
 {% endblock %}
