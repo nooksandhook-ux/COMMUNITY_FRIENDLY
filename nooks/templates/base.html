@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Nooks{% endblock %}</title>
+    <title>{% block title %}FiCore Academy{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -54,6 +54,30 @@
             color: #ffffff !important;
         }
 
+        /* Brand Auth Actions Harmonization */
+        .btn-brand-login {
+            color: rgba(255, 255, 255, 0.8) !important;
+            transition: color 0.2s ease-in-out;
+            font-weight: 500;
+        }
+
+        .btn-brand-login:hover, .btn-brand-login:focus {
+            color: #C5A850 !important;
+        }
+
+        .btn-brand-register-outline {
+            color: #C5A850 !important;
+            border: 1px solid #C5A850 !important;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-brand-register-outline:hover, .btn-brand-register-outline:focus {
+            background-color: #C5A850 !important;
+            color: #0A1931 !important;
+        }
+
         /* Rich Gold Accents for Badges, Warnings, Active Highlights */
         .text-warning, .bi-star-fill, .bi-trophy, .bi-heart-fill {
             color: #C5A850 !important;
@@ -88,6 +112,12 @@
                 padding-top: 0.5rem;
                 padding-bottom: 0.5rem;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+            .btn-brand-register-outline {
+                margin-top: 0.5rem;
+                display: inline-block;
+                text-align: center;
+                width: 100%;
             }
         }
     </style>
@@ -162,7 +192,7 @@
                     {% endif %}
                 </ul>
                 
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
                     {% if current_user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-inline-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -183,11 +213,11 @@
                         </ul>
                     </li>
                     {% else %}
-                    <li class="nav-item me-2">
-                        <a class="nav-link btn-login px-3" href="{{ url_for('auth.login') }}"><i class="bi bi-box-arrow-in-right me-1"></i>Login</a>
+                    <li class="nav-item me-lg-2">
+                        <a class="nav-link btn-brand-login px-3" href="{{ url_for('auth.login') }}"><i class="bi bi-box-arrow-in-right me-1"></i>Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn-register px-3 text-white" style="background-color: #C5A850; border-radius: 4px;" href="{{ url_for('auth.register') }}"><i class="bi bi-person-plus me-1"></i>Register</a>
+                        <a class="nav-link btn-brand-register-outline px-3" href="{{ url_for('auth.register') }}"><i class="bi bi-person-plus me-1"></i>Register</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -237,7 +267,7 @@
                     <a href="{{ url_for('donations.donate') }}" class="text-muted text-decoration-none">Donate</a>
                 </li>
             </ul>
-            <p class="mb-0 small">&copy; 2026 FiCore Academy. Track your reading and productivity.</p>
+            <p class="mb-0 small">&copy; 2026 FiCore Academy. Engineered framework execution metrics.</p>
         </div>
     </footer>
 
