@@ -3,59 +3,100 @@
 {% block title %}Reward Shop - Nook & Hook{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
+<style>
+    /* Premium Brand Configuration */
+    .brand-gold-text {
+        color: #C5A850 !important;
+    }
+    .brand-gold-bg {
+        background-color: #C5A850 !important;
+        color: #102A43 !important;
+    }
+    .btn-outline-gold {
+        border-color: #C5A850 !important;
+        color: #C5A850 !important;
+    }
+    .btn-outline-gold:hover {
+        background-color: #C5A850 !important;
+        color: #102A43 !important;
+    }
+    .shop-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid rgba(16, 42, 67, 0.08) !important;
+    }
+    .shop-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(16, 42, 67, 0.08) !important;
+    }
+    .extra-small {
+        font-size: 0.75rem;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Header Strategy Controls -->
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0"><i class="fas fa-shopping-cart me-2"></i>Reward Shop</h1>
-                <div class="d-flex align-items-center">
-                    <span class="badge bg-primary fs-6 me-3">
-                        <i class="fas fa-coins me-1"></i>{{ user_points }} Points
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <h1 class="text-primary fw-bold mb-0">
+                    <i class="bi bi-shop me-2 brand-gold-text"></i>Ecosystem Reward Shop
+                </h1>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary px-3 py-2 fs-6 shadow-sm">
+                        <i class="bi bi-star-fill brand-gold-text me-1"></i>{{ user_points }} Points Available
                     </span>
-                    <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to Rewards
+                    <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-primary fw-semibold shadow-sm">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Rewards
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <!-- System Info Alert Panel -->
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
-                <strong>Welcome to the Reward Shop!</strong> 
-                Spend your hard-earned points on themes, customizations, and mystery boxes. 
-                Items marked with ✅ are already owned.
+            <div class="card bg-primary text-white border-0 p-4 shadow-sm">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-info-circle-fill brand-gold-text fs-4 me-3"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1 brand-gold-text text-uppercase tracking-wider extra-small">Shop Ledger Regulations</h6>
+                        <p class="mb-0 small text-white-50">
+                            Exchange accumulated focus tokens to unlock custom parameters, profile enhancements, or mystery drops. Elements designated with <i class="bi bi-check-circle-fill text-white mx-1"></i> are locked permanently to your account state.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Themes Section -->
+    <!-- Themes Catalog -->
     {% if categories.get('theme') %}
     <div class="row mb-4">
         <div class="col-12">
-            <h4 class="mb-3"><i class="fas fa-palette me-2"></i>Themes</h4>
-            <div class="row">
+            <h4 class="text-primary fw-bold mb-3"><i class="bi bi-palette-fill brand-gold-text me-2 small"></i>Interface Themes</h4>
+            <div class="row g-3">
                 {% for item in categories['theme'] %}
-                <div class="col-md-4 col-lg-3 mb-3">
-                    <div class="card h-100 {% if item.owned %}border-success{% elif not item.affordable %}border-secondary{% endif %}">
-                        <div class="card-body text-center">
-                            <div class="fs-1 mb-2">{{ item.icon }}</div>
-                            <h6 class="card-title">{{ item.name }}</h6>
-                            <p class="card-text small text-muted">{{ item.description }}</p>
-                            <div class="mt-auto">
+                <div class="col-md-4 col-lg-3 mb-2">
+                    <div class="card h-100 border-0 shadow-sm shop-card text-center p-3">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="fs-1 mb-2">{{ item.icon }}</div>
+                                <h6 class="fw-bold text-dark mb-1">{{ item.name }}</h6>
+                                <p class="text-muted small mb-3">{{ item.description }}</p>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
                                 {% if item.owned %}
-                                    <span class="badge bg-success">✅ Owned</span>
+                                    <span class="badge bg-primary text-white py-2 w-100"><i class="bi bi-check-circle-fill brand-gold-text me-1"></i>Acquired</span>
                                 {% else %}
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-primary">{{ item.cost }} pts</span>
-                                        <button class="btn btn-sm {% if item.affordable %}btn-primary{% else %}btn-secondary{% endif %} purchase-btn"
+                                        <span class="badge bg-light text-primary border fw-bold px-2 py-2">{{ item.cost }} pts</span>
+                                        <button class="btn btn-sm px-3 {% if item.affordable %}btn-primary fw-bold{% else %}btn-outline-secondary opacity-50 disabled{% endif %} purchase-btn"
                                                 data-item-id="{{ item.id }}"
                                                 data-item-name="{{ item.name }}"
                                                 data-item-cost="{{ item.cost }}"
                                                 {% if not item.affordable %}disabled{% endif %}>
-                                            {% if item.affordable %}Buy{% else %}Can't Afford{% endif %}
+                                            {% if item.affordable %}Unlock{% else %}Locked{% endif %}
                                         </button>
                                     </div>
                                 {% endif %}
@@ -69,31 +110,33 @@
     </div>
     {% endif %}
 
-    <!-- Avatar Frames Section -->
+    <!-- Avatar Frames Catalog -->
     {% if categories.get('avatar_frame') %}
     <div class="row mb-4">
         <div class="col-12">
-            <h4 class="mb-3"><i class="fas fa-frame me-2"></i>Avatar Frames</h4>
-            <div class="row">
+            <h4 class="text-primary fw-bold mb-3"><i class="bi bi-person-bounding-box brand-gold-text me-2 small"></i>Avatar Frames</h4>
+            <div class="row g-3">
                 {% for item in categories['avatar_frame'] %}
-                <div class="col-md-4 col-lg-3 mb-3">
-                    <div class="card h-100 {% if item.owned %}border-success{% elif not item.affordable %}border-secondary{% endif %}">
-                        <div class="card-body text-center">
-                            <div class="fs-1 mb-2">{{ item.icon }}</div>
-                            <h6 class="card-title">{{ item.name }}</h6>
-                            <p class="card-text small text-muted">{{ item.description }}</p>
-                            <div class="mt-auto">
+                <div class="col-md-4 col-lg-3 mb-2">
+                    <div class="card h-100 border-0 shadow-sm shop-card text-center p-3">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="fs-1 mb-2">{{ item.icon }}</div>
+                                <h6 class="fw-bold text-dark mb-1">{{ item.name }}</h6>
+                                <p class="text-muted small mb-3">{{ item.description }}</p>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
                                 {% if item.owned %}
-                                    <span class="badge bg-success">✅ Owned</span>
+                                    <span class="badge bg-primary text-white py-2 w-100"><i class="bi bi-check-circle-fill brand-gold-text me-1"></i>Acquired</span>
                                 {% else %}
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-primary">{{ item.cost }} pts</span>
-                                        <button class="btn btn-sm {% if item.affordable %}btn-primary{% else %}btn-secondary{% endif %} purchase-btn"
+                                        <span class="badge bg-light text-primary border fw-bold px-2 py-2">{{ item.cost }} pts</span>
+                                        <button class="btn btn-sm px-3 {% if item.affordable %}btn-primary fw-bold{% else %}btn-outline-secondary opacity-50 disabled{% endif %} purchase-btn"
                                                 data-item-id="{{ item.id }}"
                                                 data-item-name="{{ item.name }}"
                                                 data-item-cost="{{ item.cost }}"
                                                 {% if not item.affordable %}disabled{% endif %}>
-                                            {% if item.affordable %}Buy{% else %}Can't Afford{% endif %}
+                                            {% if item.affordable %}Unlock{% else %}Locked{% endif %}
                                         </button>
                                     </div>
                                 {% endif %}
@@ -107,31 +150,33 @@
     </div>
     {% endif %}
 
-    <!-- Titles Section -->
+    <!-- Titles Catalog -->
     {% if categories.get('title') %}
     <div class="row mb-4">
         <div class="col-12">
-            <h4 class="mb-3"><i class="fas fa-tag me-2"></i>Profile Titles</h4>
-            <div class="row">
+            <h4 class="text-primary fw-bold mb-3"><i class="bi bi-tags-fill brand-gold-text me-2 small"></i>Profile Titles</h4>
+            <div class="row g-3">
                 {% for item in categories['title'] %}
-                <div class="col-md-4 col-lg-3 mb-3">
-                    <div class="card h-100 {% if item.owned %}border-success{% elif not item.affordable %}border-secondary{% endif %}">
-                        <div class="card-body text-center">
-                            <div class="fs-1 mb-2">{{ item.icon }}</div>
-                            <h6 class="card-title">{{ item.name }}</h6>
-                            <p class="card-text small text-muted">{{ item.description }}</p>
-                            <div class="mt-auto">
+                <div class="col-md-4 col-lg-3 mb-2">
+                    <div class="card h-100 border-0 shadow-sm shop-card text-center p-3">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="fs-1 mb-2">{{ item.icon }}</div>
+                                <h6 class="fw-bold text-dark mb-1">{{ item.name }}</h6>
+                                <p class="text-muted small mb-3">{{ item.description }}</p>
+                            </div>
+                            <div class="mt-3 pt-2 border-top">
                                 {% if item.owned %}
-                                    <span class="badge bg-success">✅ Owned</span>
+                                    <span class="badge bg-primary text-white py-2 w-100"><i class="bi bi-check-circle-fill brand-gold-text me-1"></i>Acquired</span>
                                 {% else %}
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span class="badge bg-primary">{{ item.cost }} pts</span>
-                                        <button class="btn btn-sm {% if item.affordable %}btn-primary{% else %}btn-secondary{% endif %} purchase-btn"
+                                        <span class="badge bg-light text-primary border fw-bold px-2 py-2">{{ item.cost }} pts</span>
+                                        <button class="btn btn-sm px-3 {% if item.affordable %}btn-primary fw-bold{% else %}btn-outline-secondary opacity-50 disabled{% endif %} purchase-btn"
                                                 data-item-id="{{ item.id }}"
                                                 data-item-name="{{ item.name }}"
                                                 data-item-cost="{{ item.cost }}"
                                                 {% if not item.affordable %}disabled{% endif %}>
-                                            {% if item.affordable %}Buy{% else %}Can't Afford{% endif %}
+                                            {% if item.affordable %}Unlock{% else %}Locked{% endif %}
                                         </button>
                                     </div>
                                 {% endif %}
@@ -145,30 +190,30 @@
     </div>
     {% endif %}
 
-    <!-- Mystery Boxes Section -->
+    <!-- Mystery Boxes Catalog -->
     {% if categories.get('mystery_box') %}
     <div class="row mb-4">
         <div class="col-12">
-            <h4 class="mb-3"><i class="fas fa-gift me-2"></i>Mystery Boxes</h4>
-            <div class="row">
+            <h4 class="text-primary fw-bold mb-3"><i class="bi bi-gift-fill brand-gold-text me-2 small"></i>Mystery Boxes</h4>
+            <div class="row g-3">
                 {% for item in categories['mystery_box'] %}
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card h-100 border-warning">
-                        <div class="card-body text-center">
-                            <div class="fs-1 mb-2">{{ item.icon }}</div>
-                            <h6 class="card-title">{{ item.name }}</h6>
-                            <p class="card-text small text-muted">{{ item.description }}</p>
-                            <div class="mt-auto">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="badge bg-warning text-dark">{{ item.cost }} pts</span>
-                                    <button class="btn btn-sm {% if item.affordable %}btn-warning{% else %}btn-secondary{% endif %} purchase-btn"
-                                            data-item-id="{{ item.id }}"
-                                            data-item-name="{{ item.name }}"
-                                            data-item-cost="{{ item.cost }}"
-                                            {% if not item.affordable %}disabled{% endif %}>
-                                        {% if item.affordable %}Open Box{% else %}Can't Afford{% endif %}
-                                    </button>
-                                </div>
+                <div class="col-md-6 col-lg-4 mb-2">
+                    <div class="card h-100 border-0 shadow-sm shop-card text-center p-4">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="fs-1 mb-2">{{ item.icon }}</div>
+                                <h5 class="fw-bold text-dark mb-1">{{ item.name }}</h5>
+                                <p class="text-muted small mb-3">{{ item.description }}</p>
+                            </div>
+                            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                                <span class="badge brand-gold-bg fw-bold px-3 py-2 shadow-sm">{{ item.cost }} pts</span>
+                                <button class="btn btn-sm px-4 {% if item.affordable %}btn-primary fw-bold{% else %}btn-outline-secondary opacity-50 disabled{% endif %} purchase-btn"
+                                        data-item-id="{{ item.id }}"
+                                        data-item-name="{{ item.name }}"
+                                        data-item-cost="{{ item.cost }}"
+                                        {% if not item.affordable %}disabled{% endif %}>
+                                    {% if item.affordable %}Open Box{% else %}Locked{% endif %}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -179,30 +224,30 @@
     </div>
     {% endif %}
 
-    <!-- Boosters Section -->
+    <!-- Boosters Catalog -->
     {% if categories.get('booster') %}
     <div class="row mb-4">
         <div class="col-12">
-            <h4 class="mb-3">⚡ Boosters</h4>
-            <div class="row">
+            <h4 class="text-primary fw-bold mb-3"><i class="bi bi-lightning-charge-fill brand-gold-text me-2 small"></i>Ecosystem Boosters</h4>
+            <div class="row g-3">
                 {% for item in categories['booster'] %}
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <div class="card h-100 border-info">
-                        <div class="card-body text-center">
-                            <div class="fs-1 mb-2">{{ item.icon }}</div>
-                            <h6 class="card-title">{{ item.name }}</h6>
-                            <p class="card-text small text-muted">{{ item.description }}</p>
-                            <div class="mt-auto">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="badge bg-info">{{ item.cost }} pts</span>
-                                    <button class="btn btn-sm {% if item.affordable %}btn-info{% else %}btn-secondary{% endif %} purchase-btn"
-                                            data-item-id="{{ item.id }}"
-                                            data-item-name="{{ item.name }}"
-                                            data-item-cost="{{ item.cost }}"
-                                            {% if not item.affordable %}disabled{% endif %}>
-                                        {% if item.affordable %}Activate{% else %}Can't Afford{% endif %}
-                                    </button>
-                                </div>
+                <div class="col-md-6 col-lg-4 mb-2">
+                    <div class="card h-100 border-0 shadow-sm shop-card text-center p-4">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="fs-1 mb-2 text-primary">{{ item.icon }}</div>
+                                <h5 class="fw-bold text-dark mb-1">{{ item.name }}</h5>
+                                <p class="text-muted small mb-3">{{ item.description }}</p>
+                            </div>
+                            <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                                <span class="badge bg-primary text-white fw-bold px-3 py-2 shadow-sm">{{ item.cost }} pts</span>
+                                <button class="btn btn-sm px-4 {% if item.affordable %}btn-primary fw-bold{% else %}btn-outline-secondary opacity-50 disabled{% endif %} purchase-btn"
+                                        data-item-id="{{ item.id }}"
+                                        data-item-name="{{ item.name }}"
+                                        data-item-cost="{{ item.cost }}"
+                                        {% if not item.affordable %}disabled{% endif %}>
+                                    {% if item.affordable %}Activate{% else %}Locked{% endif %}
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -214,39 +259,42 @@
     {% endif %}
 </div>
 
-<!-- Purchase Confirmation Modal -->
+<!-- Modal Dialog Components -->
 <div class="modal fade" id="purchaseModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Purchase</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white py-3">
+                <h5 class="modal-title fw-bold"><i class="bi bi-wallet2 brand-gold-text me-2"></i>Confirm Acquisition</h5>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p>Are you sure you want to purchase <strong id="itemName"></strong> for <strong id="itemCost"></strong> points?</p>
-                <p class="text-muted small">This action cannot be undone.</p>
+            <div class="modal-body p-4">
+                <p class="text-dark fs-5">Authorize deduction for <strong id="itemName" class="text-primary"></strong>?</p>
+                <div class="d-flex align-items-center justify-content-between bg-light p-3 rounded border">
+                    <span class="text-muted small fw-semibold">Required Token Capital:</span>
+                    <span class="fw-bold text-primary"><span id="itemCost"></span> Points</span>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmPurchase">Purchase</button>
+            <div class="modal-footer bg-light border-top-0 px-4 py-3">
+                <button type="button" class="btn btn-outline-secondary fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary fw-bold px-4" id="confirmPurchase">Defray Ledger</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Success Modal -->
 <div class="modal fade" id="successModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Purchase Successful!</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white py-3">
+                <h5 class="modal-title fw-bold"><i class="bi bi-check-circle-fill brand-gold-text me-2"></i>Transaction Confirmed</h5>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p id="successMessage"></p>
+            <div class="modal-body p-4 text-center">
+                <i class="bi bi-trophy-fill text-primary display-4 mb-3 d-block brand-gold-text"></i>
+                <p id="successMessage" class="text-dark fw-medium mb-0"></p>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Awesome!</button>
+            <div class="modal-footer bg-light border-top-0 justify-content-center py-3">
+                <button type="button" class="btn btn-primary fw-bold px-5" data-bs-dismiss="modal">Return to Terminal</button>
             </div>
         </div>
     </div>
@@ -256,33 +304,23 @@
 document.addEventListener('DOMContentLoaded', function() {
     let currentItemId = null;
     
-    // Handle purchase button clicks
     document.querySelectorAll('.purchase-btn').forEach(button => {
         button.addEventListener('click', function() {
-            const itemId = this.dataset.itemId;
-            const itemName = this.dataset.itemName;
-            const itemCost = this.dataset.itemCost;
-            
-            currentItemId = itemId;
-            document.getElementById('itemName').textContent = itemName;
-            document.getElementById('itemCost').textContent = itemCost;
+            currentItemId = this.dataset.itemId;
+            document.getElementById('itemName').textContent = this.dataset.itemName;
+            document.getElementById('itemCost').textContent = this.dataset.itemCost;
             
             new bootstrap.Modal(document.getElementById('purchaseModal')).show();
         });
     });
     
-    // Handle purchase confirmation
     document.getElementById('confirmPurchase').addEventListener('click', function() {
         if (!currentItemId) return;
         
         fetch('{{ url_for("rewards.purchase_item") }}', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                item_id: currentItemId
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id: currentItemId })
         })
         .then(response => response.json())
         .then(data => {
@@ -292,17 +330,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('successMessage').textContent = data.message;
                 new bootstrap.Modal(document.getElementById('successModal')).show();
                 
-                // Reload page after success modal is closed
                 document.getElementById('successModal').addEventListener('hidden.bs.modal', function() {
                     location.reload();
                 });
             } else {
-                alert('Error: ' + data.message);
+                alert('Ecosystem Error: ' + data.message);
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while processing your purchase.');
+            console.error('Network Error:', error);
+            alert('An integration error occurred while clearing your purchase receipt.');
         });
     });
 });
