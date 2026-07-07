@@ -7,7 +7,16 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<style>
+    .brand-gold-text {
+        color: #C5A850 !important;
+    }
+    .extra-small {
+        font-size: 0.75rem;
+    }
+</style>
+
+<div class="container-fluid mt-4">
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <!-- Focus Lock Reminder Widget (shown only when timer is active) -->
@@ -15,9 +24,9 @@
                 <div class="d-flex align-items-center">
                     <i class="bi bi-lock-fill text-warning me-2 fs-4"></i>
                     <div class="flex-grow-1">
-                        <strong>STAY FOCUSED</strong>
-                        <div id="focus-lock-message" class="small mt-1">
-                            Remember to avoid distracting sites during your focus session
+                        <strong class="text-dark">STAY FOCUSED</strong>
+                        <div id="focus-lock-message" class="small text-muted mt-1">
+                            Try to avoid distracting websites during your session.
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-sm ms-2" id="dismiss-focus-lock" title="Dismiss for 5 minutes"></button>
@@ -25,60 +34,60 @@
             </div>
 
             <!-- Timer Display -->
-            <div class="card shadow-lg border-0 timer-theme-{{ theme or 'light' }}">
+            <div class="card shadow border-0 timer-theme-{{ theme or 'light' }} mb-4 bg-white">
                 <div class="card-body text-center p-5">
-                    <div id="timer-display" class="timer-display mb-4">
+                    <div id="timer-display" class="timer-display mb-4 text-primary display-2 fw-bold">
                         <span id="minutes">25</span>:<span id="seconds">00</span>
                     </div>
                     
                     <div id="timer-info" class="mb-4">
-                        <h4 id="task-name" class="fw-bold">Ready to Focus</h4>
-                        <p id="timer-type" class="text-muted">Work Session</p>
+                        <h4 id="task-name" class="fw-bold text-dark">Ready to Focus</h4>
+                        <p id="timer-type" class="text-muted small">Work Session</p>
                     </div>
                     
                     <!-- Timer Controls -->
-                    <div class="timer-controls mb-4">
-                        <button id="start-btn" class="btn btn-success btn-lg">
-                            <i class="bi bi-play-fill"></i> Start
+                    <div class="timer-controls mb-4 d-flex justify-content-center gap-2">
+                        <button id="start-btn" class="btn btn-primary btn-lg px-4 fw-semibold shadow-sm">
+                            <i class="bi bi-play-fill brand-gold-text me-1"></i> Start
                         </button>
-                        <button id="pause-btn" class="btn btn-warning btn-lg" style="display: none;">
-                            <i class="bi bi-pause-fill"></i> Pause
+                        <button id="pause-btn" class="btn btn-warning btn-lg px-4 fw-semibold text-dark" style="display: none;">
+                            <i class="bi bi-pause-fill me-1"></i> Pause
                         </button>
-                        <button id="stop-btn" class="btn btn-danger btn-lg" style="display: none;">
-                            <i class="bi bi-stop-fill"></i> Stop
+                        <button id="stop-btn" class="btn btn-danger btn-lg px-4 fw-semibold text-white" style="display: none;">
+                            <i class="bi bi-stop-fill me-1"></i> Stop
                         </button>
-                        <button id="reset-btn" class="btn btn-secondary btn-lg">
-                            <i class="bi bi-arrow-clockwise"></i> Reset
+                        <button id="reset-btn" class="btn btn-outline-secondary btn-lg px-4 fw-semibold">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Reset
                         </button>
                     </div>
                     
                     <!-- Progress Bar -->
-                    <div class="progress mb-4" style="height: 10px;">
-                        <div id="progress-bar" class="progress-bar bg-success" style="width: 0%"></div>
+                    <div class="progress" style="height: 8px;">
+                        <div id="progress-bar" class="progress-bar bg-primary" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
             
             <!-- Timer Setup -->
-            <div class="card mt-4" id="timer-setup">
-                <div class="card-header">
-                    <h5 class="mb-0">Setup Timer</h5>
+            <div class="card border-0 shadow-sm mb-4" id="timer-setup">
+                <div class="card-header bg-light py-3 border-bottom">
+                    <h5 class="mb-0 text-primary fw-bold">Setup Timer</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     <form id="timer-form">
-                        <div class="row">
+                        <div class="row g-3">
                             <div class="col-md-6 mb-3">
-                                <label for="task_name" class="form-label">Task Name</label>
+                                <label for="task_name" class="form-label small fw-semibold text-muted">Task Name</label>
                                 <input type="text" class="form-control" id="task_name" name="task_name" 
                                        placeholder="What are you working on?" required>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label for="duration" class="form-label">Duration (minutes)</label>
+                                <label for="duration" class="form-label small fw-semibold text-muted">Duration (minutes)</label>
                                 <input type="number" class="form-control" id="duration" name="duration" 
                                        value="25" min="1" max="120" required>
                             </div>
                             <div class="col-md-3 mb-3">
-                                <label for="timer_type" class="form-label">Type</label>
+                                <label for="timer_type" class="form-label small fw-semibold text-muted">Type</label>
                                 <select class="form-select" id="timer_type" name="timer_type">
                                     <option value="work">Work</option>
                                     <option value="break">Break</option>
@@ -86,9 +95,9 @@
                             </div>
                         </div>
                         
-                        <div class="row">
+                        <div class="row g-3">
                             <div class="col-md-6 mb-3">
-                                <label for="category" class="form-label">Category</label>
+                                <label for="category" class="form-label small fw-semibold text-muted">Category</label>
                                 <select class="form-select" id="category" name="category">
                                     <option value="general">General</option>
                                     <option value="work">Work</option>
@@ -100,32 +109,32 @@
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Quick Presets</label>
+                                <label class="form-label small fw-semibold text-muted">Quick Presets</label>
                                 <div class="btn-group w-100" role="group">
-                                    <button type="button" class="btn btn-outline-danger preset-btn" data-duration="25" data-type="work">
+                                    <button type="button" class="btn btn-outline-primary preset-btn fw-semibold" data-duration="25" data-type="work">
                                         Pomodoro
                                     </button>
-                                    <button type="button" class="btn btn-outline-warning preset-btn" data-duration="5" data-type="break">
+                                    <button type="button" class="btn btn-outline-warning preset-btn fw-semibold text-dark" data-duration="5" data-type="break">
                                         Short Break
                                     </button>
-                                    <button type="button" class="btn btn-outline-success preset-btn" data-duration="15" data-type="break">
+                                    <button type="button" class="btn btn-outline-primary preset-btn fw-semibold" data-duration="15" data-type="break">
                                         Long Break
                                     </button>
                                 </div>
-                                <button type="button" class="btn btn-outline-info w-100 mt-2" id="reading-session-btn">
-                                    <i class="bi bi-book me-1"></i>Reading Session
+                                <button type="button" class="btn btn-outline-primary w-100 mt-2 fw-semibold" id="reading-session-btn">
+                                    <i class="bi bi-book me-1 brand-gold-text"></i>Reading Session
                                 </button>
                             </div>
                         </div>
                         
-                        <!-- Hook-Nook Integration -->
-                        <div class="row">
+                        <!-- Book Integration -->
+                        <div class="row mt-2">
                             <div class="col-12 mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="is_reading_session" name="is_reading_session">
-                                    <label class="form-check-label" for="is_reading_session">
-                                        <i class="bi bi-book text-info me-1"></i>
-                                        <strong>Link to a book</strong> (earn bonus points for focused reading)
+                                <div class="form-check bg-light p-3 rounded border ps-5 mx-0">
+                                    <input class="form-check-input mt-1" type="checkbox" id="is_reading_session" name="is_reading_session">
+                                    <label class="form-check-label small fw-semibold text-dark" for="is_reading_session">
+                                        <i class="bi bi-book text-primary me-1"></i>
+                                        Link this session to a book to track your reading progress
                                     </label>
                                 </div>
                             </div>
@@ -133,13 +142,13 @@
                         
                         <div id="book-selection" class="row" style="display: none;">
                             <div class="col-12 mb-3">
-                                <label for="linked_book_id" class="form-label">Select Book</label>
+                                <label for="linked_book_id" class="form-label small fw-semibold text-muted">Select Book</label>
                                 <select class="form-select" id="linked_book_id" name="linked_book_id">
                                     <option value="">Choose a book...</option>
                                 </select>
-                                <div class="form-text">
+                                <div class="form-text extra-small">
                                     <i class="bi bi-lightbulb text-warning me-1"></i>
-                                    Linking to a book gives you <strong>bonus points</strong> and tracks your reading progress!
+                                    Connecting a book keeps your library reading progress automatically updated!
                                 </div>
                             </div>
                         </div>
@@ -147,44 +156,43 @@
                 </div>
             </div>
 
-            <!-- Focus Lock Settings -->
-            <div class="card mt-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="bi bi-lock-fill text-warning me-2"></i>Focus Lock
+            <!-- Pacing Focus Settings -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center py-3 border-bottom">
+                    <h5 class="mb-0 text-primary fw-bold">
+                        <i class="bi bi-lock-fill brand-gold-text me-2"></i>Pacing Focus
                     </h5>
-                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" 
+                    <button class="btn btn-sm btn-outline-primary fw-semibold" type="button" data-bs-toggle="collapse" 
                             data-bs-target="#focus-lock-settings" aria-expanded="false">
-                        <i class="bi bi-gear"></i> Settings
+                        <i class="bi bi-gear me-1"></i> Settings
                     </button>
                 </div>
                 <div class="collapse" id="focus-lock-settings">
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <p class="text-muted small mb-3">
-                            Add distracting websites to get gentle reminders during focus sessions. 
-                            This is a visual reminder only - no blocking is performed.
+                            List websites that tend to pull your attention away. This helps give you a friendly, visual reminder to stay on track during your focus blocks.
                         </p>
                         
                         <div class="mb-3">
-                            <label for="distraction-domains" class="form-label">Distracting Sites</label>
+                            <label for="distraction-domains" class="form-label small fw-semibold text-muted">Distracting Sites</label>
                             <textarea class="form-control" id="distraction-domains" rows="3" 
-                                      placeholder="Enter domains separated by commas (e.g., twitter.com, reddit.com, youtube.com)"></textarea>
-                            <div class="form-text">
-                                Enter up to 20 domains. Don't include http:// or www.
+                                      placeholder="Enter websites separated by commas (e.g., twitter.com, reddit.com)"></textarea>
+                            <div class="form-text extra-small">
+                                You can enter up to 20 websites. Please skip the http:// or www. parts.
                             </div>
                         </div>
                         
                         <div class="d-flex justify-content-between">
-                            <button type="button" class="btn btn-success btn-sm" id="save-distraction-list">
-                                <i class="bi bi-check"></i> Save List
+                            <button type="button" class="btn btn-primary btn-sm fw-semibold" id="save-distraction-list">
+                                <i class="bi bi-check me-1 brand-gold-text"></i> Save List
                             </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="load-distraction-list">
-                                <i class="bi bi-arrow-clockwise"></i> Load Current List
+                            <button type="button" class="btn btn-outline-secondary btn-sm fw-semibold" id="load-distraction-list">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Load Current List
                             </button>
                         </div>
                         
                         <div id="current-domains" class="mt-3" style="display: none;">
-                            <small class="text-muted">Current domains:</small>
+                            <small class="text-muted small fw-semibold d-block mb-1">Current list:</small>
                             <div id="domains-list" class="mt-1"></div>
                         </div>
                     </div>
@@ -193,71 +201,71 @@
             
             <!-- Completion Modal -->
             <div class="modal fade" id="completionModal" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Session Complete!</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-primary text-white py-3">
+                            <h5 class="modal-title fw-bold">Session Complete!</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="modal-body text-center">
-                            <i class="bi bi-check-circle display-1 text-success mb-3"></i>
-                            <h4>Great job!</h4>
-                            <p>You completed your focus session.</p>
+                        <div class="modal-body text-center p-4">
+                            <i class="bi bi-check-circle display-3 text-primary mb-3 d-block"></i>
+                            <h4 class="fw-bold text-dark">Great job!</h4>
+                            <p class="text-muted">You have successfully finished your focus session.</p>
                             
                             <!-- Reading Progress (shown only for reading sessions) -->
                             <div id="reading-progress-section" style="display: none;">
-                                <div class="alert alert-info mb-3">
-                                    <i class="bi bi-book text-info me-2"></i>
-                                    <strong id="linked-book-title">Reading Session</strong>
-                                    <div class="small mt-1">Update your reading progress to earn bonus points!</div>
+                                <div class="alert alert-info border-0 mb-3 text-start">
+                                    <i class="bi bi-book text-primary me-2 fw-bold"></i>
+                                    <strong id="linked-book-title" class="text-dark">Reading Session</strong>
+                                    <div class="small text-muted mt-1">Log your pages below to save your current progress to your library.</div>
                                 </div>
                                 
-                                <div class="row mb-3">
+                                <div class="row g-3 mb-3 text-start">
                                     <div class="col-md-6">
-                                        <label for="pages_read" class="form-label">Pages Read</label>
+                                        <label for="pages_read" class="form-label small fw-semibold text-muted">Pages Read This Session</label>
                                         <input type="number" class="form-control" id="pages_read" name="pages_read" min="0" value="0">
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="current_page" class="form-label">Current Page</label>
+                                        <label for="current_page" class="form-label small fw-semibold text-muted">End on Page Number</label>
                                         <input type="number" class="form-control" id="current_page" name="current_page" min="0" value="0">
-                                        <div class="form-text">
-                                            <small id="page-progress-text">Progress: 0%</small>
+                                        <div class="form-text extra-small">
+                                            <span id="page-progress-text">Progress: 0%</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <label class="form-label">How are you feeling?</label>
-                                <div class="btn-group" role="group">
+                            <div class="mb-4">
+                                <label class="form-label small fw-semibold text-muted d-block mb-2">How do you feel after this session?</label>
+                                <div class="btn-group w-100" role="group">
                                     <input type="radio" class="btn-check" name="mood" id="mood1" value="😊" checked>
-                                    <label class="btn btn-outline-primary" for="mood1">😊</label>
+                                    <label class="btn btn-outline-primary py-2" for="mood1">😊</label>
                                     
                                     <input type="radio" class="btn-check" name="mood" id="mood2" value="😎">
-                                    <label class="btn btn-outline-primary" for="mood2">😎</label>
+                                    <label class="btn btn-outline-primary py-2" for="mood2">😎</label>
                                     
                                     <input type="radio" class="btn-check" name="mood" id="mood3" value="🤔">
-                                    <label class="btn btn-outline-primary" for="mood3">🤔</label>
+                                    <label class="btn btn-outline-primary py-2" for="mood3">🤔</label>
                                     
                                     <input type="radio" class="btn-check" name="mood" id="mood4" value="😴">
-                                    <label class="btn btn-outline-primary" for="mood4">😴</label>
+                                    <label class="btn btn-outline-primary py-2" for="mood4">😴</label>
                                 </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <label for="productivity_rating" class="form-label">Productivity Rating</label>
+                            <div class="mb-2 text-start">
+                                <label for="productivity_rating" class="form-label small fw-semibold text-muted">Productivity Level</label>
                                 <select class="form-select" id="productivity_rating" name="productivity_rating">
-                                    <option value="1">1 - Poor</option>
-                                    <option value="2">2 - Below Average</option>
-                                    <option value="3" selected>3 - Average</option>
-                                    <option value="4">4 - Good</option>
-                                    <option value="5">5 - Excellent</option>
+                                    <option value="1">1 - Low focus</option>
+                                    <option value="2">2 - Somewhat distracted</option>
+                                    <option value="3" selected>3 - Average rhythm</option>
+                                    <option value="4">4 - Highly productive</option>
+                                    <option value="5">5 - Excellent focus</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-success" id="complete-session">Complete Session</button>
+                        <div class="modal-footer bg-light border-top">
+                            <button type="button" class="btn btn-outline-secondary fw-semibold" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary fw-semibold px-4" id="complete-session">Save Session</button>
                         </div>
                     </div>
                 </div>
