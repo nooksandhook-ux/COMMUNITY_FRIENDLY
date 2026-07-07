@@ -35,6 +35,28 @@
         color: #C5A850 !important;
     }
 
+    /* --- Custom Accordion Alignment Fixes --- */
+    /* Remove default light blue/green backgrounds on active expanded items */
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(10, 25, 49, 0.04) !important; /* Extremely light institutional tint */
+        color: #0A1931 !important;
+        box-shadow: inset 0 -1px 0 rgba(0,0,0,.125), 3px 0 0 #C5A850 inset !important; /* Left gold accent border line */
+    }
+
+    /* Remove glowing outline focus rings */
+    .accordion-button:focus {
+        border-color: rgba(10, 25, 49, 0.25) !important;
+        box-shadow: 0 0 0 0.25rem rgba(10, 25, 49, 0.1) !important;
+    }
+
+    /* Synchronize the accordion arrows with the core palette */
+    .accordion-button::after {
+        filter: contrast(0.5);
+    }
+    .accordion-button:not(.collapsed)::after {
+        filter: sepia(100%) saturate(300%) brightness(90%) hue-rotate(5deg); /* Tint arrow gold when open */
+    }
+
     /* Target padding and spacing for mobile matrices */
     @media (max-width: 576px) {
         .btn-responsive-scale {
