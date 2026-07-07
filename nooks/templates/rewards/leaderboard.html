@@ -3,94 +3,163 @@
 {% block title %}Leaderboard - Nook & Hook{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="text-warning">
-            <i class="bi bi-bar-chart me-2"></i>Leaderboard
-        </h1>
-        <div class="btn-group" role="group">
-            <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-warning">
-                <i class="bi bi-trophy me-1"></i>Overview
-            </a>
-            <a href="{{ url_for('rewards.shop') }}" class="btn btn-outline-warning">
-                <i class="bi bi-shop me-1"></i>Shop
-            </a>
-            <a href="{{ url_for('rewards.progress') }}" class="btn btn-outline-warning">
-                <i class="bi bi-graph-up me-1"></i>Progress
-            </a>
-            <a href="{{ url_for('rewards.history') }}" class="btn btn-outline-warning">
-                <i class="bi bi-clock-history me-1"></i>History
-            </a>
-            <a href="{{ url_for('rewards.badges') }}" class="btn btn-outline-warning">
-                <i class="bi bi-award me-1"></i>Badges
-            </a>
+<style>
+    /* Premium Brand Configuration */
+    .brand-gold-text {
+        color: #C5A850 !important;
+    }
+    .brand-gold-bg {
+        background-color: #C5A850 !important;
+        color: #102A43 !important;
+    }
+    .btn-outline-gold {
+        border-color: #C5A850 !important;
+        color: #C5A850 !important;
+    }
+    .btn-outline-gold:hover, .btn-outline-gold:focus, .btn-outline-gold:active {
+        background-color: #C5A850 !important;
+        color: #102A43 !important;
+        border-color: #C5A850 !important;
+    }
+    .leaderboard-card {
+        border: 1px solid rgba(16, 42, 67, 0.08) !important;
+    }
+    .user-rank-gradient {
+        background: linear-gradient(135deg, #102A43 0%, #243B53 100%) !important;
+        border: 1px solid rgba(197, 168, 80, 0.2) !important;
+    }
+    .table-current-user {
+        background-color: rgba(197, 168, 80, 0.08) !important;
+    }
+    .extra-small {
+        font-size: 0.75rem;
+    }
+    .tracking-wider {
+        letter-spacing: 0.05em;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Header Strategy Controls -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <h1 class="text-primary fw-bold mb-0">
+                    <i class="bi bi-bar-chart-line me-2 brand-gold-text"></i>Ecosystem Leaderboard
+                </h1>
+                
+                <!-- Navigation Matrix Controls -->
+                <div class="btn-group shadow-sm" role="group" aria-label="Ecosystem Navigation">
+                    <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-primary fw-semibold">
+                        <i class="bi bi-trophy me-1"></i>Overview
+                    </a>
+                    <a href="{{ url_for('rewards.shop') }}" class="btn btn-outline-primary fw-semibold">
+                        <i class="bi bi-shop me-1"></i>Shop
+                    </a>
+                    <a href="{{ url_for('rewards.progress') }}" class="btn btn-outline-primary fw-semibold">
+                        <i class="bi bi-graph-up me-1"></i>Progress
+                    </a>
+                    <a href="{{ url_for('rewards.history') }}" class="btn btn-outline-primary fw-semibold">
+                        <i class="bi bi-clock-history me-1"></i>History
+                    </a>
+                    <a href="{{ url_for('rewards.badges') }}" class="btn btn-outline-primary fw-semibold">
+                        <i class="bi bi-award me-1"></i>Badges
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Current User Rank -->
-    {% if current_user_rank %}
-        <div class="card bg-gradient text-white mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <div class="card-body text-center">
-                <i class="bi bi-star-fill display-4 mb-2"></i>
-                <h2 class="fw-bold">Rank #{{ current_user_rank }}</h2>
-                <p class="mb-0">Your Position</p>
-            </div>
-        </div>
-    {% else %}
-        <div class="card bg-warning text-dark mb-4">
-            <div class="card-body text-center">
-                <i class="bi bi-exclamation-circle display-4 mb-2"></i>
-                <h5 class="fw-bold">Not Ranked</h5>
-                <p class="mb-0">Earn more points to appear on the leaderboard!</p>
-            </div>
-        </div>
-    {% endif %}
-
-    <!-- Leaderboard Table -->
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">Top Users (Last 30 Days)</h5>
-        </div>
-        <div class="card-body">
-            {% if leaderboard %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Username</th>
-                                <th>Level</th>
-                                <th>Points</th>
-                                <th>Rewards</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for entry in leaderboard %}
-                                <tr {% if entry.is_current_user %}class="table-primary"{% endif %}>
-                                    <td>{{ loop.index }}</td>
-                                    <td>
-                                        <i class="bi bi-person me-1"></i>
-                                        {{ entry.username }}
-                                        {% if entry.is_current_user %}
-                                            <span class="badge bg-warning text-dark ms-2">You</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ entry.level }}</td>
-                                    <td><span class="badge bg-primary">{{ entry.total_points }} pts</span></td>
-                                    <td>{{ entry.reward_count }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+    <!-- Current Account Standing Vector -->
+    <div class="row mb-4">
+        <div class="col-12">
+            {% if current_user_rank %}
+                <div class="card user-rank-gradient text-white border-0 shadow-sm p-3 text-center">
+                    <div class="card-body">
+                        <i class="bi bi-star-fill display-5 mb-2 brand-gold-text"></i>
+                        <h6 class="text-uppercase tracking-wider text-white-50 fw-bold extra-small mb-1">Your Operational Standing</h6>
+                        <h2 class="fw-bold text-white mb-0">Rank #{{ current_user_rank }}</h2>
+                    </div>
                 </div>
             {% else %}
-                <div class="text-center py-4">
-                    <i class="bi bi-bar-chart display-4 text-muted"></i>
-                    <h5 class="mt-3 text-muted">No leaderboard data</h5>
-                    <p class="text-muted">No users have earned points in the last 30 days.</p>
+                <div class="card bg-primary text-white border-0 shadow-sm p-3 text-center">
+                    <div class="card-body">
+                        <i class="bi bi-exclamation-circle-fill display-5 mb-2 brand-gold-text"></i>
+                        <h6 class="text-uppercase tracking-wider text-white-50 fw-bold extra-small mb-1">Unindexed Parameters</h6>
+                        <h5 class="fw-bold text-white mb-1">Position Pending</h5>
+                        <p class="text-white-50 small mb-0">Defray and accumulate points within the index blocks to register your profile state.</p>
+                    </div>
                 </div>
             {% endif %}
+        </div>
+    </div>
+
+    <!-- Leaderboard Ledger Matrix -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm leaderboard-card">
+                <div class="card-header bg-white border-bottom py-3">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-shield-check brand-gold-text fs-5 me-2"></i>
+                        <h5 class="fw-bold text-primary mb-0">Top Active Accounts <span class="text-muted small fw-normal">(30-Day Evaluation Interval)</span></h5>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if leaderboard %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-4 text-muted text-uppercase tracking-wider extra-small fw-bold">Rank</th>
+                                        <th class="text-muted text-uppercase tracking-wider extra-small fw-bold">Identity Parameter</th>
+                                        <th class="text-muted text-uppercase tracking-wider extra-small fw-bold">Tier Level</th>
+                                        <th class="text-muted text-uppercase tracking-wider extra-small fw-bold">Token Accumulation</th>
+                                        <th class="pe-4 text-muted text-uppercase tracking-wider extra-small fw-bold text-end">Acquisitions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in leaderboard %}
+                                        <tr {% if entry.is_current_user %}class="table-current-user"{% endif %}>
+                                            <td class="ps-4 fw-bold text-dark">
+                                                {% if loop.index == 1 %}
+                                                    <span class="badge brand-gold-bg px-2.5 py-1.5"><i class="bi bi-trophy-fill me-1"></i>1st</span>
+                                                {% elif loop.index == 2 %}
+                                                    <span class="badge bg-secondary text-white px-2.5 py-1.5">2nd</span>
+                                                {% elif loop.index == 3 %}
+                                                    <span class="badge bg-dark text-white px-2.5 py-1.5">3rd</span>
+                                                {% else %}
+                                                    #{{ loop.index }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="fw-semibold text-dark">
+                                                <i class="bi bi-person-circle text-primary opacity-50 me-2"></i>{{ entry.username }}
+                                                {% if entry.is_current_user %}
+                                                    <span class="badge bg-primary text-white ms-2 extra-small py-1 px-2">Active Node</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-primary border fw-bold px-2.5 py-1.5">Lvl {{ entry.level }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold text-primary">{{ entry.total_points }} <span class="text-muted small fw-normal">pts</span></span>
+                                            </td>
+                                            <td class="pe-4 text-end">
+                                                <span class="badge bg-light text-dark border px-2.5 py-1.5 fw-medium"><i class="bi bi-gift me-1 opacity-75"></i>{{ entry.reward_count }} Items</span>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-database-exclamation display-4 text-muted opacity-50 mb-3 d-block"></i>
+                            <h5 class="fw-bold text-dark mb-1">Ledger Frame Empty</h5>
+                            <p class="text-muted small mb-0 px-3">No account nodes have submitted point intervals over the current 30-day tracking block.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
