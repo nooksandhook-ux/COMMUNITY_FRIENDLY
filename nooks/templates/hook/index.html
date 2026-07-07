@@ -1,73 +1,96 @@
 {% extends "base.html" %}
 
-{% block title %}Hook - Productivity Timer{% endblock %}
+{% block title %}Hook - Pacing Focus Dashboard{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/hook-enhancements.css') }}">
 {% endblock %}
 
 {% block content %}
+<style>
+    /* Premium Brand Overrides */
+    .brand-gold-text {
+        color: #C5A850 !important;
+    }
+    .brand-gold-bg {
+        background-color: #C5A850 !important;
+        color: #102A43 !important;
+    }
+    .btn-outline-gold {
+        border-color: #C5A850 !important;
+        color: #C5A850 !important;
+    }
+    .btn-outline-gold:hover {
+        background-color: #C5A850 !important;
+        color: #102A43 !important;
+    }
+    .extra-small {
+        font-size: 0.75rem;
+    }
+</style>
+
 <meta name="csrf-token" content="{{ csrf_token() }}"> 
+
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="text-info">
-        <i class="bi bi-stopwatch me-2"></i>Hook - Productivity Timer
+    <h1 class="text-primary fw-bold">
+        <i class="bi bi-stopwatch-fill me-2 brand-gold-text"></i>Pacing Focus
     </h1>
-    <a href="{{ url_for('hook.timer') }}" class="btn btn-info">
-        <i class="bi bi-play-circle me-2"></i>Start Timer
+    <a href="{{ url_for('hook.timer') }}" class="btn btn-primary fw-semibold px-4 shadow-sm">
+        <i class="bi bi-play-circle-fill me-2 brand-gold-text"></i>Start Focus Session
     </a>
 </div>
 
-<!-- Stats Cards -->
-<div class="row mb-4">
+<!-- Analytics & Status Overview -->
+<div class="row mb-4 g-3">
     <div class="col-md-4">
-        <div class="card bg-info text-white">
-            <div class="card-body text-center">
-                <h3 class="fw-bold">{{ today_tasks }}</h3>
-                <p class="mb-0">Tasks Today</p>
+        <div class="card bg-primary text-white border-0 shadow-sm h-100">
+            <div class="card-body text-center p-4">
+                <h3 class="fw-bold display-6 brand-gold-text mb-1">{{ today_tasks }}</h3>
+                <p class="mb-0 text-white-50 small fw-semibold text-uppercase tracking-wider">Sessions Completed Today</p>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card bg-success text-white">
-            <div class="card-body text-center">
-                <h3 class="fw-bold">{{ completed_tasks | length }}</h3>
-                <p class="mb-0">Total Completed</p>
+        <div class="card bg-primary text-white border-0 shadow-sm h-100">
+            <div class="card-body text-center p-4">
+                <h3 class="fw-bold display-6 brand-gold-text mb-1">{{ completed_tasks | length }}</h3>
+                <p class="mb-0 text-white-50 small fw-semibold text-uppercase tracking-wider">All-Time Completed</p>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card bg-warning text-white">
-            <div class="card-body text-center">
-                <h3 class="fw-bold">
+        <div class="card border-0 shadow-sm h-100 {% if active_timer %}brand-gold-bg{% else %}bg-light text-muted{% endif %}">
+            <div class="card-body text-center p-4 d-flex flex-column justify-content-center align-items-center">
+                <h3 class="fw-bold mb-1">
                     {% if active_timer %}
-                        <i class="bi bi-play-fill"></i>
+                        <i class="bi bi-play-circle-fill fs-2"></i>
                     {% else %}
-                        <i class="bi bi-pause-fill"></i>
+                        <i class="bi bi-pause-circle fs-2"></i>
                     {% endif %}
                 </h3>
-                <p class="mb-0">
-                    {% if active_timer %}Active{% else %}Ready{% endif %}
+                <p class="mb-0 small fw-semibold text-uppercase tracking-wider">
+                    {% if active_timer %}Session in Progress{% else %}Ready to Start{% endif %}
                 </p>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Active Timer -->
+<!-- Active Timer Alert Banner -->
 {% if active_timer %}
 <div class="row mb-4">
     <div class="col-12">
-        <div class="card border-info">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">
-                    <i class="bi bi-play-circle me-2"></i>Active Timer
-                </h5>
-            </div>
-            <div class="card-body text-center">
-                <h4 class="fw-bold">{{ active_timer.task_name }}</h4>
-                <p class="text-muted">{{ active_timer.timer_type.title() }} Session</p>
-                <a href="{{ url_for('hook.timer') }}" class="btn btn-info">
-                    <i class="bi bi-stopwatch me-2"></i>Go to Timer
+        <div class="card border-0 bg-primary text-white shadow-sm">
+            <div class="card-body d-flex justify-content-between align-items-center p-4">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-hourglass-split display-6 brand-gold-text me-3 animate-pulse"></i>
+                    <div>
+                        <h5 class="fw-bold mb-1">Active Session: {{ active_timer.task_name }}</h5>
+                        <p class="mb-0 text-white-50 small">{{ active_timer.timer_type.title() }} interval currently running.</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('hook.timer') }}" class="btn btn-light text-primary fw-semibold px-4">
+                    View Timer <i class="bi bi-arrow-right ms-1"></i>
                 </a>
             </div>
         </div>
@@ -75,152 +98,148 @@
 </div>
 {% endif %}
 
-<!-- Quick Settings & Theme Control -->
-<div class="row mb-4">
+<!-- Presets & Strategic Controls -->
+<div class="row mb-4 g-4">
     <div class="col-md-8">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Quick Timer Presets</h5>
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center py-3 border-bottom">
+                <h5 class="mb-0 text-primary fw-bold">Focus Presets</h5>
                 <div class="btn-group">
-                    <button class="btn btn-sm btn-outline-secondary" id="theme-toggle" title="Theme Settings">
-                        <i class="bi bi-palette"></i>
+                    <button class="btn btn-sm btn-outline-primary" id="theme-toggle" title="Theme Settings">
+                        <i class="bi bi-palette-fill"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary" id="sound-toggle" title="Ambient Sounds">
-                        <i class="bi bi-volume-up"></i>
+                    <button class="btn btn-sm btn-outline-primary" id="sound-toggle" title="Ambient Sound">
+                        <i class="bi bi-volume-up-fill"></i>
                     </button>
                 </div>
             </div>
-            <div class="card-body">
-                <!-- Default Presets -->
+            <div class="card-body p-4">
+                <!-- System Presets -->
                 <div class="row g-2 mb-3">
                     <div class="col-md-3">
-                        <button class="btn btn-outline-danger w-100 preset-btn" data-preset="Pomodoro">
-                            <i class="bi bi-clock me-1"></i>Pomodoro<br>
-                            <small>25 min work</small>
+                        <button class="btn btn-outline-primary w-100 py-3 preset-btn fw-semibold" data-preset="Pomodoro">
+                            <i class="bi bi-clock-history mb-1 d-block fs-4 brand-gold-text"></i>Pomodoro<br>
+                            <small class="text-muted extra-small">25 min work</small>
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-outline-warning w-100 preset-btn" data-preset="Short Break">
-                            <i class="bi bi-cup-hot me-1"></i>Short Break<br>
-                            <small>5 min break</small>
+                        <button class="btn btn-outline-primary w-100 py-3 preset-btn fw-semibold" data-preset="Short Break">
+                            <i class="bi bi-cup-hot mb-1 d-block fs-4 brand-gold-text"></i>Short Break<br>
+                            <small class="text-muted extra-small">5 min rest</small>
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-outline-success w-100 preset-btn" data-preset="Long Break">
-                            <i class="bi bi-tree me-1"></i>Long Break<br>
-                            <small>15 min break</small>
+                        <button class="btn btn-outline-primary w-100 py-3 preset-btn fw-semibold" data-preset="Long Break">
+                            <i class="bi bi-calendar-check mb-1 d-block fs-4 brand-gold-text"></i>Long Break<br>
+                            <small class="text-muted extra-small">15 min rest</small>
                         </button>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-outline-primary w-100 preset-btn" data-preset="Deep Work">
-                            <i class="bi bi-lightning me-1"></i>Deep Work<br>
-                            <small>90 min focus</small>
+                        <button class="btn btn-outline-primary w-100 py-3 preset-btn fw-semibold" data-preset="Deep Work">
+                            <i class="bi bi-lightning-charge mb-1 d-block fs-4 brand-gold-text"></i>Deep Work<br>
+                            <small class="text-muted extra-small">90 min focus</small>
                         </button>
                     </div>
                 </div>
                 
-                <!-- Custom Presets (if any) -->
-                <div id="custom-presets" class="row g-2" style="display: none;">
+                <!-- User Custom Presets Section -->
+                <div id="custom-presets" class="row g-2 pt-2" style="display: none;">
                     <div class="col-12">
-                        <hr>
-                        <h6 class="text-muted">Your Custom Presets</h6>
+                        <hr class="text-muted opacity-25">
+                        <h6 class="text-muted small fw-bold text-uppercase tracking-wider mb-2">Your Custom Configurations</h6>
                     </div>
                 </div>
                 
-                <!-- Add Custom Preset Button -->
-                <div class="text-center mt-3">
-                    <button class="btn btn-outline-info btn-sm" id="add-preset-btn">
-                        <i class="bi bi-plus-circle me-1"></i>Create Custom Preset
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-gold btn-sm fw-semibold px-4" id="add-preset-btn">
+                        <i class="bi bi-plus-circle-fill me-1"></i>Create New Preset
                     </button>
                 </div>
             </div>
         </div>
     </div>
     
+    <!-- Action Menu Panel -->
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Quick Actions</h5>
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-light py-3 border-bottom">
+                <h5 class="mb-0 text-primary fw-bold">Quick Actions</h5>
             </div>
-            <div class="card-body text-center">
-                <a href="{{ url_for('hook.timer') }}" class="btn btn-info w-100 mb-2">
-                    <i class="bi bi-play-circle me-2"></i>Start Custom Timer
+            <div class="card-body p-4 d-flex flex-column gap-2 justify-content-center">
+                <a href="{{ url_for('hook.timer') }}" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm">
+                    <i class="bi bi-play-fill brand-gold-text me-2"></i>Configure Custom Timer
                 </a>
-                <a href="{{ url_for('hook.analytics') }}" class="btn btn-outline-secondary w-100 mb-2">
-                    <i class="bi bi-graph-up me-2"></i>View Analytics
+                <a href="{{ url_for('hook.analytics') }}" class="btn btn-outline-secondary w-100 py-2 fw-semibold text-dark">
+                    <i class="bi bi-graph-up-look me-2 text-primary"></i>Performance Analytics
                 </a>
-                <a href="{{ url_for('hook.history') }}" class="btn btn-outline-secondary w-100 mb-2">
-                    <i class="bi bi-clock-history me-2"></i>Session History
+                <a href="{{ url_for('hook.history') }}" class="btn btn-outline-secondary w-100 py-2 fw-semibold text-dark">
+                    <i class="bi bi-clock-history me-2 text-primary"></i>Session Records
                 </a>
-                <a href="{{ url_for('hook.focus_lock_settings') }}" class="btn btn-outline-warning w-100">
-                    <i class="bi bi-lock-fill me-2"></i>Focus Lock Settings
+                <a href="{{ url_for('hook.focus_lock_settings') }}" class="btn btn-outline-secondary w-100 py-2 fw-semibold text-dark">
+                    <i class="bi bi-lock-fill brand-gold-text me-2"></i>Pacing Focus Lists
                 </a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Theme Settings Popover (Hidden by default) -->
-<div id="theme-settings" class="card position-absolute" style="display: none; z-index: 1000; top: 200px; right: 20px; width: 300px;">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">Theme Settings</h6>
-        <button class="btn-close" id="close-theme-settings"></button>
+<!-- Floating Settings Overlay Window -->
+<div id="theme-settings" class="card border-0 shadow-lg position-absolute" style="display: none; z-index: 1000; top: 200px; right: 20px; width: 320px;">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-sliders me-2 brand-gold-text"></i>Preferences</h6>
+        <button class="btn-close btn-close-white" id="close-theme-settings"></button>
     </div>
-    <div class="card-body">
+    <div class="card-body p-4">
         <div class="mb-3">
-            <label class="form-label">Theme</label>
+            <label class="form-label small fw-semibold text-muted">Active Interface Theme</label>
             <select class="form-select" id="theme-selector">
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="retro">Retro</option>
-                <option value="neon">Neon</option>
-                <option value="anime">Anime</option>
-                <option value="forest">Forest</option>
-                <option value="ocean">Ocean</option>
+                <option value="light">Classic Light</option>
+                <option value="dark">Deep Blue Dark</option>
+                <option value="retro">Warm Minimal</option>
             </select>
         </div>
-        <div class="form-check mb-3">
+        <div class="form-check form-switch mb-3">
             <input class="form-check-input" type="checkbox" id="sync-global-theme">
-            <label class="form-check-label" for="sync-global-theme">
-                Sync with global theme
+            <label class="form-check-label small fw-semibold text-dark" for="sync-global-theme">
+                Match application framework theme
             </label>
         </div>
-        <div class="form-check">
+        <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="ambient-sounds">
-            <label class="form-check-label" for="ambient-sounds">
-                Enable ambient sounds
+            <label class="form-check-label small fw-semibold text-dark" for="ambient-sounds">
+                Enable ambient focus sounds
             </label>
         </div>
     </div>
 </div>
 
-<!-- Custom Preset Modal -->
+<!-- Modal Dialog - Create Preset -->
 <div class="modal fade" id="presetModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Create Custom Preset</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white py-3">
+                <h5 class="modal-title fw-bold">New Focus Preset</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-4">
                 <form id="preset-form">
                     <div class="mb-3">
-                        <label for="preset-name" class="form-label">Preset Name</label>
-                        <input type="text" class="form-control" id="preset-name" required>
+                        <label for="preset-name" class="form-label small fw-semibold text-muted">Label / Identifier</label>
+                        <input type="text" class="form-control" id="preset-name" placeholder="e.g., Financial Modeling Blocks" required>
                     </div>
-                    <div class="row">
+                    <div class="row g-3">
                         <div class="col-md-6 mb-3">
-                            <label for="preset-duration" class="form-label">Focus Duration (min)</label>
+                            <label for="preset-duration" class="form-label small fw-semibold text-muted">Focus Period (min)</label>
                             <input type="number" class="form-control" id="preset-duration" min="1" max="120" value="25" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="preset-break" class="form-label">Break Duration (min)</label>
+                            <label for="preset-break" class="form-label small fw-semibold text-muted">Rest Interval (min)</label>
                             <input type="number" class="form-control" id="preset-break" min="1" max="30" value="5">
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row g-3">
                         <div class="col-md-6 mb-3">
-                            <label for="preset-category" class="form-label">Category</label>
+                            <label for="preset-category" class="form-label small fw-semibold text-muted">Context Domain</label>
                             <select class="form-select" id="preset-category">
                                 <option value="general">General</option>
                                 <option value="work">Work</option>
@@ -231,61 +250,59 @@
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="preset-cycles" class="form-label">Cycles</label>
+                            <label for="preset-cycles" class="form-label small fw-semibold text-muted">Iterative Cycles</label>
                             <input type="number" class="form-control" id="preset-cycles" min="1" max="10" value="1">
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="save-preset">Save Preset</button>
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-outline-secondary fw-semibold" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary fw-semibold px-4" id="save-preset">Save Configuration</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Recent Tasks -->
+<!-- Historical Log Snapshot -->
 <div class="row">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Completed Tasks</h5>
-                <a href="{{ url_for('hook.history') }}" class="btn btn-sm btn-outline-info">
-                    <i class="bi bi-clock-history me-1"></i>View All
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center py-3 border-bottom">
+                <h5 class="mb-0 text-primary fw-bold">Recent History</h5>
+                <a href="{{ url_for('hook.history') }}" class="btn btn-sm btn-outline-primary fw-semibold">
+                    <i class="bi bi-collection-play me-1"></i>Full History Log
                 </a>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 {% if completed_tasks %}
                     <div class="list-group list-group-flush">
                         {% for task in completed_tasks[:5] %}
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-4 py-3">
                             <div>
-                                <h6 class="mb-1 fw-bold">{{ task.task_name }}</h6>
-                                <small class="text-muted">
-                                    <i class="bi bi-clock me-1"></i>{{ task.duration }} min
-                                    <span class="mx-2">•</span>
-                                    <i class="bi bi-tag me-1"></i>{{ task.category.title() }}
-                                    <span class="mx-2">•</span>
+                                <h6 class="mb-1 fw-bold text-dark">{{ task.task_name }}</h6>
+                                <small class="text-muted extra-small">
+                                    <i class="bi bi-clock me-1 text-primary"></i>{{ task.duration }} mins
+                                    <span class="mx-2 text-black-50">•</span>
+                                    <i class="bi bi-bookmark me-1 text-primary"></i>{{ task.category.title() }}
+                                    <span class="mx-2 text-black-50">•</span>
                                     {{ task.completed_at.strftime('%m/%d %H:%M') }}
                                 </small>
                             </div>
-                            <div>
-                                <span class="badge 
-                                    {% if task.timer_type == 'work' %}bg-primary
-                                    {% else %}bg-success{% endif %}">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge rounded-pill bg-primary fw-semibold px-3 py-2 text-uppercase tracking-wider extra-small">
                                     {{ task.timer_type.title() }}
                                 </span>
-                                <span class="ms-2">{{ task.mood }}</span>
+                                <span class="fs-5">{{ task.mood }}</span>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="text-center py-4">
-                        <i class="bi bi-clock-history display-4 text-muted"></i>
-                        <h5 class="mt-3 text-muted">No completed tasks yet</h5>
-                        <p class="text-muted">Start your first focus session to see your progress here!</p>
+                    <div class="text-center py-5">
+                        <i class="bi bi-journal-x display-4 text-muted mb-3 d-block"></i>
+                        <h5 class="text-muted fw-semibold">No recent entries recorded</h5>
+                        <p class="text-muted small">Completed blocks will register here automatically.</p>
                     </div>
                 {% endif %}
             </div>
@@ -297,27 +314,21 @@
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Theme settings toggle
     const themeToggle = document.getElementById('theme-toggle');
     const themeSettings = document.getElementById('theme-settings');
     const closeThemeSettings = document.getElementById('close-theme-settings');
     const themeSelector = document.getElementById('theme-selector');
     const syncGlobalTheme = document.getElementById('sync-global-theme');
     const ambientSounds = document.getElementById('ambient-sounds');
-    
-    // Sound toggle
     const soundToggle = document.getElementById('sound-toggle');
-    
-    // Preset management
     const addPresetBtn = document.getElementById('add-preset-btn');
     const presetModal = new bootstrap.Modal(document.getElementById('presetModal'));
     const savePresetBtn = document.getElementById('save-preset');
     
-    // Initialize current settings
     initializeSettings();
     
-    // Theme toggle functionality
-    themeToggle.addEventListener('click', function() {
+    themeToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
         themeSettings.style.display = themeSettings.style.display === 'none' ? 'block' : 'none';
     });
     
@@ -325,7 +336,6 @@ document.addEventListener('DOMContentLoaded', function() {
         themeSettings.style.display = 'none';
     });
     
-    // Theme change handler
     themeSelector.addEventListener('change', function() {
         updateTheme();
     });
@@ -334,7 +344,6 @@ document.addEventListener('DOMContentLoaded', function() {
         updateTheme();
     });
     
-    // Ambient sounds toggle
     ambientSounds.addEventListener('change', function() {
         toggleAmbientSounds();
     });
@@ -344,7 +353,6 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleAmbientSounds();
     });
     
-    // Preset management
     addPresetBtn.addEventListener('click', function() {
         presetModal.show();
     });
@@ -353,7 +361,6 @@ document.addEventListener('DOMContentLoaded', function() {
         saveCustomPreset();
     });
     
-    // Preset buttons
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('preset-btn') || e.target.closest('.preset-btn')) {
             const btn = e.target.classList.contains('preset-btn') ? e.target : e.target.closest('.preset-btn');
@@ -363,7 +370,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function initializeSettings() {
-        // Load current user preferences
         fetch('/hook/get_user_preferences')
             .then(response => response.json())
             .then(data => {
@@ -372,29 +378,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     themeSelector.value = prefs.theme || 'light';
                     syncGlobalTheme.checked = prefs.sync_global_theme !== false;
                     ambientSounds.checked = prefs.ambient_sounds === true;
-                    
-                    // Update sound toggle icon
                     updateSoundToggleIcon();
-                    
-                    // Load custom presets
                     loadCustomPresets(prefs.timer_presets || []);
                 }
             })
             .catch(error => {
                 console.error('Error loading preferences:', error);
-                // Fallback to defaults
-                const currentTheme = document.body.className.match(/theme-(\w+)/)?.[1] || 'light';
-                themeSelector.value = currentTheme;
+                themeSelector.value = 'light';
                 updateSoundToggleIcon();
             });
     }
     
     function loadCustomPresets(presets) {
         const customPresetsContainer = document.getElementById('custom-presets');
-        
         if (presets.length > 0) {
             customPresetsContainer.style.display = 'block';
-            
             presets.forEach(preset => {
                 addCustomPresetToUI(preset);
             });
@@ -403,35 +401,30 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function addCustomPresetToUI(preset) {
         const customPresetsContainer = document.getElementById('custom-presets');
-        customPresetsContainer.style.display = 'block';
-        
         const presetCol = document.createElement('div');
         presetCol.className = 'col-md-3 mb-2';
         
         presetCol.innerHTML = `
-            <div class="btn-group w-100">
-                <button class="btn btn-outline-info preset-btn" data-preset="${preset.name}">
-                    <i class="bi bi-star me-1"></i>${preset.name}<br>
-                    <small>${preset.duration} min${preset.cycles > 1 ? ` × ${preset.cycles}` : ''}</small>
+            <div class="btn-group w-100 shadow-sm">
+                <button class="btn btn-outline-primary preset-btn fw-semibold" data-preset="${preset.name}">
+                    <i class="bi bi-star-fill brand-gold-text me-1"></i>${preset.name}<br>
+                    <small class="text-muted extra-small">${preset.duration} min${preset.cycles > 1 ? ` × ${preset.cycles}` : ''}</small>
                 </button>
                 <button class="btn btn-outline-danger btn-sm delete-preset" data-preset="${preset.name}" title="Delete">
-                    <i class="bi bi-trash"></i>
+                    <i class="bi bi-trash-fill"></i>
                 </button>
             </div>
         `;
         
         customPresetsContainer.appendChild(presetCol);
-        
-        // Add delete functionality
-        presetCol.querySelector('.delete-preset').addEventListener('click', function() {
+        presetCol.querySelector('.delete-preset').addEventListener('click', function(e) {
+            e.stopPropagation();
             deleteCustomPreset(preset.name, presetCol);
         });
     }
     
     function deleteCustomPreset(presetName, element) {
         if (!confirm(`Delete preset "${presetName}"?`)) return;
-        
-        // Get the CSRF Token from the meta tag
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         
         fetch('/hook/delete_preset', {
@@ -440,17 +433,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': csrfToken 
             },
-            body: JSON.stringify({
-                preset_name: presetName
-            })
+            body: JSON.stringify({ preset_name: presetName })
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
                 element.remove();
                 showToast(data.message, 'success');
-                
-                // Hide custom presets section if empty
                 const remaining = document.querySelectorAll('#custom-presets .col-md-3').length;
                 if (remaining === 0) {
                     document.getElementById('custom-presets').style.display = 'none';
@@ -466,9 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateTheme() {
-        // Get the CSRF Token from the meta tag
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
         const theme = themeSelector.value;
         const syncGlobal = syncGlobalTheme.checked;
         
@@ -478,18 +465,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': csrfToken 
             },
-            body: JSON.stringify({
-                theme: theme,
-                sync_global: syncGlobal
-            })
+            body: JSON.stringify({ theme: theme, sync_global: syncGlobal })
         })
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                // Apply theme immediately to body
                 document.body.className = document.body.className.replace(/theme-\w+/g, '');
                 document.body.classList.add(`theme-${theme}`);
-                
                 showToast(data.message, 'success');
             } else {
                 showToast(data.message || 'Failed to update theme', 'error');
@@ -502,9 +484,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function toggleAmbientSounds() {
-        // Get the CSRF Token from the meta tag
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
         const enabled = ambientSounds.checked;
         
         fetch('/hook/toggle_ambient_sounds', {
@@ -513,9 +493,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': csrfToken 
             },
-            body: JSON.stringify({
-                enabled: enabled
-            })
+            body: JSON.stringify({ enabled: enabled })
         })
         .then(response => response.json())
         .then(data => {
@@ -535,20 +513,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateSoundToggleIcon() {
         const icon = soundToggle.querySelector('i');
         if (ambientSounds.checked) {
-            icon.className = 'bi bi-volume-up';
-            soundToggle.classList.add('btn-outline-success');
-            soundToggle.classList.remove('btn-outline-secondary');
+            icon.className = 'bi bi-volume-up-fill brand-gold-text';
+            soundToggle.classList.add('btn-outline-primary');
         } else {
-            icon.className = 'bi bi-volume-mute';
-            soundToggle.classList.add('btn-outline-secondary');
-            soundToggle.classList.remove('btn-outline-success');
+            icon.className = 'bi bi-volume-mute-fill';
+            soundToggle.classList.remove('btn-outline-primary');
         }
     }
     
     function saveCustomPreset() {
-        // Get the CSRF Token from the meta tag
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
         const formData = {
             name: document.getElementById('preset-name').value.trim(),
             duration: parseInt(document.getElementById('preset-duration').value),
@@ -576,8 +550,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 presetModal.hide();
                 document.getElementById('preset-form').reset();
                 showToast(data.message, 'success');
-                
-                // Reload page to show new preset
                 setTimeout(() => location.reload(), 1000);
             } else {
                 showToast(data.message || 'Failed to save preset', 'error');
@@ -590,31 +562,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function startTimerWithPreset(presetName) {
-        // Redirect to timer page with preset
         window.location.href = `/hook/timer?preset=${encodeURIComponent(presetName)}`;
     }
     
     function showToast(message, type = 'info') {
-        // Create a simple toast notification
         const toast = document.createElement('div');
-        toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} position-fixed`;
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'primary'} position-fixed border-0 shadow-sm`;
         toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
         toast.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+            <div class="d-flex justify-content-between align-items-center">
+                <span>${message}</span>
+                <button type="button" class="btn-close btn-close-sm ms-2" onclick="this.parentElement.parentElement.remove()"></button>
+            </div>
         `;
-        
         document.body.appendChild(toast);
-        
-        // Auto-remove after 3 seconds
-        setTimeout(() => {
-            if (toast.parentElement) {
-                toast.remove();
-            }
-        }, 3000);
+        setTimeout(() => { if (toast.parentElement) toast.remove(); }, 3000);
     }
     
-    // Close theme settings when clicking outside
     document.addEventListener('click', function(e) {
         if (!themeSettings.contains(e.target) && !themeToggle.contains(e.target)) {
             themeSettings.style.display = 'none';
@@ -622,5 +586,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
 {% endblock %}
