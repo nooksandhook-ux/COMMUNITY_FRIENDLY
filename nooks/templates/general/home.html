@@ -47,6 +47,22 @@
         font-size: clamp(0.75rem, 1vw, 0.9rem);
     }
 
+    /* Custom Premium Palette Targets */
+    .brand-gold-text { color: #C5A850 !important; }
+    .brand-gold-btn { background-color: #C5A850 !important; border-color: #C5A850 !important; color: #fff !important; }
+    .brand-gold-btn-outline { color: #C5A850 !important; border-color: #C5A850 !important; }
+    .brand-gold-btn-outline:hover { background-color: #C5A850 !important; color: #fff !important; }
+    
+    .brand-emerald-text { color: #1E4620 !important; }
+    .brand-emerald-btn { background-color: #1E4620 !important; border-color: #1E4620 !important; color: #fff !important; }
+    .brand-emerald-btn-outline { color: #1E4620 !important; border-color: #1E4620 !important; }
+    .brand-emerald-btn-outline:hover { background-color: #1E4620 !important; color: #fff !important; }
+
+    .brand-slate-text { color: #2B4C7E !important; }
+    .brand-slate-btn { background-color: #2B4C7E !important; border-color: #2B4C7E !important; color: #fff !important; }
+    .brand-slate-btn-outline { color: #2B4C7E !important; border-color: #2B4C7E !important; }
+    .brand-slate-btn-outline:hover { background-color: #2B4C7E !important; color: #fff !important; }
+
     /* Target padding and spacing for high density viewing matrices */
     @media (max-width: 576px) {
         .card-body {
@@ -78,16 +94,16 @@
                 <div class="card-body text-center p-4 p-lg-5 d-flex flex-column justify-content-between">
                     <div>
                         <div class="mb-4">
-                            <i class="bi bi-book display-3 text-success"></i>
+                            <i class="bi bi-book display-3 brand-emerald-text"></i>
                         </div>
-                        <h3 class="dynamic-card-title fw-bold text-success" title="Knowledge Vault">Knowledge Vault</h3>
+                        <h3 class="dynamic-card-title fw-bold brand-emerald-text" title="Knowledge Vault">Knowledge Vault</h3>
                         <p class="card-text text-muted mb-4 fw-bold card-text-clamp">Track your milestone coverage across courses and syllabi.</p>
                     </div>
                     <div class="card-buttons d-grid gap-2">
-                        <a href="{{ url_for('nook.index') }}" class="btn btn-success btn-lg btn-responsive-scale">
+                        <a href="{{ url_for('nook.index') }}" class="btn brand-emerald-btn btn-lg btn-responsive-scale">
                             <i class="bi bi-book-half me-2"></i><span>Study Module</span>
                         </a>
-                        <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success btn-responsive-scale" id="nook-add-book">
+                        <a href="{{ url_for('nook.add_book') }}" class="btn brand-emerald-btn-outline btn-responsive-scale" id="nook-add-book">
                             <i class="bi bi-plus-circle me-2"></i><span>Add Course</span>
                         </a>
                     </div>
@@ -101,16 +117,16 @@
                 <div class="card-body text-center p-4 p-lg-5 d-flex flex-column justify-content-between">
                     <div>
                         <div class="mb-4">
-                            <i class="bi bi-stopwatch display-3 text-info"></i>
+                            <i class="bi bi-stopwatch display-3 brand-slate-text"></i>
                         </div>
-                        <h3 class="dynamic-card-title fw-bold text-info" title="Pacing Engine">Pacing Engine</h3>
+                        <h3 class="dynamic-card-title fw-bold brand-slate-text" title="Pacing Engine">Pacing Engine</h3>
                         <p class="card-text text-muted mb-4 fw-bold card-text-clamp">Train your execution speed against real-world and exam timelines.</p>
                     </div>
                     <div class="card-buttons d-grid gap-2">
-                        <a href="{{ url_for('hook.timer') }}" class="btn btn-info btn-lg btn-responsive-scale">
+                        <a href="{{ url_for('hook.timer') }}" class="btn brand-slate-btn btn-lg btn-responsive-scale">
                             <i class="bi bi-play-circle me-2"></i><span>Start Timed Session</span>
                         </a>
-                        <a href="{{ url_for('hook.history') }}" class="btn btn-outline-info btn-responsive-scale">
+                        <a href="{{ url_for('hook.history') }}" class="btn brand-slate-btn-outline btn-responsive-scale">
                             <i class="bi bi-clock-history me-2"></i><span>View History</span>
                         </a>
                     </div>
@@ -147,16 +163,16 @@
                 <div class="card-body text-center p-4 p-lg-5 d-flex flex-column justify-content-between">
                     <div>
                         <div class="mb-4">
-                            <i class="bi bi-lightbulb display-3 text-warning"></i>
+                            <i class="bi bi-lightbulb display-3 brand-gold-text"></i>
                         </div>
-                        <h3 class="dynamic-card-title fw-bold text-warning" title="Core Triggers">Core Triggers</h3>
+                        <h3 class="dynamic-card-title fw-bold brand-gold-text" title="Core Triggers">Core Triggers</h3>
                         <p class="card-text text-muted mb-4 fw-bold card-text-clamp">Daily flash-cards and quick-fire knowledge quizzes.</p>
                     </div>
                     <div class="card-buttons d-grid gap-2">
-                        <a href="{{ url_for('mini_modules.index') }}" class="btn btn-warning btn-lg text-white btn-responsive-scale">
+                        <a href="{{ url_for('mini_modules.index') }}" class="btn brand-gold-btn btn-lg btn-responsive-scale">
                             <i class="bi bi-lightning-charge me-2"></i><span>Syllabus Quick-Fire</span>
                         </a>
-                        <a href="{{ url_for('mini_modules.quiz') }}" class="btn btn-outline-warning btn-responsive-scale">
+                        <a href="{{ url_for('mini_modules.quiz') }}" class="btn brand-gold-btn-outline btn-responsive-scale">
                             <i class="bi bi-question-circle me-2"></i><span>Daily Quiz</span>
                         </a>
                     </div>
@@ -172,7 +188,7 @@
         <div class="col-12 col-md-6 col-lg-3">
             <div class="tagline-item text-center p-2 border rounded bg-light">
                 <small class="text-muted tagline-text-clamp d-block" title="Track dynamic progress and core data parameters">
-                    <i class="bi bi-book text-warning me-1"></i>
+                    <i class="bi bi-book brand-gold-text me-1"></i>
                     Track dynamic progress and core data parameters
                 </small>
             </div>
@@ -180,7 +196,7 @@
         <div class="col-12 col-md-6 col-lg-3">
             <div class="tagline-item text-center p-2 border rounded bg-light">
                 <small class="text-muted tagline-text-clamp d-block" title="Reach execution benchmarks and build streaks">
-                    <i class="bi bi-trophy-fill text-warning me-1"></i>
+                    <i class="bi bi-trophy-fill brand-gold-text me-1"></i>
                     Reach execution benchmarks and build streaks
                 </small>
             </div>
@@ -188,7 +204,7 @@
         <div class="col-12 col-md-6 col-lg-3">
             <div class="tagline-item text-center p-2 border rounded bg-light">
                 <small class="text-muted tagline-text-clamp d-block" title="Group modules, structured forums, and shared goals">
-                    <i class="bi bi-chat-dots text-info me-1"></i>
+                    <i class="bi bi-chat-dots brand-slate-text me-1"></i>
                     Group modules, structured forums, and shared goals
                 </small>
             </div>
@@ -196,7 +212,7 @@
         <div class="col-12 col-md-6 col-lg-3">
             <div class="tagline-item text-center p-2 border rounded bg-light">
                 <small class="text-muted tagline-text-clamp d-block" title="Earn milestones and status for professional coverage">
-                    <i class="bi bi-award text-success me-1"></i>
+                    <i class="bi bi-award brand-emerald-text me-1"></i>
                     Earn milestones and status for professional coverage
                 </small>
             </div>
@@ -215,12 +231,12 @@
                 </a>
             </div>
             <div class="col-12 col-md-4">
-                <a href="{{ url_for('nook.add_book') }}" class="btn btn-outline-success quick-actions w-100 btn-responsive-scale py-3" id="quick-add-book">
+                <a href="{{ url_for('nook.add_book') }}" class="btn brand-emerald-btn-outline quick-actions w-100 btn-responsive-scale py-3" id="quick-add-book">
                     <i class="bi bi-plus-circle me-2"></i><span>Add New Course</span>
                 </a>
             </div>
             <div class="col-12 col-md-4">
-                <a href="{{ url_for('hook.timer') }}" class="btn btn-outline-info quick-actions w-100 btn-responsive-scale py-3">
+                <a href="{{ url_for('hook.timer') }}" class="btn brand-slate-btn-outline quick-actions w-100 btn-responsive-scale py-3">
                     <i class="bi bi-play-circle me-2"></i><span>Start Timed Session</span>
                 </a>
             </div>
@@ -332,7 +348,7 @@
         <p class="lead text-muted mb-4 px-3">Please log in to access your dashboard and pacing matrix.</p>
         <div class="d-sm-inline-block d-grid gap-2 px-4">
             <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg px-5 me-sm-2">Login</a>
-            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary btn-lg px-5">Register</a>
+            <a href="{{ url_for('auth.register') }}" class="btn brand-gold-btn btn-lg px-5">Register</a>
         </div>
     </div>
 </div>
@@ -388,8 +404,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     {{ tier_data.silver.total | default(0) }},
                     {{ tier_data.gold.total | default(0) }}
                 ],
-                backgroundColor: ['#cd7f32', '#c0c0c0', '#ffd700'],
-                borderColor: ['#8b4513', '#808080', '#b8860b'],
+                // Updated chart segments to match the executive palette profiles
+                backgroundColor: ['#2B4C7E', '#7F8C8D', '#C5A850'],
+                borderColor: ['#0A1931', '#34495E', '#9A7D2C'],
                 borderWidth: 1
             }]
         };
