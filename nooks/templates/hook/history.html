@@ -3,44 +3,66 @@
 {% block title %}Task History - Nook & Hook{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="text-warning">
-            <i class="bi bi-clock-history me-2"></i>Task History
+<style>
+    /* Premium Brand Overrides */
+    .brand-gold-text {
+        color: #C5A850 !important;
+    }
+    .brand-gold-bg {
+        background-color: #C5A850 !important;
+        color: #102A43 !important;
+    }
+    .btn-outline-gold {
+        border-color: #C5A850 !important;
+        color: #C5A850 !important;
+    }
+    .btn-outline-gold:hover {
+        background-color: #C5A850 !important;
+        color: #102A43 !important;
+    }
+    .extra-small {
+        font-size: 0.75rem;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- Header Controls -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h1 class="text-primary fw-bold mb-0">
+            <i class="bi bi-clock-history me-2 brand-gold-text"></i>Pacing Focus History
         </h1>
-        <div class="btn-group" role="group">
-            <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-warning">
-                <i class="bi bi-trophy me-1"></i>Rewards
+        <div class="btn-group shadow-sm" role="group">
+            <a href="{{ url_for('rewards.index') }}" class="btn btn-outline-primary fw-semibold">
+                <i class="bi bi-trophy me-1 brand-gold-text"></i>Rewards
             </a>
-            <a href="{{ url_for('rewards.shop') }}" class="btn btn-outline-warning">
-                <i class="bi bi-shop me-1"></i>Shop
+            <a href="{{ url_for('rewards.shop') }}" class="btn btn-outline-primary fw-semibold">
+                <i class="bi bi-shop me-1 brand-gold-text"></i>Shop
             </a>
-            <a href="{{ url_for('rewards.progress') }}" class="btn btn-outline-warning">
-                <i class="bi bi-graph-up me-1"></i>Progress
+            <a href="{{ url_for('rewards.progress') }}" class="btn btn-outline-primary fw-semibold">
+                <i class="bi bi-graph-up me-1 brand-gold-text"></i>Progress
             </a>
-            <a href="{{ url_for('rewards.history') }}" class="btn btn-outline-warning">
-                <i class="bi bi-clock-history me-1"></i>Reward History
+            <a href="{{ url_for('rewards.history') }}" class="btn btn-outline-primary fw-semibold">
+                <i class="bi bi-calendar-check me-1 brand-gold-text"></i>Reward History
             </a>
-            <a href="{{ url_for('rewards.badges') }}" class="btn btn-outline-warning">
+            <a href="{{ url_for('rewards.badges') }}" class="btn btn-outline-primary fw-semibold">
                 <i class="bi bi-award me-1"></i>Badges
             </a>
-            <a href="{{ url_for('rewards.leaderboard') }}" class="btn btn-outline-warning">
+            <a href="{{ url_for('rewards.leaderboard') }}" class="btn btn-outline-primary fw-semibold">
                 <i class="bi bi-bar-chart me-1"></i>Leaderboard
             </a>
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Filter Tasks</h5>
+    <!-- Filters Panel -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light py-3">
+            <h5 class="mb-0 text-primary fw-bold">Filter Records</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             <form method="GET" action="{{ url_for('hook.history') }}" class="d-flex flex-wrap gap-3">
                 <!-- Category Filter -->
                 <div class="flex-fill">
-                    <label for="category" class="form-label">Category</label>
+                    <label for="category" class="form-label small fw-semibold text-muted">Category</label>
                     <select name="category" id="category" class="form-select">
                         <option value="all" {% if current_category == 'all' %}selected{% endif %}>All Categories</option>
                         {% for category in categories %}
@@ -51,7 +73,7 @@
 
                 <!-- Date Filter -->
                 <div class="flex-fill">
-                    <label for="date" class="form-label">Date Range</label>
+                    <label for="date" class="form-label small fw-semibold text-muted">Date Range</label>
                     <select name="date" id="date" class="form-select">
                         <option value="all" {% if current_date == 'all' %}selected{% endif %}>All Time</option>
                         <option value="today" {% if current_date == 'today' %}selected{% endif %}>Today</option>
@@ -61,121 +83,121 @@
                 </div>
 
                 <div class="align-self-end">
-                    <button type="submit" class="btn btn-warning">
-                        <i class="bi bi-funnel me-1"></i>Apply Filters
+                    <button type="submit" class="btn btn-primary fw-semibold px-4">
+                        <i class="bi bi-funnel-fill brand-gold-text me-1"></i>Apply Filters
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Summary -->
-    <div class="row mb-4">
+    <!-- Performance Metric Blocks -->
+    <div class="row mb-4 g-3">
         <div class="col-md-6">
-            <div class="card bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body text-center">
-                    <i class="bi bi-check-circle-fill display-4 mb-2"></i>
-                    <h2 class="fw-bold">{{ total_tasks }}</h2>
-                    <p class="mb-0">Total Tasks</p>
+            <div class="card bg-primary text-white border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-check-circle-fill display-5 mb-2 brand-gold-text"></i>
+                    <h2 class="fw-bold mb-1">{{ total_tasks }}</h2>
+                    <p class="mb-0 text-white-50 small fw-semibold text-uppercase tracking-wider">Total Blocks Executed</p>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card bg-success text-white">
-                <div class="card-body text-center">
-                    <i class="bi bi-stopwatch display-4 mb-2"></i>
-                    <h2 class="fw-bold">{{ total_time | round(0) }} min</h2>
-                    <p class="mb-0">Total Focus Time</p>
+            <div class="card bg-primary text-white border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-stopwatch-fill display-5 mb-2 brand-gold-text"></i>
+                    <h2 class="fw-bold mb-1">{{ total_time | round(0) }} min</h2>
+                    <p class="mb-0 text-white-50 small fw-semibold text-uppercase tracking-wider">Total Cumulative Focus</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tasks Table -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0">Task History</h5>
+    <!-- Focus History Log Table -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-light py-3">
+            <h5 class="mb-0 text-primary fw-bold">Historical Log</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             {% if tasks %}
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Task</th>
-                                <th>Category</th>
-                                <th>Duration</th>
-                                <th>Actual</th>
-                                <th>Priority</th>
-                                <th>Rating</th>
-                                <th>Mood</th>
-                                <th>Notes</th>
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr class="text-muted small fw-bold text-uppercase">
+                                <th class="px-4 py-3">Date</th>
+                                <th class="py-3">Session Task</th>
+                                <th class="py-3">Context</th>
+                                <th class="py-3">Target</th>
+                                <th class="py-3">Actual</th>
+                                <th class="py-3">Priority</th>
+                                <th class="py-3">Rating</th>
+                                <th class="py-3 text-center">Mood</th>
+                                <th class="px-4 py-3">Notes</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for task in tasks %}
                                 <tr>
-                                    <td>{{ task.completed_at.strftime('%m/%d/%Y %H:%M') }}</td>
-                                    <td>{{ task.task_name | default('No name') }}</td>
-                                    <td>{{ task.category | replace('_', ' ') | capitalize | default('General') }}</td>
-                                    <td>{{ task.duration | round(0) }} min</td>
-                                    <td>{{ task.actual_duration | round(0) }} min</td>
+                                    <td class="px-4 text-secondary small fw-medium">{{ task.completed_at.strftime('%m/%d/%Y %H:%M') }}</td>
+                                    <td class="fw-bold text-dark">{{ task.task_name | default('No identifier') }}</td>
+                                    <td><span class="text-muted small"><i class="bi bi-tag-fill me-1 text-primary"></i>{{ task.category | replace('_', ' ') | capitalize | default('General') }}</span></td>
+                                    <td class="text-secondary small fw-medium">{{ task.duration | round(0) }} min</td>
+                                    <td class="text-primary fw-bold small">{{ task.actual_duration | round(0) }} min</td>
                                     <td>
-                                        <span class="badge {{ 'bg-success' if task.priority == 'high' else 'bg-warning text-dark' if task.priority == 'medium' else 'bg-info' }}">
+                                        <span class="badge rounded-pill px-3 py-1 extra-small {% if task.priority == 'high' %}bg-danger{% elif task.priority == 'medium' %}bg-primary{% else %}bg-secondary{% endif %}">
                                             {{ task.priority | capitalize | default('Medium') }}
                                         </span>
                                     </td>
-                                    <td>{{ task.productivity_rating | default(3) }}/5</td>
-                                    <td>
-                                        {% if task.mood == 'happy' or not task.mood %}
-                                            <i class="fas fa-smile text-success" title="Happy"></i>
-                                        {% elif task.mood == 'cool' %}
-                                            <i class="fas fa-sunglasses text-primary" title="Cool"></i>
-                                        {% elif task.mood == 'thinking' %}
-                                            <i class="fas fa-brain text-info" title="Thinking"></i>
-                                        {% elif task.mood == 'tired' %}
-                                            <i class="fas fa-bed text-warning" title="Tired"></i>
+                                    <td class="text-dark small fw-semibold">{{ task.productivity_rating | default(3) }}/5</td>
+                                    <td class="text-center fs-5">
+                                        {% if task.mood == 'happy' or not task.mood or task.mood == '😊' %}
+                                            <span title="Happy">😊</span>
+                                        {% elif task.mood == 'cool' or task.mood == '😎' %}
+                                            <span title="Cool">😎</span>
+                                        {% elif task.mood == 'thinking' or task.mood == '🤔' %}
+                                            <span title="Thinking">🤔</span>
+                                        {% elif task.mood == 'tired' or task.mood == '😴' %}
+                                            <span title="Tired">😴</span>
                                         {% else %}
                                             {{ task.mood }}
                                         {% endif %}
                                     </td>
-                                    <td>{{ task.notes | default('-') }}</td>
+                                    <td class="px-4 text-muted small text-truncate" style="max-width: 200px;">{{ task.notes | default('-') }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             {% else %}
-                <div class="text-center py-4">
-                    <i class="bi bi-stopwatch display-4 text-muted"></i>
-                    <h5 class="mt-3 text-muted">No tasks found</h5>
-                    <p class="text-muted">Complete tasks in Hook to see your history here.</p>
+                <div class="text-center py-5">
+                    <i class="bi bi-journal-x display-4 text-muted mb-3 d-block"></i>
+                    <h5 class="text-muted fw-semibold">No records matches found</h5>
+                    <p class="text-muted small">Completed pacing intervals will populate here automatically.</p>
                 </div>
             {% endif %}
         </div>
     </div>
 
-    <!-- Pagination -->
+    <!-- Data Pagination -->
     <div class="d-flex justify-content-between align-items-center">
         {% if page > 1 %}
             <a href="{{ url_for('hook.history', page=page-1, category=current_category, date=current_date) }}"
-               class="btn btn-outline-warning">
+               class="btn btn-outline-primary fw-semibold shadow-sm">
                 <i class="bi bi-chevron-left me-1"></i>Previous
             </a>
         {% else %}
-            <span class="btn btn-outline-secondary disabled">
+            <span class="btn btn-outline-secondary disabled fw-semibold opacity-50">
                 <i class="bi bi-chevron-left me-1"></i>Previous
             </span>
         {% endif %}
 
         {% if has_next %}
             <a href="{{ url_for('hook.history', page=page+1, category=current_category, date=current_date) }}"
-               class="btn btn-outline-warning">
+               class="btn btn-outline-primary fw-semibold shadow-sm">
                 Next<i class="bi bi-chevron-right ms-1"></i>
             </a>
         {% else %}
-            <span class="btn btn-outline-secondary disabled">
+            <span class="btn btn-outline-secondary disabled fw-semibold opacity-50">
                 Next<i class="bi bi-chevron-right ms-1"></i>
             </span>
         {% endif %}
