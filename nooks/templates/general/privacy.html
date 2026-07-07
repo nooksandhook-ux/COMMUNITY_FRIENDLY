@@ -1,40 +1,81 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="privacy py-5">
+<style>
+    /* Prevent title text-breaking and scale typography smoothly using fluid clamp bounds */
+    .dynamic-main-title {
+        font-size: clamp(1.8rem, 4vw, 3.5rem);
+        word-wrap: break-word;
+    }
+    
+    .dynamic-section-title {
+        font-size: clamp(1.35rem, 3vw, 2rem);
+        word-wrap: break-word;
+    }
+
+    /* Brand Accent Highlights */
+    .brand-gold-text {
+        color: #C5A850 !important;
+    }
+</style>
+
+<section class="privacy py-5 bg-white rounded shadow-sm my-4 border p-4 p-md-5">
     <div class="container">
-        <h1 class="text-primary">
-            <i class="bi bi-shield-lock me-2"></i>Privacy Policy
+        <h1 class="dynamic-main-title text-primary fw-bold mb-2">
+            <i class="bi bi-shield-lock me-2 brand-gold-text"></i>Privacy Policy
         </h1>
-        <p>Effective Date: September 3, 2025</p>
+        <p class="text-muted small mb-4">Effective Date: July 7, 2026</p>
         
-        <h2>Introduction</h2>
-        <p>NOOKSBRIDGE LTD/GTE ("Nooks") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal information.</p>
+        <hr class="my-4 opacity-10">
+
+        <h2 class="dynamic-section-title fw-bold text-primary mb-3">Introduction</h2>
+        <p class="text-muted">FiCore Academy is committed to protecting your personal and professional data. This Privacy Policy outlines how we collect, process, and safeguard your structural metrics, account information, and performance indicators across our learning ecosystem.</p>
         
-        <h2>Information We Collect</h2>
+        <h2 class="dynamic-section-title fw-bold text-primary mt-4 mb-3">Information We Collect</h2>
         <ul class="list-unstyled">
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Personal Information: Name, email address, and other details you provide during registration or feedback submission.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Usage Data: Information about how you interact with our platform, such as reading progress and productivity sessions.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>Device Information: Device type, browser, and IP address for analytics and security purposes.</li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Account Profiling Data:</strong> Professional names, corporate or student email coordinates, and authentication tokens provided during registration.</span>
+            </li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Velocity & Execution Metrics:</strong> Granular performance track progress, syllabus timeline completions, active Pacing Engine durations, and diagnostic test selections.</span>
+            </li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted"><strong>Technical Identifiers:</strong> Secure browser headers, device parameters, and tokenized session IP allocations compiled for audit logging and performance security.</span>
+            </li>
         </ul>
         
-        <h2>How We Use Your Information</h2>
+        <h2 class="dynamic-section-title fw-bold text-primary mt-4 mb-3">How We Use Your Information</h2>
         <ul class="list-unstyled">
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>To provide and improve our services, including personalized analytics and rewards.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>To verify quotes and process rewards for Nigerian users.</li>
-            <li><i class="bi bi-check-circle-fill text-primary me-2"></i>To communicate with you via email (nooksandhook@gmail.com) for support and updates.</li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted">To manage personalized dashboards, maintain study frameworks, and power diagnostic optimization engines.</span>
+            </li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted">To compile aggregated, non-identifiable transparency analytics linking cohort mastery metrics directly to verifying corporate sponsors.</span>
+            </li>
+            <li class="mb-2 d-flex align-items-start">
+                <i class="bi bi-check-circle-fill brand-gold-text me-3 mt-1"></i>
+                <span class="text-muted">To dispatch administrative account alerts, syllabus updates, and corporate partner notifications.</span>
+            </li>
         </ul>
         
-        <h2>Information Sharing</h2>
-        <p>We do not sell or share your personal information with third parties except as required by law or to provide our services (e.g., Google Books API for book data).</p>
+        <h2 class="dynamic-section-title fw-bold text-primary mt-4 mb-3">Information Sharing</h2>
+        <p class="text-muted">FiCore Academy does not rent, sell, or disclose proprietary user information to outside third-party entities. Selected operational datasets are shared exclusively with secure cloud engines and database interfaces strictly required to execute core platform operations.</p>
         
-        <h2>Security</h2>
-        <p>We use industry-standard security measures, including password hashing and secure session management, to protect your data.</p>
+        <h2 class="dynamic-section-title fw-bold text-primary mt-4 mb-3">Data Security</h2>
+        <p class="text-muted">We maintain rigorous defense controls including server-side password hashing, tokenized cross-site request forgery (CSRF) tracking layers, and isolation matrices to prevent unauthorized data manipulation or exposure.</p>
         
-        <h2>Your Rights</h2>
-        <p>You can access, update, or delete your data by contacting us at <a href="mailto:nooksandhook@gmail.com">nooksandhook@gmail.com</a>.</p>
+        <h2 class="dynamic-section-title fw-bold text-primary mt-4 mb-3">Your Rights & Management</h2>
+        <p class="text-muted">Users retain full authority to request access to, edit, or purge their historical performance metadata. For inquiries regarding data protection structures, profile extractions, or security logs, please launch an escalations ticket through our official team contact channels.</p>
         
-        <h2>Contact Us</h2>
-        <p>For questions about this Privacy Policy, please email us at <a href="mailto:nooksandhook@gmail.com">nooksandhook@gmail.com</a>.</p>
+        <div class="text-center mt-5">
+            <a href="https://wa.me/+2348133128979" class="btn btn-primary btn-lg px-5 py-3 shadow" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-whatsapp me-2 brand-gold-text"></i><span>Contact Institutional Support</span>
+            </a>
+        </div>
     </div>
 </section>
 {% endblock %}
