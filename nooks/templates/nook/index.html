@@ -1,54 +1,77 @@
 {% extends "base.html" %}
 
-{% block title %}Nook - Reading Tracker{% endblock %}
+{% block title %}Knowledge Vault - Study Tracker{% endblock %}
 
 {% block content %}
+<style>
+    /* Institutional Layout Harmonization */
+    .brand-gold-text {
+        color: #C5A850 !important;
+    }
+    
+    /* Stats Accent Overrides to replace legacy bright palettes */
+    .bg-completion {
+        background-color: #0d2347 !important;
+    }
+    
+    .status-badge-reading {
+        background-color: #f1a93e !important;
+        color: #0A1931 !important;
+        font-weight: 600;
+    }
+    
+    .status-badge-finished {
+        background-color: #C5A850 !important;
+        color: #0A1931 !important;
+        font-weight: 600;
+    }
+</style>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="text-success">
-        <i class="bi bi-book me-2"></i>Nook - Reading Tracker
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+    <h1 class="text-primary fw-bold mb-0">
+        <i class="bi bi-book me-2 brand-gold-text"></i>Knowledge Vault
     </h1>
-    <div>
-        <a href="{{ url_for('nook.my_uploads') }}" class="btn btn-outline-primary me-2">
+    <div class="d-flex gap-2 w-100 w-sm-auto">
+        <a href="{{ url_for('nook.my_uploads') }}" class="btn btn-outline-primary flex-grow-1 flex-sm-grow-0">
             <i class="bi bi-upload me-1"></i>My Uploads
         </a>
-        <a href="{{ url_for('nook.add_book') }}" class="btn btn-success">
-            <i class="bi bi-plus-circle me-2"></i>Add Book
+        <a href="{{ url_for('nook.add_book') }}" class="btn btn-primary flex-grow-1 flex-sm-grow-0">
+            <i class="bi bi-plus-circle me-2 brand-gold-text"></i>Add Framework
         </a>
     </div>
 </div>
 
 <!-- Stats Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body text-center">
-                <h3 class="fw-bold">{{ stats.total_books }}</h3>
-                <p class="mb-0">Total Books</p>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card bg-primary text-white h-100 border-0 shadow-sm">
+            <div class="card-body text-center d-flex flex-column justify-content-center py-3">
+                <h3 class="fw-bold mb-0">{{ stats.total_books }}</h3>
+                <small class="text-white-50">Total Resources</small>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-white">
-            <div class="card-body text-center">
-                <h3 class="fw-bold">{{ stats.reading_books }}</h3>
-                <p class="mb-0">Currently Reading</p>
+    <div class="col-6 col-md-3">
+        <div class="card bg-warning text-dark h-100 border-0 shadow-sm">
+            <div class="card-body text-center d-flex flex-column justify-content-center py-3">
+                <h3 class="fw-bold mb-0">{{ stats.reading_books }}</h3>
+                <small class="text-dark-50">Active Track</small>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body text-center">
-                <h3 class="fw-bold">{{ stats.finished_books }}</h3>
-                <p class="mb-0">Finished</p>
+    <div class="col-6 col-md-3">
+        <div class="card h-100 border-0 shadow-sm text-white" style="background-color: #C5A850;">
+            <div class="card-body text-center d-flex flex-column justify-content-center py-3">
+                <h3 class="fw-bold mb-0 text-white">{{ stats.finished_books }}</h3>
+                <small class="text-white-50">Mastered</small>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-info text-white">
-            <div class="card-body text-center">
-                <h3 class="fw-bold">{{ stats.completion_rate }}%</h3>
-                <p class="mb-0">Completion Rate</p>
+    <div class="col-6 col-md-3">
+        <div class="card bg-completion text-white h-100 border-0 shadow-sm">
+            <div class="card-body text-center d-flex flex-column justify-content-center py-3">
+                <h3 class="fw-bold mb-0 text-warning">{{ stats.completion_rate }}%</h3>
+                <small class="text-white-50">Completion Rate</small>
             </div>
         </div>
     </div>
@@ -59,7 +82,7 @@
     {% if books %}
         {% for book in books %}
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100 shadow-sm border-0 bg-white">
                 <div class="row g-0 h-100">
                     <div class="col-4">
                         <img src="{{ book.cover_image or '/static/images/default-book-cover.png' }}" 
@@ -68,37 +91,44 @@
                     </div>
                     <div class="col-8">
                         <div class="card-body d-flex flex-column h-100">
-                            <h6 class="card-title fw-bold">{{ book.title[:50] }}{% if book.title|length > 50 %}...{% endif %}</h6>
+                            <h6 class="card-title fw-bold text-primary mb-1">{{ book.title[:45] }}{% if book.title|length > 45 %}...{% endif %}</h6>
                             <p class="card-text text-muted small mb-2">
-                                by {{ book.authors | join(', ') }}
+                                by {{ book.authors | join(', ')[:30] }}
                             </p>
                             
                             <!-- Status Badge -->
-                            <span class="badge 
-                                {% if book.status == 'reading' %}bg-warning
-                                {% elif book.status == 'finished' %}bg-success
-                                {% else %}bg-secondary{% endif %} mb-2">
-                                {{ book.status.title() }}
-                            </span>
+                            <div>
+                                <span class="badge mb-2 
+                                    {% if book.status == 'reading' %}status-badge-reading
+                                    {% elif book.status == 'finished' %}status-badge-finished
+                                    {% else %}bg-secondary text-white{% endif %}">
+                                    {{ book.status.title() }}
+                                </span>
+                            </div>
                             
                             <!-- Progress Bar -->
                             {% if book.page_count > 0 %}
-                            <div class="mb-2">
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar" 
+                            <div class="mb-3 mt-1">
+                                <div class="progress bg-light" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" 
                                          style="width: {{ (book.current_page / book.page_count * 100) | round(1) }}%">
                                     </div>
                                 </div>
-                                <small class="text-muted">
-                                    {{ book.current_page }} / {{ book.page_count }} pages
-                                </small>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <small class="text-muted extra-small" style="font-size: 0.75rem;">
+                                        {{ book.current_page }} / {{ book.page_count }} metrics
+                                    </small>
+                                    <small class="text-muted extra-small fw-bold" style="font-size: 0.75rem;">
+                                        {{ ((book.current_page / book.page_count) * 100) | int }}%
+                                    </small>
+                                </div>
                             </div>
                             {% endif %}
                             
                             <div class="mt-auto">
                                 <a href="{{ url_for('nook.book_detail', book_id=book._id) }}" 
-                                   class="btn btn-outline-success btn-sm w-100">
-                                    <i class="bi bi-eye me-1"></i>View Details
+                                   class="btn btn-outline-primary btn-sm w-100 fw-semibold">
+                                    <i class="bi bi-eye me-1"></i>Analyze Details
                                 </a>
                             </div>
                         </div>
@@ -109,12 +139,12 @@
         {% endfor %}
     {% else %}
         <div class="col-12">
-            <div class="text-center py-5">
-                <i class="bi bi-book display-1 text-muted"></i>
-                <h3 class="mt-3 text-muted">No books yet</h3>
-                <p class="text-muted">Start your reading journey by adding your first book!</p>
-                <a href="{{ url_for('nook.add_book') }}" class="btn btn-success btn-lg">
-                    <i class="bi bi-plus-circle me-2"></i>Add Your First Book
+            <div class="text-center py-5 bg-white rounded shadow-sm border">
+                <i class="bi bi-book display-1 text-muted opacity-50"></i>
+                <h4 class="mt-3 text-primary fw-bold">No Framework Materials Yet</h4>
+                <p class="text-muted mx-auto" style="max-width: 400px;">Begin documenting your compliance records and study tracks by registering your primary execution documentation.</p>
+                <a href="{{ url_for('nook.add_book') }}" class="btn btn-primary btn-lg mt-2">
+                    <i class="bi bi-plus-circle me-2 brand-gold-text"></i>Initialize First Resource
                 </a>
             </div>
         </div>
