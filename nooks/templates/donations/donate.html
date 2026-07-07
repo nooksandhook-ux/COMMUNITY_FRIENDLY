@@ -1,34 +1,78 @@
 {% extends "base.html" %}
-{% block title %}Donate - Nooks{% endblock %}
+{% block title %}Sponsorship Allocation - FiCore Academy{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
+<style>
+    /* Prevent title text-breaking and scale typography smoothly using fluid clamp bounds */
+    .dynamic-main-title {
+        font-size: clamp(1.5rem, 3vw, 2.5rem);
+        word-wrap: break-word;
+    }
+
+    /* Force button labels and inputs into a singular scalable line */
+    .btn-responsive-scale {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: clamp(0.85rem, 1.2vw, 1.1rem) !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* Brand Accent Highlights */
+    .brand-gold-text {
+        color: #C5A850 !important;
+    }
+    
+    .brand-slate-text {
+        color: #2B4C7E !important;
+    }
+</style>
+
+<div class="row justify-content-center my-4">
     <div class="col-md-8 col-lg-6">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-5">
-                <h2 class="card-title text-center fw-bold text-primary mb-4">Support Nooks</h2>
+        <div class="card shadow-sm border-0 bg-white rounded p-2 p-md-4">
+            <div class="card-body">
+                <h2 class="dynamic-main-title text-center fw-bold text-primary mb-3">
+                    <i class="bi bi-building-fill-add me-2 brand-gold-text"></i>Institutional Sponsorship
+                </h2>
                 <p class="text-center text-muted mb-4">
-                    Your donation helps keep Nooks free and accessible for readers worldwide. Choose a sponsorship tier and make a difference!
+                    Underwrite structural learning tracks, fund student cohort pacing infrastructure, and drive performance data transparency metrics across our financial ecosystems.
                 </p>
-                <form method="POST" action="{{ url_for('donations.donate') }}">
+                
+                <form method="POST" action="{{ url_for('donations.donate') }}" class="mb-4">
                     {{ form.hidden_tag() }}
                     <div class="mb-3">
-                        <label for="tier" class="form-label fw-bold">Sponsorship Tier</label>
-                        {{ form.tier(class="form-select", id="tier") }}
+                        <label for="tier" class="form-label fw-bold text-primary">Sponsorship Capital Tier</label>
+                        {{ form.tier(class="form-select border-2", id="tier") }}
                     </div>
-                    <div class="mb-3">
-                        <label for="amount" class="form-label fw-bold">Donation Amount (NGN)</label>
-                        {{ form.amount(class="form-control", id="amount", placeholder="Enter amount") }}
+                    <div class="mb-4">
+                        <label for="amount" class="form-label fw-bold text-primary">Allocation Value (NGN)</label>
+                        {{ form.amount(class="form-control border-2", id="amount", placeholder="Enter allocation amount") }}
                     </div>
                     <div class="text-center">
-                        {{ form.submit(class="btn btn-primary btn-lg") }}
+                        {{ form.submit(class="btn btn-primary btn-lg px-5 py-2 btn-responsive-scale shadow-sm") }}
                     </div>
                 </form>
-                <div class="mt-4">
-                    <h5 class="fw-bold">Why Donate?</h5>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">Support free access to reading and productivity tools</li>
-                        <li class="list-group-item">Earn exclusive donor badges and rewards</li>
-                        <li class="list-group-item">Contribute to our mission of promoting literacy</li>
+                
+                <hr class="my-4 opacity-10">
+
+                <div>
+                    <h5 class="fw-bold text-primary mb-3">Sponsorship Impact Parameters:</h5>
+                    <ul class="list-group list-group-flush rounded border">
+                        <li class="list-group-item d-flex align-items-center text-muted py-3">
+                            <i class="bi bi-cpu brand-gold-text me-3 fs-5"></i>
+                            <span>Underwrite framework-first exam preparation tools for student cohorts.</span>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center text-muted py-3">
+                            <i class="bi bi-shield-shaded brand-gold-text me-3 fs-5"></i>
+                            <span>Fund real-time metric tracking, past query caching, and transparency data.</span>
+                        </li>
+                        <li class="list-group-item d-flex align-items-center text-muted py-3">
+                            <i class="bi bi-award brand-slate-text me-3 fs-5"></i>
+                            <span>Gain validated corporate talent pipeline analytics and donor status logs.</span>
+                        </li>
                     </ul>
                 </div>
             </div>
