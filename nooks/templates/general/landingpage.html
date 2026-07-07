@@ -12,7 +12,7 @@
         word-wrap: break-word;
     }
 
-    /* Force button labels and accordion controls into a singular scalable line */
+    /* Force button labels into a singular scalable line */
     .btn-responsive-scale {
         white-space: nowrap;
         overflow: hidden;
@@ -24,14 +24,15 @@
         max-width: 100%;
     }
 
+    /* Allow clean text-wrapping while dynamically shrinking layout headers safely */
     .accordion-button-scale {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-size: clamp(0.9rem, 1.5vw, 1.25rem) !important;
-        display: block;
-        width: 100%;
-        text-align: start;
+        font-size: clamp(0.95rem, 1.6vw, 1.25rem) !important;
+        word-wrap: break-word;
+    }
+
+    /* Brand Gold Highlights */
+    .brand-gold-text {
+        color: #C5A850 !important;
     }
 
     /* Target padding and spacing for mobile matrices */
@@ -42,69 +43,69 @@
     }
 </style>
 
-<div class="d-flex justify-content-center align-items-center mb-4 bg-light py-5 text-center">
+<div class="d-flex justify-content-center align-items-center mb-4 bg-light py-5 text-center rounded shadow-sm animate-fade-in">
     <div class="container">
         <h1 class="dynamic-landing-title text-primary fw-bold">
-            <i class="bi bi-mortarboard-fill me-2"></i>FiCore Academy
+            <i class="bi bi-mortarboard-fill me-2 brand-gold-text"></i>FiCore Academy
         </h1>
         <p class="lead fw-bold px-3 mt-3">Build the Competency to Command the Room. Master the Financial Skills That Build Real Careers.</p>
         <p class="text-muted mx-auto px-3" style="max-width: 800px;">FiCore Academy is the structured, framework-first learning platform built for students, corporate professionals, and career builders to crush professional exams and unlock elite-level earning potential—no academic jargon required.</p>
         <div class="px-3">
-            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg mt-2 btn-responsive-scale px-5 py-3">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg mt-2 btn-responsive-scale px-5 py-3 shadow">
                 <i class="bi bi-arrow-right-circle me-2"></i><span>Get Started</span>
             </a>
         </div>
     </div>
 </div>
 
-<section class="cta-section text-center py-5 bg-primary text-white">
+<section class="cta-section text-center py-5 bg-primary text-white rounded shadow-sm mb-4">
     <div class="container">
-        <h2 class="dynamic-section-title fw-bold"><i class="bi bi-people-fill me-2"></i>Join Our Learning Cohorts</h2>
+        <h2 class="dynamic-section-title fw-bold"><i class="bi bi-people-fill me-2 brand-gold-text"></i>Join Our Learning Cohorts</h2>
         <p class="px-3 my-3">Accelerate your professional path alongside ambitious peers, leveraging optimized pacing engines and premium execution templates.</p>
         <div class="px-3">
-            <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg btn-responsive-scale px-5 py-3 text-primary fw-bold">
-                <i class="bi bi-person-plus-fill me-2"></i><span>Sign Up Now</span>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg btn-responsive-scale px-5 py-3 text-primary fw-bold shadow-sm">
+                <i class="bi bi-person-plus-fill me-2 brand-gold-text"></i><span>Sign Up Now</span>
             </a>
         </div>
     </div>
 </section>
 
-<section class="faq-section py-5 bg-light">
+<section class="faq-section py-5 bg-light rounded shadow-sm mb-4">
     <div class="container">
         <h2 class="text-center mb-4 dynamic-section-title fw-bold"><i class="bi bi-question-circle-fill text-primary me-2"></i>Why FiCore Academy?</h2>
         <div class="accordion shadow-sm" id="faqAccordion">
-            <div class="accordion-item">
+            <div class="accordion-item border-0 mb-2 rounded overflow-hidden">
                 <h3 class="accordion-header" id="faq1">
-                    <button class="accordion-button accordion-button-scale fw-bold text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true" aria-controls="collapse1" title="Clear Your Professional Exams">
-                         <i class="bi bi-journal-check me-2"></i>Clear Your Professional Exams
+                    <button class="accordion-button accordion-button-scale fw-bold text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1" aria-expanded="true" aria-controls="collapse1">
+                         <i class="bi bi-journal-check me-2 brand-gold-text"></i>Clear Your Professional Exams
                     </button>
                 </h3>
                 <div id="collapse1" class="accordion-collapse collapse show" aria-labelledby="faq1" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body text-muted">
+                    <div class="accordion-body bg-white text-muted">
                         Master the core syllabus with precision pacing tools, simplified study frameworks, and high-yield past question blueprints designed specifically to conquer strict examiner timelines.
                     </div>
                 </div>
             </div>
-            <div class="accordion-item">
+            <div class="accordion-item border-0 mb-2 rounded overflow-hidden">
                 <h3 class="accordion-header" id="faq2">
-                    <button class="accordion-button collapsed accordion-button-scale fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2" title="Model for High-Paying Roles">
-                         <i class="bi bi-graph-up-arrow me-2"></i>Model for High-Paying Roles
+                    <button class="accordion-button collapsed accordion-button-scale fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2" aria-expanded="false" aria-controls="collapse2">
+                         <i class="bi bi-graph-up-arrow me-2 brand-gold-text"></i>Model for High-Paying Roles
                     </button>
                 </h3>
                 <div id="collapse2" class="accordion-collapse collapse" aria-labelledby="faq2" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body text-muted">
+                    <div class="accordion-body bg-white text-muted">
                         Learn to build dynamic financial models for startups, investment banking, and elite corporate finance tracks that command premium market valuations and high-earning corporate salaries.
                     </div>
                 </div>
             </div>
-            <div class="accordion-item">
+            <div class="accordion-item border-0 rounded overflow-hidden">
                 <h3 class="accordion-header" id="faq3">
-                    <button class="accordion-button collapsed accordion-button-scale fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3" title="Own Your Financial Authority">
-                         <i class="bi bi-shield-check me-2"></i>Own Your Financial Authority
+                    <button class="accordion-button collapsed accordion-button-scale fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3" aria-expanded="false" aria-controls="collapse3">
+                         <i class="bi bi-shield-check me-2 brand-gold-text"></i>Own Your Financial Authority
                     </button>
                 </h3>
                 <div id="collapse3" class="accordion-collapse collapse" aria-labelledby="faq3" data-bs-parent="#faqAccordion">
-                    <div class="accordion-body text-muted">
+                    <div class="accordion-body bg-white text-muted">
                         Go from zero baseline technical understanding to building real corporate competence, career mobility, and complete financial execution confidence within weeks.
                     </div>
                 </div>
@@ -113,13 +114,13 @@
     </div>
 </section>
 
-<section class="partner-section py-5 bg-white text-center">
+<section class="partner-section py-5 bg-white text-center rounded shadow-sm border">
     <div class="container">
         <h2 class="dynamic-section-title fw-bold"><i class="bi bi-building-check text-primary me-2"></i>Partner with FiCore Academy</h2>
         <p class="lead px-3 my-3">Collaborate with us to deploy corporate training tracks, sponsored student cohorts, or customized institutional talent development pipelines.</p>
         <div class="px-3">
-            <a href="https://wa.me/+2348133128979" class="btn btn-primary btn-lg btn-responsive-scale px-5 py-3" target="_blank" rel="noopener noreferrer">
-                <i class="bi bi-whatsapp me-2"></i><span>Reach Out to Our Team</span>
+            <a href="https://wa.me/+2348133128979" class="btn btn-primary btn-lg btn-responsive-scale px-5 py-3 shadow" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-whatsapp me-2 brand-gold-text"></i><span>Reach Out to Our Team</span>
             </a>
         </div>
     </div>
