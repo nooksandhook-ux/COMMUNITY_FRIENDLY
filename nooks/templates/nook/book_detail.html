@@ -46,7 +46,7 @@
                     {% if book.pdf_path %}
                     <div class="mb-3">
                         <a href="#" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm" id="read-now-btn">
-                            <i class="bi bi-file-earmark-pdf me-2 brand-gold-text"></i>Read Framework
+                            <i class="bi bi-file-earmark-pdf me-2 brand-gold-text"></i>Read Books
                         </a>
                     </div>
                     {% endif %}
@@ -218,7 +218,7 @@
     {% if book.description %}
         <div class="card mb-4 border-0 shadow-sm bg-white">
             <div class="card-body">
-                <h5 class="fw-bold text-primary mb-2">Core Content Framework Overview</h5>
+                <h5 class="fw-bold text-primary mb-2">Content Overview</h5>
                 <p class="text-muted mb-0" style="line-height: 1.6;">{{ book.description }}</p>
             </div>
         </div>
@@ -295,7 +295,7 @@
                             {% if quote.page or quote.context %}
                                 <small class="text-muted extra-small d-block mt-2">
                                     {% if quote.page %}<i class="bi bi-file-earmark-text text-primary me-1"></i>Page Ref: {{ quote.page }}{% if quote.context %} | {% endif %}{% endif %}
-                                    {% if quote.context %}Framework Anchor: {{ quote.context }}{% endif %}
+                                    {% if quote.context %}Book Anchor: {{ quote.context }}{% endif %}
                                     | Appended: {{ quote.date.strftime('%Y-%m-%d') }}
                                 </small>
                             {% endif %}
@@ -402,7 +402,7 @@
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold" id="pdfViewerModalLabel"><i class="bi bi-file-earmark-pdf me-2 brand-gold-text"></i>Read Document Framework: {{ book.title }}</h5>
+                <h5 class="modal-title fw-bold" id="pdfViewerModalLabel"><i class="bi bi-file-earmark-pdf me-2 brand-gold-text"></i>Read Document: {{ book.title }}</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body bg-dark p-2 text-center">
