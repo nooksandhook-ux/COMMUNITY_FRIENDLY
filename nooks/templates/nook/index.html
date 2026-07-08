@@ -93,7 +93,7 @@
                         <div class="card-body d-flex flex-column h-100">
                             <h6 class="card-title fw-bold text-primary mb-1">{{ book.title[:45] }}{% if book.title|length > 45 %}...{% endif %}</h6>
                             <p class="card-text text-muted small mb-2">
-                                by {{ book.authors | join(', ')[:30] }}
+                                by {{ (book.authors | join(', '))[:30] }}
                             </p>
                             
                             <!-- Status Badge -->
