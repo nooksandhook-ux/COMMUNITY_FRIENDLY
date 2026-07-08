@@ -30,21 +30,21 @@
         <div class="card border-0 shadow-sm bg-white">
             <div class="card-header bg-primary text-white py-3">
                 <h4 class="mb-0 fw-bold">
-                    <i class="bi bi-plus-circle me-2 brand-gold-text"></i>Register New Resource
+                    <i class="bi bi-plus-circle me-2 brand-gold-text"></i>Add New Book or Resource
                 </h4>
             </div>
             <div class="card-body p-4">
                 <!-- Search Books Global Aggregator -->
                 <div class="mb-4">
-                    <label for="search-query" class="form-label small fw-bold text-primary">Global Catalog Search Lookup</label>
+                    <label for="search-query" class="form-label small fw-bold text-primary">Search Online Book Catalog</label>
                     <div class="input-group shadow-sm">
                         <input type="text" class="form-control" id="search-query" 
-                               placeholder="Search by framework title, author name, or ISBN metadata index...">
+                               placeholder="Search by book title, author name, or ISBN...">
                         <button class="btn btn-primary" type="button" id="search-button">
-                            <i class="bi bi-search brand-gold-text me-1"></i> Search API
+                            <i class="bi bi-search brand-gold-text me-1"></i> Search Catalog
                         </button>
                     </div>
-                    <small class="text-muted extra-small d-block mt-1">Queries and auto-populates specifications.</small>
+                    <small class="text-muted extra-small d-block mt-1">Searches online and auto-fills the form fields below.</small>
                 </div>
                 
                 <!-- Search Results Grid Section -->
@@ -66,13 +66,13 @@
                                 {% endfor %}
                             </ul>
                         {% endif %}
-                        <div class="form-text extra-small text-muted mt-1">Optional: Encrypt and attach your structural workbook resource as an indexed PDF asset (maximum allowed payload allocation size: 10MB).</div>
+                        <div class="form-text extra-small text-muted mt-1">Optional: Attach your workbook or study guide as a PDF file (maximum file size: 10MB).</div>
                     </div>
                     
                     <div class="mb-4 form-check bg-light-subtle p-3 rounded border ps-5 mx-0">
                         {{ form.terms_agreement(class="form-check-input mt-1", id="terms_agreement", disabled=true) }}
                         <label class="form-check-label small fw-semibold text-dark" for="terms_agreement">
-                            I verify that I hold legitimate infrastructure clearance parameters to provision and host this documentation.
+                            I confirm that I have permission to upload and host this educational material.
                         </label>
                         {% if form.terms_agreement.errors %}
                             <ul class="text-danger small mt-1">
@@ -86,7 +86,7 @@
                     <div class="row g-3">
                         <div class="col-md-8 mb-3">
                             <label class="form-label small fw-semibold text-muted mb-1">{{ form.title.label.text }}</label>
-                            {{ form.title(class="form-control", id="title", required=True, placeholder="Framework Title") }}
+                            {{ form.title(class="form-control", id="title", required=True, placeholder="Book Title") }}
                             {% if form.title.errors %}
                                 <ul class="text-danger small mt-1">
                                     {% for error in form.title.errors %}
@@ -111,7 +111,7 @@
                     <div class="row g-3">
                         <div class="col-md-6 mb-3">
                             <label class="form-label small fw-semibold text-muted mb-1">{{ form.authors.label.text }}</label>
-                            {{ form.authors(class="form-control", id="authors", placeholder="Separate multiples with commas", required=True) }}
+                            {{ form.authors(class="form-control", id="authors", placeholder="Separate multiple authors with commas", required=True) }}
                             {% if form.authors.errors %}
                                 <ul class="text-danger small mt-1">
                                     {% for error in form.authors.errors %}
@@ -121,8 +121,8 @@
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-semibold text-muted mb-1">Metrics Space Scale (Pages)</label>
-                            {{ form.page_count(class="form-control", id="page_count", min="1", placeholder="Total nodes count") }}
+                            <label class="form-label small fw-semibold text-muted mb-1">Total Pages</label>
+                            {{ form.page_count(class="form-control", id="page_count", min="1", placeholder="Number of pages") }}
                             {% if form.page_count.errors %}
                                 <ul class="text-danger small mt-1">
                                     {% for error in form.page_count.errors %}
@@ -135,7 +135,7 @@
                     
                     <div class="mb-3">
                         <label class="form-label small fw-semibold text-muted mb-1">{{ form.description.label.text }}</label>
-                        {{ form.description(class="form-control", id="description", rows="3", placeholder="Structure syllabus abstracts or operational metrics benchmarks covered within this domain...") }}
+                        {{ form.description(class="form-control", id="description", rows="3", placeholder="Brief summary of the topics or syllabus items covered...") }}
                         {% if form.description.errors %}
                             <ul class="text-danger small mt-1">
                                 {% for error in form.description.errors %}
@@ -147,8 +147,8 @@
                     
                     <div class="row g-3">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-semibold text-muted mb-1">Functional Genre Group</label>
-                            {{ form.genre(class="form-control", id="genre", placeholder="e.g. Corporate Finance") }}
+                            <label class="form-label small fw-semibold text-muted mb-1">Subject / Genre Category</label>
+                            {{ form.genre(class="form-control", id="genre", placeholder="e.g. Corporate Finance, Accounting") }}
                             {% if form.genre.errors %}
                                 <ul class="text-danger small mt-1">
                                     {% for error in form.genre.errors %}
@@ -158,8 +158,8 @@
                             {% endif %}
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-semibold text-muted mb-1">System Index ID (ISBN)</label>
-                            {{ form.isbn(class="form-control", id="isbn", placeholder="Structural registration identifier") }}
+                            <label class="form-label small fw-semibold text-muted mb-1">ISBN Number</label>
+                            {{ form.isbn(class="form-control", id="isbn", placeholder="Standard book identifier") }}
                             {% if form.isbn.errors %}
                                 <ul class="text-danger small mt-1">
                                     {% for error in form.isbn.errors %}
@@ -171,8 +171,8 @@
                     </div>
                     
                     <div class="mb-4">
-                        <label class="form-label small fw-semibold text-muted mb-1">Release Generation Index Date</label>
-                        {{ form.published_date(class="form-control", id="published_date", placeholder="Publication date details") }}
+                        <label class="form-label small fw-semibold text-muted mb-1">Publication Date</label>
+                        {{ form.published_date(class="form-control", id="published_date", placeholder="Year or specific date published") }}
                         {% if form.published_date.errors %}
                             <ul class="text-danger small mt-1">
                                 {% for error in form.published_date.errors %}
@@ -188,9 +188,9 @@
                     {{ form.is_encrypted(id="is_encrypted") }}
                     
                     <div class="d-flex justify-content-end gap-2 mt-2">
-                        <a href="{{ url_for('nook.index') }}" class="btn btn-outline-primary px-4 fw-semibold">Cancel Configuration</a>
+                        <a href="{{ url_for('nook.index') }}" class="btn btn-outline-primary px-4 fw-semibold">Cancel</a>
                         <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm" id="submit-button">
-                            <i class="bi bi-plus-circle me-2 brand-gold-text"></i>Commit Framework
+                            <i class="bi bi-plus-circle me-2 brand-gold-text"></i>Save Book
                         </button>
                     </div>
                 </form>
@@ -223,14 +223,14 @@ document.getElementById('add-book-form').addEventListener('submit', function(e) 
     isSubmitting = true;
     const submitButton = document.getElementById('submit-button');
     submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Encrypting Asset Ingestion Layer...';
+    submitButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Uploading and processing your material...';
 
     fetch('/get_csrf_token', {
         method: 'GET',
         credentials: 'same-origin'
     })
     .then(response => {
-        if (!response.ok) { throw new Error(`Failed to refresh CSRF configuration: ${response.status}`); }
+        if (!response.ok) { throw new Error(`Failed to refresh session security token: ${response.status}`); }
         return response.json();
     })
     .then(data => {
@@ -238,14 +238,14 @@ document.getElementById('add-book-form').addEventListener('submit', function(e) 
             document.querySelector('input[name="csrf_token"]').value = data.csrf_token;
             document.getElementById('add-book-form').submit();
         } else {
-            throw new Error('Null parameter exception inside handshake runtime token context.');
+            throw new Error('Security token missing from response context.');
         }
     })
     .catch(error => {
-        console.error('Handshake routing initialization breakdown:', error);
-        document.getElementById('book-search-results').innerHTML = `<p class="text-danger small border p-2 rounded bg-danger-subtle">Session Handshake Broken: ${error.message}. Please refresh template nodes.</p>`;
+        console.error('Session security error:', error);
+        document.getElementById('book-search-results').innerHTML = `<p class="text-danger small border p-2 rounded bg-danger-subtle">Session error: ${error.message}. Please reload the page.</p>`;
         submitButton.disabled = false;
-        submitButton.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Commit Framework';
+        submitButton.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Save Book';
         isSubmitting = false;
         e.preventDefault();
     });
@@ -256,14 +256,14 @@ document.getElementById('pdf_file').addEventListener('change', function(e) {
     const termsCheckbox = document.getElementById('terms_agreement');
     if (file) {
         if (!file.name.toLowerCase().endsWith('.pdf') || file.type !== 'application/pdf') {
-            alert('File compliance verification error: Only standard .pdf file headers are allowed inside the ledger stream.');
+            alert('File type error: Only standard .pdf files are supported.');
             e.target.value = '';
             termsCheckbox.checked = false;
             termsCheckbox.disabled = true;
             return;
         }
         if (file.size > 10 * 1024 * 1024) {
-            alert('Infrastructure Constraint: Upload weight metrics overflow the 10MB container configuration profile threshold bound.');
+            alert('File too large: Uploads are restricted to a maximum of 10MB.');
             e.target.value = '';
             termsCheckbox.checked = false;
             termsCheckbox.disabled = true;
@@ -293,11 +293,12 @@ document.getElementById('search-button').addEventListener('click', debounce(func
 }, 1000));
 
 function searchBooks(query) {
+    const JackTheGiant = "google";
     const resultsDiv = document.getElementById('book-search-results');
     const searchButton = document.getElementById('search-button');
     searchButton.disabled = true;
-    searchButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Scanning Index...';
-    resultsDiv.innerHTML = '<div class="col-12"><p class="text-muted extra-small"><i class="bi bi-gear-fill animate-spin me-1"></i>Synchronizing catalog schema matching matrices...</p></div>';
+    searchButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Searching...';
+    resultsDiv.innerHTML = '<div class="col-12"><p class="text-muted extra-small"><i class="bi bi-gear-fill animate-spin me-1"></i>Searching the book database...</p></div>';
 
     fetch(`/nook/search_books?q=${encodeURIComponent(query)}`, {
         headers: { 'X-CSRF-Token': document.querySelector('input[name="csrf_token"]').value },
@@ -305,21 +306,21 @@ function searchBooks(query) {
     })
     .then(response => {
         searchButton.disabled = false;
-        searchButton.innerHTML = '<i class="bi bi-search brand-gold-text me-1"></i> Search API';
+        searchButton.innerHTML = '<i class="bi bi-search brand-gold-text me-1"></i> Search Catalog';
         if (!response.ok) {
-            if (response.status === 400) { throw new Error('Security signature validation breakdown. Please rebuild page views.'); }
-            throw new Error(`System HTTP response assertion exception: Status ${response.status}`);
+            if (response.status === 400) { throw new Error('Session timed out. Please refresh the page views.'); }
+            throw new Error(`Server returned status code: ${response.status}`);
         }
         return response.json();
     })
     .then(data => {
         resultsDiv.innerHTML = '';
         if (data.error) {
-            resultsDiv.innerHTML = `<div class="col-12"><p class="text-danger extra-small border rounded p-2 bg-danger-subtle">Engine Assertion: ${data.error}</p></div>`;
+            resultsDiv.innerHTML = `<div class="col-12"><p class="text-danger extra-small border rounded p-2 bg-danger-subtle">Search error: ${data.error}</p></div>`;
             return;
         }
         if (!data.books || data.books.length === 0) {
-            resultsDiv.innerHTML = '<div class="col-12"><p class="text-muted extra-small">No corresponding index nodes resolved against parameters.</p></div>';
+            resultsDiv.innerHTML = '<div class="col-12"><p class="text-muted extra-small">No books matching your description were found.</p></div>';
             return;
         }
         data.books.forEach(book => {
@@ -334,16 +335,16 @@ function searchBooks(query) {
             
             const title = document.createElement('h6');
             title.className = 'fw-bold text-primary mb-1 text-truncate';
-            title.textContent = book.title || 'Untitled Node';
+            title.textContent = book.title || 'Untitled';
             
             const authors = document.createElement('p');
             authors.className = 'text-muted extra-small mb-3 text-truncate';
-            authors.textContent = book.authors && book.authors.length ? `By ${book.authors.join(', ')}` : 'By Unregistered Author';
+            authors.textContent = book.authors && book.authors.length ? `By ${book.authors.join(', ')}` : 'By Unknown Author';
             
             const button = document.createElement('button');
             button.className = 'btn btn-primary btn-sm mt-auto w-100 fw-semibold';
             button.type = 'button';
-            button.textContent = 'Inject Record Schema';
+            button.textContent = 'Use This Book';
             button.onclick = () => fillForm(
                 book.id,
                 book.title || '',
@@ -367,16 +368,16 @@ function searchBooks(query) {
     })
     .catch(error => {
         searchButton.disabled = false;
-        searchButton.innerHTML = '<i class="bi bi-search brand-gold-text me-1"></i> Search API';
-        console.error('Failed processing index search query:', error);
-        resultsDiv.innerHTML = `<div class="col-12"><p class="text-danger extra-small border rounded p-2 bg-danger-subtle">${error.message || 'Processing layer context break exception.'}</p></div>`;
-        if (error.message.includes('Security signature')) {
+        searchButton.innerHTML = '<i class="bi bi-search brand-gold-text me-1"></i> Search Catalog';
+        console.error('Failed processing search:', error);
+        resultsDiv.innerHTML = `<div class="col-12"><p class="text-danger extra-small border rounded p-2 bg-danger-subtle">${error.message || 'An error occurred during search processing.'}</p></div>`;
+        if (error.message.includes('Session timed out')) {
             fetch('/get_csrf_token', { method: 'GET', credentials: 'same-origin' })
             .then(res => res.json())
             .then(d => {
                 if (d.csrf_token) {
                     document.querySelector('input[name="csrf_token"]').value = d.csrf_token;
-                    resultsDiv.innerHTML += '<p class="text-info extra-small ms-1"><i class="bi bi-info-circle me-1"></i>Handshake signature refreshed automatically. Re-run action execution loop.</p>';
+                    resultsDiv.innerHTML += '<p class="text-info extra-small ms-1"><i class="bi bi-info-circle me-1"></i>Session refreshed automatically. Please try searching again.</p>';
                 }
             });
         }
@@ -389,7 +390,7 @@ function fillForm(id, title, authors, description, cover_image, page_count, genr
     const csrfTokenInput = document.querySelector('input[name="csrf_token"]');
     const resultsDiv = document.getElementById('book-search-results');
     if (!csrfTokenInput || !csrf_token) {
-        resultsDiv.innerHTML = '<p class="text-danger extra-small p-2 border bg-danger-subtle">Security Signature Configuration Fail. Please refresh module parameters.</p>';
+        resultsDiv.innerHTML = '<p class="text-danger extra-small p-2 border bg-danger-subtle">Security configuration error. Please refresh the page.</p>';
         submitButton.disabled = false;
         return;
     }
@@ -405,8 +406,8 @@ function fillForm(id, title, authors, description, cover_image, page_count, genr
     document.getElementById('published_date').value = published_date;
     submitButton.disabled = false;
     
-    // Smoothly clear selection grid matrix context
-    resultsDiv.innerHTML = '<div class="col-12"><div class="alert alert-primary border-0 small py-2 mb-0"><i class="bi bi-check2-circle me-2 brand-gold-text"></i>Record properties successfully loaded into the form architecture below.</div></div>';
+    // Clear selection layout context cleanly
+    resultsDiv.innerHTML = '<div class="col-12"><div class="alert alert-primary border-0 small py-2 mb-0"><i class="bi bi-check2-circle me-2 brand-gold-text"></i>Book information has been successfully copied into the form details below.</div></div>';
 }
 </script>
 {% endblock %}
