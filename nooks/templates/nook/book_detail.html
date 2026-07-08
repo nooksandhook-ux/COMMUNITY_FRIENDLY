@@ -195,7 +195,7 @@
                             </div>
                             <div class="mb-3">
                                 {{ rate_form.review.label(class="form-label small fw-semibold") }}
-                                {{ rate_form.review(class="form-control", id="review", rows="3", value=book.review or '', placeholder="Add institutional framework feedback...") }}
+                                {{ rate_form.review(class="form-control", id="review", rows="3", value=book.review or '', placeholder="Add details or feedback...") }}
                                 {% if rate_form.review.errors %}
                                     <ul class="text-danger small mt-1">
                                         {% for error in rate_form.review.errors %}
@@ -253,7 +253,7 @@
                     {{ takeaway_form.hidden_tag() }}
                     <div class="mb-3">
                         {{ takeaway_form.takeaway.label(class="form-label small text-muted mb-1") }}
-                        {{ takeaway_form.takeaway(class="form-control", id="takeaway", rows="2", required=True, placeholder="Log execution summary metric...") }}
+                        {{ takeaway_form.takeaway(class="form-control", id="takeaway", rows="2", required=True, placeholder="Log progress summary metric...") }}
                         {% if takeaway_form.takeaway.errors %}
                             <ul class="text-danger small mt-1">
                                 {% for error in takeaway_form.takeaway.errors %}
@@ -309,7 +309,7 @@
             <!-- Log Core Reference Parameter Block -->
             {% if quote_form %}
                 <hr class="my-4 opacity-25">
-                <h6 class="fw-bold text-primary mb-2">Log High-Yield Reference Framework Data</h6>
+                <h6 class="fw-bold text-primary mb-2">Log key learnings</h6>
                 <form action="{{ url_for('nook.add_quote', book_id=book._id) }}" method="POST" id="add-quote-form">
                     {{ quote_form.hidden_tag() }}
                     <div class="mb-3">
@@ -336,7 +336,7 @@
                     </div>
                     <div class="mb-3">
                         {{ quote_form.context.label(class="form-label small text-muted mb-1") }}
-                        {{ quote_form.context(class="form-control", id="context", rows="2", placeholder="Context or framework mapping details...") }}
+                        {{ quote_form.context(class="form-control", id="context", rows="2", placeholder="Context or details...") }}
                         {% if quote_form.context.errors %}
                             <ul class="text-danger small mt-1">
                                 {% for error in quote_form.context.errors %}
@@ -356,16 +356,16 @@
     <!-- Active Compliance Evaluation Audit Sessions Log -->
     <div class="card mb-4 border-0 shadow-sm bg-white">
         <div class="card-body">
-            <h5 class="fw-bold text-primary mb-3">Historical Execution Iterations Log</h5>
+            <h5 class="fw-bold text-primary mb-3">Historical Learnings Log</h5>
             {% if reading_sessions %}
                 <div class="table-responsive border rounded shadow-sm bg-white">
                     <table class="table table-hover align-middle mb-0 small">
                         <thead class="table-light text-primary fw-bold">
                             <tr>
                                 <th scope="col" class="ps-3">Execution Sequence Timestamp</th>
-                                <th scope="col">Metrics Delta Covered</th>
-                                <th scope="col">Evaluation Volume Block</th>
-                                <th scope="col" class="pe-3">Performance Audit Observations</th>
+                                <th scope="col">Metrics of Covered Items</th>
+                                <th scope="col">Volume Block</th>
+                                <th scope="col" class="pe-3">Performance Observations</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -373,7 +373,7 @@
                             <tr>
                                 <td class="ps-3 fw-bold text-dark">{{ session.date.strftime('%Y-%m-%d %H:%M') }}</td>
                                 <td>Pages <span class="badge bg-light text-primary fw-bold">{{ session.start_page }}</span> to <span class="badge bg-light text-primary fw-bold">{{ session.end_page }}</span></td>
-                                <td class="fw-semibold text-primary"><i class="bi bi-clock-history me-1 text-muted"></i>{{ session.duration_minutes }} min Execution</td>
+                                <td class="fw-semibold text-primary"><i class="bi bi-clock-history me-1 text-muted"></i>{{ session.duration_minutes }} min learnings</td>
                                 <td class="text-muted pe-3 text-wrap" style="max-width: 250px;">{{ session.notes or '—' }}</td>
                             </tr>
                             {% endfor %}
@@ -381,7 +381,7 @@
                     </table>
                 </div>
             {% else %}
-                <p class="text-muted small py-2 mb-0">No verifiable evaluation runs registered across this infrastructure track.</p>
+                <p class="text-muted small py-2 mb-0">No verifiable logs registered across this track.</p>
             {% endif %}
         </div>
     </div>
@@ -411,7 +411,7 @@
                         <button id="prev" class="btn btn-primary btn-sm px-3 fw-semibold">Previous Page</button>
                         <button id="next" class="btn btn-primary btn-sm px-3 fw-semibold">Next Page</button>
                     </div>
-                    <span class="text-dark fw-bold small">Metric Node Position: <span id="page_num" class="text-primary"></span> / <span id="page_count"></span></span>
+                    <span class="text-dark fw-bold small">Metrics: <span id="page_num" class="text-primary"></span> / <span id="page_count"></span></span>
                 </div>
                 <div class="overflow-auto bg-dark p-1 rounded" style="max-height: 70vh;">
                     <canvas id="the-canvas" class="mx-auto bg-white shadow-sm rounded" style="border:1px solid #222; max-width:100%;"></canvas>
